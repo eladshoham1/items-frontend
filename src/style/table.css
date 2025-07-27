@@ -1,0 +1,82 @@
+.users-tab-container {
+  padding: 16px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.users-table th, .users-table td {
+  padding: 12px 16px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+@import url('./theme.css');
+
+.users-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.users-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+@import url('./theme.css');
+
+.users-table button {
+  margin-right: 8px;
+  padding: 6px 12px;
+  border: none;
+  background-color: #1976d2;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.users-table th, .users-table td {
+  padding: 12px 16px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.users-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.users-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+
+.users-table button:last-child {
+  background-color: #d32f2f;
+}
+
+.users-table button:hover {
+  opacity: 0.9;
+}
+
+.add-user-btn {
+  padding: 8px 16px;
+  background-color: #388e3c;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.add-user-btn:hover {
+  background-color: #2e7d32;
+}
+.users-table button:hover {
+  opacity: 0.9;
+}
+
