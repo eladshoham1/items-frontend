@@ -124,12 +124,13 @@ const ReceiptsTab: React.FC = () => {
                   <td>{receipt.user.phoneNumber}</td>
                   <td>{receipt.receiptItems?.length || 0} פריטים</td>
                   <td>
-                    <div className="d-flex gap-2">
+                    <div className="d-flex justify-content-start" style={{ gap: '15px' }}>
                       <button 
                         className="btn btn-sm btn-outline-primary" 
                         onClick={() => handleReceiptClick(receipt)}
                         disabled={generatingPdfId === receipt.id}
                         title="הורד קבלה כ-PDF"
+                        style={{ minWidth: '100px', marginLeft: '10px' }}
                       >
                         {generatingPdfId === receipt.id ? (
                           <>
@@ -150,6 +151,7 @@ const ReceiptsTab: React.FC = () => {
                         className="btn btn-sm btn-outline-danger" 
                         onClick={() => handleReturnItems(receipt)}
                         title="החזר פריטים"
+                        style={{ minWidth: '120px' }}
                       >
                         <i className="fas fa-undo me-1"></i>
                         החזר פריטים
