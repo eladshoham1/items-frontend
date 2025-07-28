@@ -1,0 +1,58 @@
+/* ConflictErrorModal.css */
+
+.conflict-modal {
+  max-width: 600px;
+  width: 90vw;
+}
+
+.conflict-header {
+  color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.conflict-explanation {
+  margin-bottom: 1.5rem;
+}
+
+.resolution-guide {
+  margin-bottom: 1.5rem;
+}
+
+.resolution-guide .alert {
+  border-left: 4px solid #0dcaf0;
+}
+
+.additional-help {
+  margin-bottom: 1rem;
+}
+
+.additional-help .card {
+  border: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .conflict-modal {
+    width: 95vw;
+    margin: 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .resolution-guide .alert,
+  .conflict-explanation .alert {
+    padding: 0.75rem;
+  }
+  
+  .resolution-guide .alert i,
+  .conflict-explanation .alert i {
+    margin-right: 0.5rem;
+  }
+}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ServerError } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import ReceiptForm from './ReceiptForm';
+import ReturnItemsModal from './ReturnItemsModal';
 import { useReceipts } from '../../hooks';
 import { Receipt } from '../../types';
 import { paginate, generateReceiptPDF } from '../../utils';
@@ -10,6 +11,8 @@ import { UI_CONFIG } from '../../config/app.config';
 const ReceiptsTab: React.FC = () => {
   const { receipts, loading, error, fetchReceipts } = useReceipts();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
 
@@ -37,6 +40,21 @@ const ReceiptsTab: React.FC = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleReturnItems = (receipt: Receipt) => {
+    setSelectedReceipt(receipt);
+    setIsReturnModalOpen(true);
+  };
+
+  const handleCloseReturnModal = () => {
+    setIsReturnModalOpen(false);
+    setSelectedReceipt(null);
+  };
+
+  const handleReturnSuccess = async () => {
+    handleCloseReturnModal();
+    await fetchReceipts(); // Refresh the receipts list
   };
 
   const handleSuccess = async () => {
@@ -106,26 +124,37 @@ const ReceiptsTab: React.FC = () => {
                   <td>{receipt.user.phoneNumber}</td>
                   <td>{receipt.receiptItems?.length || 0} פריטים</td>
                   <td>
-                    <button 
-                      className="btn btn-sm btn-outline-primary" 
-                      onClick={() => handleReceiptClick(receipt)}
-                      disabled={generatingPdfId === receipt.id}
-                      title="הורד קבלה כ-PDF"
-                    >
-                      {generatingPdfId === receipt.id ? (
-                        <>
-                          <div className="spinner-border spinner-border-sm me-1" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
-                          יוצר PDF...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-download me-1"></i>
-                          הורד PDF
-                        </>
-                      )}
-                    </button>
+                    <div className="d-flex gap-2">
+                      <button 
+                        className="btn btn-sm btn-outline-primary" 
+                        onClick={() => handleReceiptClick(receipt)}
+                        disabled={generatingPdfId === receipt.id}
+                        title="הורד קבלה כ-PDF"
+                      >
+                        {generatingPdfId === receipt.id ? (
+                          <>
+                            <div className="spinner-border spinner-border-sm me-1" role="status">
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                            יוצר PDF...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fas fa-download me-1"></i>
+                            הורד PDF
+                          </>
+                        )}
+                      </button>
+                      
+                      <button 
+                        className="btn btn-sm btn-outline-danger" 
+                        onClick={() => handleReturnItems(receipt)}
+                        title="החזר פריטים"
+                      >
+                        <i className="fas fa-undo me-1"></i>
+                        החזר פריטים
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -157,6 +186,19 @@ const ReceiptsTab: React.FC = () => {
         <ReceiptForm
           onSuccess={handleSuccess}
           onCancel={handleCloseModal}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={isReturnModalOpen}
+        onClose={handleCloseReturnModal}
+        title="החזר פריטים מקבלה"
+        size="lg"
+      >
+        <ReturnItemsModal
+          receipt={selectedReceipt}
+          onSuccess={handleReturnSuccess}
+          onCancel={handleCloseReturnModal}
         />
       </Modal>
     </div>

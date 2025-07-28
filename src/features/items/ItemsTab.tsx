@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { ServerError } from '../../shared/components';
+import { ServerError, ConflictErrorModal } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import ItemForm from './ItemForm';
 import { useItems } from '../../hooks';
 import { Item } from '../../types';
-import { paginate } from '../../utils';
+import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
 const ItemsTab: React.FC = () => {
@@ -12,6 +12,15 @@ const ItemsTab: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [conflictError, setConflictError] = useState<{
+    isOpen: boolean;
+    message: string;
+    itemName: string;
+  }>({
+    isOpen: false,
+    message: '',
+    itemName: '',
+  });
 
   const { paginatedItems, totalPages } = paginate(
     items,
@@ -36,12 +45,23 @@ const ItemsTab: React.FC = () => {
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    if (window.confirm('האם אתה בטוח שברצונך למחוק את הפריט?')) {
-      const success = await deleteItem(itemId);
-      if (success) {
+    const item = items.find(i => i.id === itemId);
+    const itemName = item?.name || 'פריט לא ידוע';
+    
+    if (window.confirm(`האם אתה בטוח שברצונך למחוק את הפריט "${itemName}"?`)) {
+      const result = await deleteItem(itemId);
+      if (result.success) {
         // Item deleted successfully, list will be refreshed automatically
+      } else if (result.isConflict) {
+        // Show detailed conflict error modal
+        setConflictError({
+          isOpen: true,
+          message: result.error || 'שגיאת התנגשות',
+          itemName,
+        });
       } else {
-        alert('שגיאה במחיקת הפריט');
+        // Show generic error
+        alert(`שגיאה במחיקת הפריט: ${result.error || 'שגיאה לא ידועה'}`);
       }
     }
   };
@@ -97,7 +117,7 @@ const ItemsTab: React.FC = () => {
                   <td>{item.origin}</td>
                   <td>{item.idNumber || 'לא זמין'}</td>
                   <td>{item.note || 'אין הערה'}</td>
-                  <td>זמין</td>
+                  <td>{item.isAvailable ? 'זמין' : 'לא זמין'}</td>
                   <td>
                     <div className="btn-group">
                       <button 
@@ -148,6 +168,15 @@ const ItemsTab: React.FC = () => {
           onCancel={handleCloseModal}
         />
       </Modal>
+
+      <ConflictErrorModal
+        isOpen={conflictError.isOpen}
+        onClose={() => setConflictError({ isOpen: false, message: '', itemName: '' })}
+        title={`לא ניתן למחוק את הפריט "${conflictError.itemName}"`}
+        message={conflictError.message}
+        resolutionMessage={getConflictResolutionMessage('item')}
+        type="item"
+      />
     </div>
   );
 };

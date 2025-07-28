@@ -1,16 +1,11 @@
 import { ID, Timestamp } from './common.types';
+import { User } from './user.types';
 
 export interface Receipt {
   id: ID;
   receiptItems: BackendReceiptItem[];
   userId: ID;
-  user: {
-    id: ID;
-    name: string;
-    personalNumber: number;
-    rank: string;
-    location: string;
-  };
+  user: User;
   signature: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -35,8 +30,6 @@ export interface ReceiptItem {
   origin: string;
   name: string;
   idNumber?: string;
-  quantity: number;
-  subItem?: string;
 }
 
 export interface CreateReceiptRequest {
@@ -48,4 +41,9 @@ export interface CreateReceiptRequest {
 export interface ReturnReceiptRequest {
   receiptId: ID;
   signature: string;
+}
+
+export interface ReturnItemsRequest {
+  receiptId: ID;
+  receiptItemIds: string[];
 }

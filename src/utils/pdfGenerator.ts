@@ -107,6 +107,10 @@ const createReceiptHTML = (receipt: Receipt): string => {
           text-align: right;
         }
         
+        .info-grid .info-item:last-child {
+          grid-column: 1 / -1;
+        }
+        
         .info-item {
           padding: 6px 8px;
           background: white;
@@ -268,6 +272,10 @@ const createReceiptHTML = (receipt: Receipt): string => {
               <span class="info-value">${receipt.user.phoneNumber}</span>
             </div>
             <div class="info-item hebrew-text">
+              <span class="info-label">יחידה:</span>
+              <span class="info-value">${receipt.user.location}</span>
+            </div>
+            <div class="info-item hebrew-text">
               <span class="info-label">תאריך מלא:</span>
               <span class="info-value">${formatDate(receipt.createdAt)}</span>
             </div>
@@ -282,7 +290,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
                 <th style="width: 8%;">#</th>
                 <th style="width: 30%;">שם הפריט</th>
                 <th style="width: 15%;">מקור</th>
-                <th style="width: 20%;">מספר זיהוי</th>
+                <th style="width: 20%;">מספר צ'</th>
                 <th style="width: 27%;">הערות</th>
               </tr>
             </thead>

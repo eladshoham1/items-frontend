@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 
 interface Props {
@@ -7,6 +7,42 @@ interface Props {
 
 export const SignaturePad: React.FC<Props> = ({ onSave }) => {
   const sigRef = useRef<SignatureCanvas>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canvasSize, setCanvasSize] = useState({ width: 450, height: 120 });
+
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        // Use container width minus padding (20px on each side)
+        const availableWidth = containerWidth - 40;
+        const newWidth = Math.max(300, availableWidth);
+        
+        setCanvasSize({
+          width: newWidth,
+          height: 120
+        });
+
+        // Force canvas to redraw with correct dimensions
+        if (sigRef.current) {
+          // Use a timeout to ensure the canvas is rendered with new dimensions
+          setTimeout(() => {
+            if (sigRef.current) {
+              sigRef.current.getCanvas().width = newWidth;
+              sigRef.current.getCanvas().height = 120;
+              sigRef.current.getCanvas().style.width = `${newWidth}px`;
+              sigRef.current.getCanvas().style.height = '120px';
+            }
+          }, 10);
+        }
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
 
   const isSigRefValid = (ref: SignatureCanvas | null): ref is SignatureCanvas => {
     return ref !== null;
@@ -27,23 +63,32 @@ export const SignaturePad: React.FC<Props> = ({ onSave }) => {
   };
 
   return (
-    <div className="signature-pad-container">
+    <div className="signature-pad-container" ref={containerRef}>
       <div className="text-center mb-2">
         <small className="text-muted">
           <i className="fas fa-info-circle me-1"></i>
           חתום באזור הלבן למטה
         </small>
       </div>
-      <div className="d-flex justify-content-center">
+      <div className="signature-canvas-wrapper">
         <SignatureCanvas
           ref={sigRef}
           penColor="black"
           onEnd={handleEnd}
           canvasProps={{
-            width: Math.min(450, window.innerWidth - 100),
-            height: 120,
-            className: 'border border-2 border-primary rounded shadow-sm bg-white',
-            style: { cursor: 'crosshair', maxWidth: '100%' }
+            width: canvasSize.width,
+            height: canvasSize.height,
+            className: 'signature-canvas',
+            style: { 
+              cursor: 'crosshair',
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
+              touchAction: 'none',
+              border: '2px solid #667eea',
+              borderRadius: '8px',
+              backgroundColor: 'white',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }
           }}
         />
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { reportService } from '../services';
-import { ReportItem, ReportStatusUpdate, DashboardStatistics } from '../types';
+import { ReportItem, ReportStatusUpdate, DashboardStatistics, DailyReportResponse } from '../types';
 
 export const useReports = () => {
   const [reportItems, setReportItems] = useState<ReportItem[]>([]);
@@ -11,12 +11,17 @@ export const useReports = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await reportService.getDailyReport();
-      // Ensure data is an array to prevent "map is not a function" errors
-      if (Array.isArray(data)) {
-        setReportItems(data);
+      const data: DailyReportResponse = await reportService.getDailyReport();
+      // Handle the new response structure
+      if (data && Array.isArray(data.items)) {
+        // Add isReported property for local state management
+        const itemsWithReportStatus = data.items.map(item => ({
+          ...item,
+          isReported: item.hasRecentReport
+        }));
+        setReportItems(itemsWithReportStatus);
       } else {
-        console.warn('getDailyReport returned non-array data:', data);
+        console.warn('getDailyReport returned invalid data:', data);
         setReportItems([]);
       }
     } catch (err) {

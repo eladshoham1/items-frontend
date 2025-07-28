@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useUsers, useItems, useReceipts } from '../../hooks';
+import { useUsers, useAvailableItems, useReceipts } from '../../hooks';
 import { ReceiptItem } from '../../types';
 import { SignaturePad } from './SignaturePad';
 import './ReceiptForm.css';
@@ -25,24 +25,22 @@ const ItemCard: React.FC<ItemCardProps> = ({
         <div className="item-details">
           {item.idNumber && (
             <span className="item-badge item-badge-id">
-              מספר: {item.idNumber}
+              מספר צ': {item.idNumber}
             </span>
           )}
           <span className="item-badge item-badge-origin">
             מקור: {item.origin}
           </span>
-          <span className="item-badge item-badge-quantity">
-            כמות: 1
-          </span>
         </div>
       </div>
       <button 
         type="button" 
-        className="btn btn-danger btn-sm item-remove-btn"
+        className="btn btn-outline-danger btn-sm item-remove-btn"
         onClick={() => onRemove(item.id)}
         title="הסר פריט"
       >
-        <i className="fas fa-trash"></i>
+        <i className="fas fa-times"></i>
+        <span className="remove-text">הסר</span>
       </button>
     </div>
   );
@@ -50,7 +48,12 @@ const ItemCard: React.FC<ItemCardProps> = ({
 
 const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
   const { users } = useUsers();
-  const { items: allItems } = useItems();
+  const { 
+    availableItems: serverAvailableItems, 
+    loading: itemsLoading, 
+    error: itemsError, 
+    refetch: refetchAvailableItems 
+  } = useAvailableItems();
   const { createReceipt } = useReceipts();
   
   const [selectedUser, setSelectedUser] = useState<string>('');
@@ -60,33 +63,38 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
 
+  // Use server-side available items and filter out locally selected items
   const availableItems = useMemo(() => {
-    return allItems.filter(item => 
+    return serverAvailableItems.filter(item => 
       !receiptItems.some(receiptItem => receiptItem.id === item.id)
     );
-  }, [allItems, receiptItems]);
+  }, [serverAvailableItems, receiptItems]);
 
   const addItem = () => {
     if (!selectedItemId) return;
     
-    const item = allItems.find(i => i.id === selectedItemId);
+    // Find only from available items (no fallback to all items)
+    const item = availableItems.find(i => i.id === selectedItemId);
     if (!item) return;
 
     const newReceiptItem: ReceiptItem = {
       id: item.id,
       name: item.name,
       origin: item.origin,
-      quantity: 1, // Always 1 since each item is unique
-      subItem: '', // Not used anymore
       idNumber: item.idNumber || ''
     };
     
     setReceiptItems([...receiptItems, newReceiptItem]);
     setSelectedItemId('');
+    
+    // Refresh available items to ensure real-time updates
+    refetchAvailableItems();
   };
 
   const removeItem = (id: string) => {
     setReceiptItems(items => items.filter(item => item.id !== id));
+    // Refresh available items when removing an item
+    refetchAvailableItems();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -120,6 +128,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
 
       const success = await createReceipt(receiptData);
       if (success) {
+        // Refresh available items after successful receipt creation
+        refetchAvailableItems();
         onSuccess();
       } else {
         setError('שגיאה ביצירת הקבלה');
@@ -154,19 +164,21 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
                 </h5>
               </div>
               <div className="section-content">
-                <select 
-                  className="form-select form-select-lg"
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                  required
-                >
-                  <option value="">בחר משתמש...</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.name} - {user.rank} - {user.location}
-                    </option>
-                  ))}
-                </select>
+                <div className="user-selection-row">
+                  <select 
+                    className="form-select"
+                    value={selectedUser}
+                    onChange={(e) => setSelectedUser(e.target.value)}
+                    required
+                  >
+                    <option value="">בחר משתמש...</option>
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.name} - {user.rank} - {user.location}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -179,28 +191,54 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
                 </h5>
               </div>
               <div className="section-content">
-                <div className="add-item-row">
-                  <select 
-                    className="form-select"
-                    value={selectedItemId}
-                    onChange={(e) => setSelectedItemId(e.target.value)}
-                  >
-                    <option value="">בחר פריט להוספה...</option>
-                    {availableItems.map(item => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} ({item.origin}) {item.idNumber && `- ${item.idNumber}`}
+                {itemsError && (
+                  <div className="alert alert-warning mb-3" role="alert">
+                    <i className="fas fa-exclamation-triangle me-2"></i>
+                    שגיאה בטעינת פריטים: {itemsError}
+                  </div>
+                )}
+                <div className="add-item-section">
+                  <div className="item-select-row">
+                    <select 
+                      className="form-select"
+                      value={selectedItemId}
+                      onChange={(e) => setSelectedItemId(e.target.value)}
+                      disabled={itemsLoading}
+                    >
+                      <option value="">
+                        {itemsLoading ? 'טוען פריטים...' : 'בחר פריט להוספה...'}
                       </option>
-                    ))}
-                  </select>
-                  <button 
-                    type="button" 
-                    className="btn btn-success add-item-btn"
-                    onClick={addItem}
-                    disabled={!selectedItemId}
-                  >
-                    <i className="fas fa-plus me-1"></i>
-                    הוסף
-                  </button>
+                      {!itemsLoading && availableItems.length === 0 && (
+                        <option value="" disabled>אין פריטים זמינים</option>
+                      )}
+                      {availableItems.map(item => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} ({item.origin}) {item.idNumber && `- ${item.idNumber}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="item-actions-row">
+                    <button 
+                      type="button" 
+                      className="btn btn-success add-item-btn"
+                      onClick={addItem}
+                      disabled={!selectedItemId || itemsLoading}
+                    >
+                      <i className="fas fa-plus me-1"></i>
+                      הוסף פריט
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-outline-primary refresh-btn"
+                      onClick={refetchAvailableItems}
+                      disabled={itemsLoading}
+                      title="רענן רשימת פריטים זמינים"
+                    >
+                      <i className={`fas fa-sync-alt me-1 ${itemsLoading ? 'fa-spin' : ''}`}></i>
+                      {itemsLoading ? 'מרענן...' : 'רענן רשימה'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -233,18 +271,20 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
               <div className="section-header">
                 <h5 className="section-title">
                   <i className="fas fa-signature me-2"></i>
-                  חתימה (חובה)
+                  חתימה
                 </h5>
               </div>
               <div className="section-content">
-                <div className="signature-container">
-                  <SignaturePad onSave={setSignature} />
-                  {signature && (
-                    <div className="signature-success">
-                      <i className="fas fa-check me-1"></i>
-                      חתימה נשמרה בהצלחה
-                    </div>
-                  )}
+                <div className="signature-selection-row">
+                  <div className="signature-container">
+                    <SignaturePad onSave={setSignature} />
+                    {signature && (
+                      <div className="signature-success">
+                        <i className="fas fa-check me-1"></i>
+                        חתימה נשמרה בהצלחה
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

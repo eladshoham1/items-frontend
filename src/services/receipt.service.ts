@@ -1,5 +1,5 @@
 import { apiService } from './api.service';
-import { Receipt, CreateReceiptRequest, ReturnReceiptRequest } from '../types';
+import { Receipt, CreateReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest } from '../types';
 
 export const receiptService = {
   // Get all receipts
@@ -19,6 +19,16 @@ export const receiptService = {
   // Return items from receipt
   async returnItems(returnData: ReturnReceiptRequest): Promise<void> {
     return apiService.patch<void>('/receipts/return', returnData, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  },
+
+  // Return specific items from receipt
+  async returnSelectedItems(returnData: ReturnItemsRequest): Promise<void> {
+    const { receiptId, receiptItemIds } = returnData;
+    return apiService.patch<void>(`/receipts/return/${receiptId}`, { receiptItemIds }, {
       headers: {
         'Content-Type': 'application/json',
       },

@@ -22,6 +22,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     idNumber: '',
     note: '',
     origin: 'מרת"ק',
+    isAvailable: true,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +34,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
         idNumber: item.idNumber || '',
         note: item.note || '',
         origin: item.origin,
+        isAvailable: item.isAvailable,
       });
     }
   }, [item]);

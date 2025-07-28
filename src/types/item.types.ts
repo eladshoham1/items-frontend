@@ -6,7 +6,7 @@ export interface Item {
   name: string;
   idNumber?: string;
   note?: string;
-  subItems?: string[];
+  isAvailable: boolean;
 }
 
 export type CreateItemRequest = Omit<Item, 'id'>;

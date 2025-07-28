@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { ServerError } from '../../shared/components';
+import { ServerError, ConflictErrorModal } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import UserForm from './UserForm';
 import { useUsers } from '../../hooks';
 import { User } from '../../types';
-import { paginate } from '../../utils';
+import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
 const UsersTab: React.FC = () => {
@@ -12,6 +12,15 @@ const UsersTab: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [conflictError, setConflictError] = useState<{
+    isOpen: boolean;
+    message: string;
+    userName: string;
+  }>({
+    isOpen: false,
+    message: '',
+    userName: '',
+  });
 
   const { paginatedItems: paginatedUsers, totalPages } = paginate(
     users,
@@ -35,11 +44,24 @@ const UsersTab: React.FC = () => {
   };
 
   const handleDelete = async (userId: string) => {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק את המשתמש?')) return;
+    const user = users.find(u => u.id === userId);
+    const userName = user?.name || 'משתמש לא ידוע';
+    
+    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את המשתמש "${userName}"?`)) return;
 
-    const success = await deleteUser(userId);
-    if (!success) {
-      alert('שגיאה במחיקת המשתמש');
+    const result = await deleteUser(userId);
+    if (result.success) {
+      // User deleted successfully, list will be refreshed automatically
+    } else if (result.isConflict) {
+      // Show detailed conflict error modal
+      setConflictError({
+        isOpen: true,
+        message: result.error || 'שגיאת התנגשות',
+        userName,
+      });
+    } else {
+      // Show generic error
+      alert(`שגיאה במחיקת המשתמש: ${result.error || 'שגיאה לא ידועה'}`);
     }
   };
 
@@ -149,6 +171,15 @@ const UsersTab: React.FC = () => {
           onCancel={handleCloseModal}
         />
       </Modal>
+
+      <ConflictErrorModal
+        isOpen={conflictError.isOpen}
+        onClose={() => setConflictError({ isOpen: false, message: '', userName: '' })}
+        title={`לא ניתן למחוק את המשתמש "${conflictError.userName}"`}
+        message={conflictError.message}
+        resolutionMessage={getConflictResolutionMessage('user')}
+        type="user"
+      />
     </div>
   );
 };

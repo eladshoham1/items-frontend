@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { userService } from '../services';
 import { User, CreateUserRequest } from '../types';
+import { extractApiError } from '../utils';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -48,16 +49,26 @@ export const useUsers = () => {
     }
   };
 
-  const deleteUser = async (userId: string): Promise<boolean> => {
+  const deleteUser = async (userId: string): Promise<{ success: boolean; error?: string; isConflict?: boolean }> => {
     try {
       setError(null);
       await userService.delete(userId);
       await fetchUsers(); // Refresh the list
-      return true;
+      return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete user');
+      const apiError = extractApiError(err);
+      
+      // Don't set general error state for conflicts - let the component handle it
+      if (!apiError.isConflict) {
+        setError(apiError.message);
+      }
+      
       console.error('Failed to delete user:', err);
-      return false;
+      return { 
+        success: false, 
+        error: apiError.message,
+        isConflict: apiError.isConflict
+      };
     }
   };
 

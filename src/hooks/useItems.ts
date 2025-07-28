@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { itemService } from '../services';
 import { Item, CreateItemRequest } from '../types';
+import { extractApiError } from '../utils';
 
 export const useItems = () => {
   const [items, setItems] = useState<Item[]>([]);
+  const [availableItems, setAvailableItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,6 +21,18 @@ export const useItems = () => {
       console.error('Failed to fetch items:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailableItems = async () => {
+    try {
+      setError(null);
+      const data = await itemService.getAvailableItems();
+      setAvailableItems(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch available items');
+      setAvailableItems([]); // Ensure empty array on error
+      console.error('Failed to fetch available items:', err);
     }
   };
 
@@ -74,16 +88,26 @@ export const useItems = () => {
     }
   };
 
-  const deleteItem = async (itemId: string): Promise<boolean> => {
+  const deleteItem = async (itemId: string): Promise<{ success: boolean; error?: string; isConflict?: boolean }> => {
     try {
       setError(null);
       await itemService.delete(itemId);
       await fetchItems(); // Refresh the list
-      return true;
+      return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete item');
+      const apiError = extractApiError(err);
+      
+      // Don't set general error state for conflicts - let the component handle it
+      if (!apiError.isConflict) {
+        setError(apiError.message);
+      }
+      
       console.error('Failed to delete item:', err);
-      return false;
+      return { 
+        success: false, 
+        error: apiError.message,
+        isConflict: apiError.isConflict
+      };
     }
   };
 
@@ -93,9 +117,11 @@ export const useItems = () => {
 
   return {
     items,
+    availableItems,
     loading,
     error,
     refetch: fetchItems,
+    refetchAvailableItems: fetchAvailableItems,
     createItem,
     updateItem,
     deleteItem,

@@ -2,16 +2,27 @@ import { ID } from './common.types';
 
 export interface ReportItem {
   id: ID;
-  itemName: string;
-  itemNumberId: string;
+  name: string;
+  idNumber: string;
   userName: string;
   phoneNumber: string;
-  isReported: boolean;
+  hasRecentReport: boolean;
+  isReported?: boolean; // For local state management
+}
+
+export interface DailyReportResponse {
+  items: ReportItem[];
+  total: number;
+  timestamp: string;
 }
 
 export interface ReportStatusUpdate {
   id: ID;
-  reported: boolean;
+  status: boolean;
+}
+
+export interface UpdateReportRequest {
+  items: ReportStatusUpdate[];
 }
 
 export interface DashboardStatistics {
@@ -19,4 +30,19 @@ export interface DashboardStatistics {
   totalItems: number;
   totalReceipts: number;
   activeReports: number;
+  // Matrix data structure
+  matrix: Record<string, Record<string, number>>; // location -> item -> count
+  locations: string[];
+  itemNames: string[];
+  totals: {
+    byLocation: Record<string, number>;
+    byItem: Record<string, number>;
+    grand: number;
+  };
+  metadata: {
+    locationsCount: number;
+    itemsCount: number;
+    totalAssignments: number;
+    generatedAt: string;
+  };
 }

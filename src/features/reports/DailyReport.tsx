@@ -14,7 +14,7 @@ const DailyReport: React.FC = () => {
   const handleSubmitReport = async () => {
     const reportUpdates: ReportStatusUpdate[] = reportItems.map(item => ({
       id: item.id,
-      reported: item.isReported,
+      status: item.isReported || false,
     }));
 
     const success = await updateReportStatus(reportUpdates);
@@ -34,8 +34,10 @@ const DailyReport: React.FC = () => {
         </div>
         <div className="card-body">
           <div className="alert alert-info">
-            <div className="spinner"></div>
-            <span>טוען נתונים...</span>
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">טוען...</span>
+            </div>
+            <span className="ms-2">טוען נתונים...</span>
           </div>
         </div>
       </div>
@@ -53,11 +55,11 @@ const DailyReport: React.FC = () => {
       </div>
       <div className="card-body">
         <div className="table-responsive">
-          <table className="table">
+          <table className="table table-striped">
             <thead>
               <tr>
                 <th>שם פריט</th>
-                <th>מספר</th>
+                <th>מספר צ'</th>
                 <th>שם החותם</th>
                 <th>מספר טלפון</th>
                 <th>האם דיווח</th>
@@ -66,17 +68,16 @@ const DailyReport: React.FC = () => {
             <tbody>
               {reportItems.map(item => (
                 <tr key={item.id}>
-                  <td>{item.itemName}</td>
-                  <td>{item.itemNumberId}</td>
+                  <td>{item.name}</td>
+                  <td>{item.idNumber}</td>
                   <td>{item.userName}</td>
                   <td>{item.phoneNumber}</td>
                   <td>
                     <input
                       type="checkbox"
-                      checked={item.isReported}
+                      checked={item.isReported || false}
                       onChange={() => handleCheckboxChange(item.id)}
-                      className="form-control"
-                      style={{ width: 'auto' }}
+                      className="form-check-input"
                     />
                   </td>
                 </tr>
@@ -84,11 +85,18 @@ const DailyReport: React.FC = () => {
             </tbody>
           </table>
         </div>
-        <div className="btn-group btn-group-end mt-4">
-          <button className="btn btn-primary" onClick={handleSubmitReport}>
-            עדכן דיווח
-          </button>
-        </div>
+        {reportItems.length > 0 && (
+          <div className="d-flex justify-content-end mt-4">
+            <button className="btn btn-primary" onClick={handleSubmitReport}>
+              עדכן דיווח
+            </button>
+          </div>
+        )}
+        {reportItems.length === 0 && (
+          <div className="alert alert-info text-center">
+            אין פריטים לדיווח
+          </div>
+        )}
       </div>
     </div>
   );

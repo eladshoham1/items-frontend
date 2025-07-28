@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Receipt, CreateReceiptRequest, ReturnReceiptRequest } from '../types';
+import { Receipt, CreateReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest } from '../types';
 import { receiptService } from '../services';
 
 export const useReceipts = () => {
@@ -69,6 +69,24 @@ export const useReceipts = () => {
     }
   }, [fetchReceipts]);
 
+  const returnSelectedItems = useCallback(async (
+    returnData: ReturnItemsRequest
+  ): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await receiptService.returnSelectedItems(returnData);
+      // Refetch all receipts to get updated data
+      await fetchReceipts();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to return selected items');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchReceipts]);
+
   useEffect(() => {
     fetchReceipts();
   }, [fetchReceipts]);
@@ -80,5 +98,6 @@ export const useReceipts = () => {
     fetchReceipts,
     createReceipt,
     returnReceipt,
+    returnSelectedItems,
   };
 };

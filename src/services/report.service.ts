@@ -1,18 +1,21 @@
 import { apiService } from './api.service';
-import { ReportItem, ReportStatusUpdate, DashboardStatistics } from '../types';
+import { ReportStatusUpdate, UpdateReportRequest, DashboardStatistics, DailyReportResponse } from '../types';
 
 export const reportService = {
   // Get daily report items
-  async getDailyReport(): Promise<ReportItem[]> {
-    return apiService.get<ReportItem[]>('/reports');
+  async getDailyReport(): Promise<DailyReportResponse> {
+    return apiService.get<DailyReportResponse>('/reports');
   },
 
-  // Update report status
+  // Update report status using new DTO structure
   async updateReportStatus(reportUpdates: ReportStatusUpdate[]): Promise<void> {
-    return apiService.post<void>('/reports', reportUpdates);
+    const updateRequest: UpdateReportRequest = {
+      items: reportUpdates
+    };
+    return apiService.patch<void>('/reports', updateRequest);
   },
 
-  // Get dashboard statistics
+  // Get dashboard statistics (now includes matrix data)
   async getStatistics(): Promise<DashboardStatistics> {
     return apiService.get<DashboardStatistics>('/reports/statistics');
   },

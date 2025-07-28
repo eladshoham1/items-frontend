@@ -7,6 +7,12 @@ export const itemService = {
     return apiService.get<Item[]>('/items');
   },
 
+  // Get only available items (not currently assigned to active receipts)
+  async getAvailableItems(): Promise<Item[]> {
+    const response = await apiService.get<{ items: Item[]; total: number; timestamp: string }>('/items/available');
+    return response.items || [];
+  },
+
   // Create a new item
   async create(itemData: CreateItemRequest): Promise<Item> {
     return apiService.post<Item>('/items', itemData);
