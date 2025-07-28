@@ -216,7 +216,21 @@ const Dashboard: React.FC = () => {
                       borderBottom: '3px solid #2ecc71'
                     }}
                   >
-                    מס' חתומים
+                    חתומים
+                  </th>
+                  <th 
+                    className="text-center" 
+                    style={{ 
+                      minWidth: '120px', 
+                      background: 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)',
+                      color: 'white',
+                      padding: '16px 8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      borderBottom: '3px solid #af7ac5'
+                    }}
+                  >
+                    זמינים
                   </th>
                   <th 
                     className="text-center" 
@@ -366,6 +380,30 @@ const Dashboard: React.FC = () => {
                       className="text-center" 
                       style={{ 
                         padding: '16px 8px',
+                        backgroundColor: '#f3e5f5',
+                        borderLeft: '3px solid #9b59b6'
+                      }}
+                    >
+                      <span 
+                        className="badge" 
+                        style={{ 
+                          backgroundColor: '#9b59b6',
+                          color: 'white',
+                          fontSize: '13px',
+                          padding: '8px 12px',
+                          borderRadius: '20px',
+                          fontWeight: '600',
+                          boxShadow: '0 2px 4px rgba(155, 89, 182, 0.3)',
+                          border: '2px solid #af7ac5'
+                        }}
+                      >
+                        {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - getItemSignedTotal(item)}
+                      </span>
+                    </td>
+                    <td 
+                      className="text-center" 
+                      style={{ 
+                        padding: '16px 8px',
                         backgroundColor: '#fef5e7',
                         borderLeft: '3px solid #f39c12'
                       }}
@@ -391,79 +429,6 @@ const Dashboard: React.FC = () => {
                 }).filter(Boolean) : null}
               </tbody>
             </table>
-          </div>
-
-          <div className="mt-4 p-4" style={{ 
-            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', 
-            borderRadius: '12px',
-            border: '1px solid #cbd5e0',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.07)'
-          }}>
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <div className="d-flex align-items-center">
-                  <span style={{ fontSize: '24px', marginRight: '8px' }}>🔍</span>
-                  <div>
-                    <strong style={{ color: '#2c3e50', fontSize: '14px' }}>הסבר:</strong>
-                    <small className="text-muted d-block" style={{ fontSize: '13px', marginTop: '2px' }}>
-                      התא הירוק מציג כמות חתומה. לחץ על תא כדי לראות פרטי משתמשים.
-                    </small>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="d-flex justify-content-end align-items-center flex-wrap gap-2">
-                  <div className="d-flex align-items-center me-3">
-                    <span 
-                      className="badge me-2" 
-                      style={{ 
-                        backgroundColor: '#27ae60',
-                        color: 'white',
-                        padding: '6px 10px',
-                        borderRadius: '15px',
-                        fontSize: '11px',
-                        fontWeight: '600'
-                      }}
-                    >
-                      ירוק
-                    </span>
-                    <small style={{ color: '#34495e', fontSize: '12px' }}>חתום</small>
-                  </div>
-                  <div className="d-flex align-items-center me-3">
-                    <span 
-                      className="badge me-2" 
-                      style={{ 
-                        backgroundColor: '#3498db',
-                        color: 'white',
-                        padding: '6px 10px',
-                        borderRadius: '15px',
-                        fontSize: '11px',
-                        fontWeight: '600'
-                      }}
-                    >
-                      כחול
-                    </span>
-                    <small style={{ color: '#34495e', fontSize: '12px' }}>סה"כ חתומים</small>
-                  </div>
-                  <div className="d-flex align-items-center">
-                    <span 
-                      className="badge me-2" 
-                      style={{ 
-                        backgroundColor: '#f39c12',
-                        color: 'white',
-                        padding: '6px 10px',
-                        borderRadius: '15px',
-                        fontSize: '11px',
-                        fontWeight: '600'
-                      }}
-                    >
-                      צהוב
-                    </span>
-                    <small style={{ color: '#34495e', fontSize: '12px' }}>סה"כ במלאי</small>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
