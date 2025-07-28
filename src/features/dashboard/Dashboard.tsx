@@ -17,18 +17,27 @@ const Dashboard: React.FC = () => {
 
   // Extract unique locations and items from the data
   const { items, locations } = useMemo(() => {
-    if (!stats) return { items: [], locations: [] };
+    if (!stats || typeof stats !== 'object') return { items: [], locations: [] };
     
-    const items = Object.keys(stats);
-    const locationSet = new Set<string>();
-    
-    items.forEach(item => {
-      Object.keys(stats[item].locations).forEach(location => {
-        locationSet.add(location);
+    try {
+      const items = Object.keys(stats);
+      const locationSet = new Set<string>();
+      
+      items.forEach(item => {
+        if (stats[item] && stats[item].locations && typeof stats[item].locations === 'object') {
+          Object.keys(stats[item].locations).forEach(location => {
+            if (location && typeof location === 'string') {
+              locationSet.add(location);
+            }
+          });
+        }
       });
-    });
-    
-    return { items, locations: Array.from(locationSet).sort() };
+      
+      return { items, locations: Array.from(locationSet).sort() };
+    } catch (error) {
+      console.error('Error processing dashboard stats:', error);
+      return { items: [], locations: [] };
+    }
   }, [stats]);
 
   const handleCellClick = (event: React.MouseEvent, users: SignUser[]) => {
@@ -50,22 +59,45 @@ const Dashboard: React.FC = () => {
   };
 
   const getCellData = (itemName: string, location: string) => {
-    const locationData = stats?.[itemName]?.locations?.[location];
-    if (!locationData) return { signedQuantity: 0, totalQuantity: 0, users: [] };
-    
-    const users = locationData.signUsers;
-    const signedQuantity = users.reduce((sum, user) => sum + user.quantity, 0);
-    const totalQuantity = stats[itemName].quantity;
-    
-    return { signedQuantity, totalQuantity, users };
+    try {
+      if (!stats || !stats[itemName] || !stats[itemName].locations || !stats[itemName].locations[location]) {
+        return { signedQuantity: 0, totalQuantity: 0, users: [] };
+      }
+      
+      const locationData = stats[itemName].locations[location];
+      if (!locationData || !locationData.signUsers || !Array.isArray(locationData.signUsers)) {
+        return { signedQuantity: 0, totalQuantity: 0, users: [] };
+      }
+      
+      const users = locationData.signUsers;
+      const signedQuantity = users.reduce((sum, user) => {
+        return sum + (user && typeof user.quantity === 'number' ? user.quantity : 0);
+      }, 0);
+      const totalQuantity = stats[itemName] && typeof stats[itemName].quantity === 'number' ? stats[itemName].quantity : 0;
+      
+      return { signedQuantity, totalQuantity, users };
+    } catch (error) {
+      console.error('Error getting cell data:', error, { itemName, location });
+      return { signedQuantity: 0, totalQuantity: 0, users: [] };
+    }
   };
 
   // Calculate total signed quantities per item (across all locations)
   const getItemSignedTotal = (itemName: string) => {
-    return locations.reduce((total, location) => {
-      const { signedQuantity } = getCellData(itemName, location);
-      return total + signedQuantity;
-    }, 0);
+    try {
+      if (!locations || !Array.isArray(locations) || !stats || !stats[itemName]) {
+        return 0;
+      }
+      
+      return locations.reduce((total, location) => {
+        if (!location || typeof location !== 'string') return total;
+        const { signedQuantity } = getCellData(itemName, location);
+        return total + (typeof signedQuantity === 'number' ? signedQuantity : 0);
+      }, 0);
+    } catch (error) {
+      console.error('Error calculating item signed total:', error, { itemName });
+      return 0;
+    }
   };
 
   if (loading) {
@@ -127,7 +159,7 @@ const Dashboard: React.FC = () => {
                 marginLeft: '16px'
               }}
             >
-              {items.length} פריטים • {locations.length} מיקומים
+              {(items && Array.isArray(items) ? items.length : 0)} פריטים • {(locations && Array.isArray(locations) ? locations.length : 0)} מיקומים
             </span>
           </div>
         </div>
@@ -203,7 +235,10 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {items.map((item, itemIndex) => (
+                {items && Array.isArray(items) ? items.map((item, itemIndex) => {
+                  if (!item || typeof item !== 'string') return null;
+                  
+                  return (
                   <tr 
                     key={item} 
                     style={{
@@ -235,9 +270,11 @@ const Dashboard: React.FC = () => {
                     >
                       {item}
                     </td>
-                    {locations.map(location => {
+                    {locations && Array.isArray(locations) ? locations.map(location => {
+                      if (!location || typeof location !== 'string') return null;
+                      
                       const { signedQuantity, users } = getCellData(item, location);
-                      const hasUsers = users.length > 0;
+                      const hasUsers = users && Array.isArray(users) && users.length > 0;
                       
                       return (
                         <td 
@@ -251,7 +288,7 @@ const Dashboard: React.FC = () => {
                             backgroundColor: hasUsers ? '#e8f5e8' : '#f8f9fa',
                             borderLeft: hasUsers ? '3px solid #27ae60' : '1px solid #dee2e6'
                           }}
-                          onClick={(e) => handleCellClick(e, users)}
+                          onClick={(e) => handleCellClick(e, users || [])}
                           title={hasUsers ? 'לחץ לפרטים נוספים' : 'אין משתמשים רשומים'}
                           onMouseEnter={(e) => {
                             if (hasUsers) {
@@ -300,7 +337,7 @@ const Dashboard: React.FC = () => {
                           )}
                         </td>
                       );
-                    })}
+                    }) : null}
                     <td 
                       className="text-center" 
                       style={{ 
@@ -346,11 +383,12 @@ const Dashboard: React.FC = () => {
                           border: '2px solid #f5b041'
                         }}
                       >
-                        {stats[item].quantity}
+                        {stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0}
                       </span>
                     </td>
                   </tr>
-                ))}
+                  );
+                }).filter(Boolean) : null}
               </tbody>
             </table>
           </div>
