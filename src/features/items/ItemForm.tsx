@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Item, CreateItemRequest, origins } from '../../types';
 import { useItems } from '../../hooks';
-import { validateRequired, sanitizeInput } from '../../utils';
+import { validateRequired, sanitizeInput, getConflictResolutionMessage } from '../../utils';
+import { ConflictErrorModal } from '../../shared/components';
 
 interface ItemFormProps {
   item: Item | null;
@@ -26,6 +27,15 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [conflictError, setConflictError] = useState<{
+    isOpen: boolean;
+    message: string;
+    itemName: string;
+  }>({
+    isOpen: false,
+    message: '',
+    itemName: ''
+  });
 
   useEffect(() => {
     if (item) {
@@ -57,7 +67,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   const handleInputChange = (field: keyof CreateItemRequest, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: field === 'note' ? value : sanitizeInput(value),
+      [field]: field === 'note' || field === 'name' ? value : sanitizeInput(value),
     }));
     
     if (errors[field as keyof FormErrors]) {
@@ -78,18 +88,27 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     setIsSubmitting(true);
 
     try {
-      let success: boolean;
+      let result: { success: boolean; error?: string; isConflict?: boolean };
       
       if (item?.id) {
-        success = await updateItem(item.id, formData);
+        // For updates, exclude isAvailable from the request body
+        const { isAvailable, ...updateData } = formData;
+        result = await updateItem(item.id, updateData);
       } else {
-        success = await createItem(formData);
+        result = await createItem(formData);
       }
 
-      if (success) {
+      if (result.success) {
         onSuccess();
+      } else if (result.isConflict) {
+        // Show detailed conflict error modal
+        setConflictError({
+          isOpen: true,
+          message: result.error || 'פריט עם מספר צ\' זה כבר קיים במערכת',
+          itemName: formData.name
+        });
       } else {
-        alert('שגיאה בשמירת הפריט');
+        alert(result.error || 'שגיאה בשמירת הפריט');
       }
     } catch (error) {
       console.error('Error submitting item:', error);
@@ -100,69 +119,80 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label className="form-label">שם פריט</label>
-        <input 
-          className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-          name="name" 
-          value={formData.name} 
-          onChange={e => handleInputChange('name', e.target.value)} 
-          required 
-        />
-        {errors.name && <div className="form-error">{errors.name}</div>}
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">מקור</label>
-        <select 
-          className="form-control"
-          name="origin" 
-          value={formData.origin} 
-          onChange={e => handleInputChange('origin', e.target.value)} 
-          required
-        >
-          {origins.map(origin => (
-            <option key={origin} value={origin}>{origin}</option>
-          ))}
-        </select>
-      </div>
-      
-      {formData.origin === 'כ"ס' && (
+    <>
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label className="form-label">מספר צ'</label>
+          <label className="form-label">שם פריט</label>
           <input 
-            className={`form-control ${errors.idNumber ? 'is-invalid' : ''}`}
-            name="idNumber" 
-            value={formData.idNumber} 
-            onChange={e => handleInputChange('idNumber', e.target.value)} 
-            required
+            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+            name="name" 
+            value={formData.name} 
+            onChange={e => handleInputChange('name', e.target.value)} 
+            required 
           />
-          {errors.idNumber && <div className="form-error">{errors.idNumber}</div>}
+          {errors.name && <div className="form-error">{errors.name}</div>}
         </div>
-      )}
-      
-      <div className="form-group">
-        <label className="form-label">הערה</label>
-        <textarea 
-          className={`form-control ${errors.note ? 'is-invalid' : ''}`}
-          name="note" 
-          value={formData.note} 
-          onChange={e => handleInputChange('note', e.target.value)} 
-          rows={3}
-        />
-        {errors.note && <div className="form-error">{errors.note}</div>}
-      </div>
-      
-      <div className="btn-group btn-group-end">
-        <button type="button" className="btn btn-ghost" onClick={onCancel}>
-          ביטול
-        </button>
-        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-          {isSubmitting ? 'שומר...' : (item ? 'עדכן' : 'צור')}
-        </button>
-      </div>
-    </form>
+
+        <div className="form-group">
+          <label className="form-label">מקור</label>
+          <select 
+            className="form-control"
+            name="origin" 
+            value={formData.origin} 
+            onChange={e => handleInputChange('origin', e.target.value)} 
+            required
+          >
+            {origins.map(origin => (
+              <option key={origin} value={origin}>{origin}</option>
+            ))}
+          </select>
+        </div>
+        
+        {formData.origin === 'כ"ס' && (
+          <div className="form-group">
+            <label className="form-label">מספר צ'</label>
+            <input 
+              className={`form-control ${errors.idNumber ? 'is-invalid' : ''}`}
+              name="idNumber" 
+              value={formData.idNumber} 
+              onChange={e => handleInputChange('idNumber', e.target.value)} 
+              required
+            />
+            {errors.idNumber && <div className="form-error">{errors.idNumber}</div>}
+          </div>
+        )}
+        
+        <div className="form-group">
+          <label className="form-label">הערה</label>
+          <textarea 
+            className={`form-control ${errors.note ? 'is-invalid' : ''}`}
+            name="note" 
+            value={formData.note} 
+            onChange={e => handleInputChange('note', e.target.value)} 
+            rows={3}
+          />
+          {errors.note && <div className="form-error">{errors.note}</div>}
+        </div>
+        
+        <div className="btn-group btn-group-end">
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
+            ביטול
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? 'שומר...' : (item ? 'עדכן' : 'צור')}
+          </button>
+        </div>
+      </form>
+
+      <ConflictErrorModal
+        isOpen={conflictError.isOpen}
+        onClose={() => setConflictError({ isOpen: false, message: '', itemName: '' })}
+        title={`לא ניתן לשמור את הפריט "${conflictError.itemName}"`}
+        message={conflictError.message}
+        resolutionMessage={getConflictResolutionMessage('item')}
+        type="item"
+      />
+    </>
   );
 };
 

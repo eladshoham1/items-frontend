@@ -36,29 +36,45 @@ export const useItems = () => {
     }
   };
 
-  const createItem = async (itemData: CreateItemRequest): Promise<boolean> => {
+  const createItem = async (itemData: CreateItemRequest): Promise<{ success: boolean; error?: string; isConflict?: boolean }> => {
     try {
       setError(null);
       await itemService.create(itemData);
       await fetchItems(); // Refresh the list
-      return true;
+      return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create item');
+      const apiError = extractApiError(err);
+      // Don't set general error state for conflicts - let the component handle it
+      if (!apiError.isConflict) {
+        setError(apiError.message);
+      }
       console.error('Failed to create item:', err);
-      return false;
+      return { 
+        success: false, 
+        error: apiError.message,
+        isConflict: apiError.isConflict
+      };
     }
   };
 
-  const updateItem = async (itemId: string, itemData: Partial<CreateItemRequest>): Promise<boolean> => {
+  const updateItem = async (itemId: string, itemData: Partial<CreateItemRequest>): Promise<{ success: boolean; error?: string; isConflict?: boolean }> => {
     try {
       setError(null);
       await itemService.update(itemId, itemData);
       await fetchItems(); // Refresh the list
-      return true;
+      return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update item');
+      const apiError = extractApiError(err);
+      // Don't set general error state for conflicts - let the component handle it
+      if (!apiError.isConflict) {
+        setError(apiError.message);
+      }
       console.error('Failed to update item:', err);
-      return false;
+      return { 
+        success: false, 
+        error: apiError.message,
+        isConflict: apiError.isConflict
+      };
     }
   };
 
