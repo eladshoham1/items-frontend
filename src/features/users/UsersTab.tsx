@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import UserForm from './UserForm';
 import { useUsers } from '../../hooks';
@@ -8,10 +8,11 @@ import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
 const UsersTab: React.FC = () => {
-  const { users, loading, error, deleteUser, refetch } = useUsers();
+  const { users, loading, error, deleteManyUsers, refetch } = useUsers();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [conflictError, setConflictError] = useState<{
     isOpen: boolean;
     message: string;
@@ -20,6 +21,20 @@ const UsersTab: React.FC = () => {
     isOpen: false,
     message: '',
     userName: '',
+  });
+
+  const [bulkDeleteError, setBulkDeleteError] = useState<{
+    isOpen: boolean;
+    message: string;
+    deletedCount: number;
+    totalCount: number;
+    errors: string[];
+  }>({
+    isOpen: false,
+    message: '',
+    deletedCount: 0,
+    totalCount: 0,
+    errors: [],
   });
 
   const { paginatedItems: paginatedUsers, totalPages } = paginate(
@@ -43,31 +58,58 @@ const UsersTab: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (userId: string) => {
-    const user = users.find(u => u.id === userId);
-    const userName = user?.name || 'משתמש לא ידוע';
-    
-    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את המשתמש "${userName}"?`)) return;
-
-    const result = await deleteUser(userId);
-    if (result.success) {
-      // User deleted successfully, list will be refreshed automatically
-    } else if (result.isConflict) {
-      // Show detailed conflict error modal
-      setConflictError({
-        isOpen: true,
-        message: result.error || 'שגיאת התנגשות',
-        userName,
-      });
-    } else {
-      // Show generic error
-      alert(`שגיאה במחיקת המשתמש: ${result.error || 'שגיאה לא ידועה'}`);
-    }
-  };
-
   const handleSelectUser = (user: User) => {
     setSelectedUser(user);
     setIsModalOpen(true);
+  };
+
+  const handleSelectAllUsers = () => {
+    if (selectedUserIds.length === paginatedUsers.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(paginatedUsers.map(user => user.id));
+    }
+  };
+
+  const handleToggleUserSelection = (userId: string) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUserIds.length === 0) return;
+
+    const selectedUsers = users.filter(user => selectedUserIds.includes(user.id));
+    const userNames = selectedUsers.map(user => user.name).join(', ');
+    
+    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את המשתמשים הבאים?\n\n${userNames}\n\n(${selectedUserIds.length} משתמשים)`)) return;
+
+    const result = await deleteManyUsers(selectedUserIds);
+    if (result.success) {
+      setSelectedUserIds([]);
+    } else if (result.isConflict && result.bulkError) {
+      // Show bulk delete error modal
+      setBulkDeleteError({
+        isOpen: true,
+        message: result.bulkError.message,
+        deletedCount: result.bulkError.deletedCount,
+        totalCount: selectedUserIds.length,
+        errors: result.bulkError.errors,
+      });
+      setSelectedUserIds([]);
+    } else if (result.isConflict) {
+      // Show regular conflict error modal
+      setConflictError({
+        isOpen: true,
+        message: result.error || 'שגיאת התנגשות במחיקת משתמשים',
+        userName: `${selectedUserIds.length} משתמשים`,
+      });
+    } else {
+      alert(`שגיאה במחיקת המשתמשים: ${result.error || 'שגיאה לא ידועה'}`);
+    }
   };
 
   if (loading) {
@@ -95,9 +137,26 @@ const UsersTab: React.FC = () => {
       <div className="card-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 className="mb-0">משתמשים</h2>
-          <button className="btn btn-primary" onClick={handleAddClick}>
-            הוסף משתמש חדש
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {selectedUserIds.length > 0 && (
+              <>
+                <span className="badge bg-primary">
+                  {selectedUserIds.length} נבחרו
+                </span>
+                <button 
+                  className="btn btn-danger btn-sm" 
+                  onClick={handleBulkDelete}
+                  disabled={selectedUserIds.length === 0}
+                >
+                  <i className="fas fa-trash me-1"></i>
+                  מחק נבחרים ({selectedUserIds.length})
+                </button>
+              </>
+            )}
+            <button className="btn btn-primary" onClick={handleAddClick}>
+              הוסף משתמש חדש
+            </button>
+          </div>
         </div>
       </div>
 
@@ -106,6 +165,15 @@ const UsersTab: React.FC = () => {
           <table className="table">
             <thead>
               <tr>
+                <th style={{ width: '50px' }}>
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={selectedUserIds.length === paginatedUsers.length && paginatedUsers.length > 0}
+                    onChange={handleSelectAllUsers}
+                    title="בחר הכל"
+                  />
+                </th>
                 <th>שם</th>
                 <th>מספר אישי</th>
                 <th>טלפון</th>
@@ -117,6 +185,14 @@ const UsersTab: React.FC = () => {
             <tbody>
               {paginatedUsers.map((user: User) => (
                 <tr key={user.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selectedUserIds.includes(user.id)}
+                      onChange={() => handleToggleUserSelection(user.id)}
+                    />
+                  </td>
                   <td>{user.name}</td>
                   <td>{user.personalNumber}</td>
                   <td>{user.phoneNumber}</td>
@@ -129,12 +205,6 @@ const UsersTab: React.FC = () => {
                         onClick={() => handleSelectUser(user)}
                       >
                         עדכן
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-danger" 
-                        onClick={() => handleDelete(user.id)}
-                      >
-                        מחק
                       </button>
                     </div>
                   </td>
@@ -178,6 +248,23 @@ const UsersTab: React.FC = () => {
         title={`לא ניתן למחוק את המשתמש "${conflictError.userName}"`}
         message={conflictError.message}
         resolutionMessage={getConflictResolutionMessage('user')}
+        type="user"
+      />
+
+      <BulkDeleteErrorModal
+        isOpen={bulkDeleteError.isOpen}
+        onClose={() => setBulkDeleteError({ 
+          isOpen: false, 
+          message: '', 
+          deletedCount: 0, 
+          totalCount: 0, 
+          errors: [] 
+        })}
+        title="תוצאות מחיקה מרובה - משתמשים"
+        message={bulkDeleteError.message}
+        deletedCount={bulkDeleteError.deletedCount}
+        totalCount={bulkDeleteError.totalCount}
+        errors={bulkDeleteError.errors}
         type="user"
       />
     </div>

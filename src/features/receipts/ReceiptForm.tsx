@@ -21,7 +21,14 @@ const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <div className="item-card">
       <div className="item-info">
-        <div className="item-name">{item.name}</div>
+        <div className="item-name">
+          {item.name}
+          {item.origin === 'מרת"ק' && item.quantity && item.quantity > 1 && (
+            <span className="item-badge item-badge-quantity ms-2">
+              כמות: {item.quantity}
+            </span>
+          )}
+        </div>
         <div className="item-details">
           {item.idNumber && (
             <span className="item-badge item-badge-id">
@@ -59,9 +66,11 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>('');
+  const [selectedQuantity, setSelectedQuantity] = useState<number>(1);
   const [signature, setSignature] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
+  const [itemSearchQuery, setItemSearchQuery] = useState<string>('');
 
   // Use server-side available items and filter out locally selected items
   const availableItems = useMemo(() => {
@@ -70,22 +79,97 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
     );
   }, [serverAvailableItems, receiptItems]);
 
+  // Filter available items based on search query
+  const filteredAvailableItems = useMemo(() => {
+    if (!itemSearchQuery.trim()) {
+      return availableItems;
+    }
+    
+    const query = itemSearchQuery.toLowerCase().trim();
+    return availableItems.filter(item => 
+      item.name.toLowerCase().includes(query) ||
+      item.origin.toLowerCase().includes(query) ||
+      (item.idNumber && item.idNumber.toLowerCase().includes(query))
+    );
+  }, [availableItems, itemSearchQuery]);
+
+  // Get the selected item details
+  const selectedItem = useMemo(() => {
+    return filteredAvailableItems.find(item => item.id === selectedItemId);
+  }, [filteredAvailableItems, selectedItemId]);
+
+  // Calculate max available quantity for מרת"ק items
+  const maxAvailableQuantity = useMemo(() => {
+    if (!selectedItem || selectedItem.origin !== 'מרת"ק') {
+      return 1;
+    }
+    
+    // Count how many items with the same name are available
+    const sameNameItems = availableItems.filter(item => 
+      item.name === selectedItem.name && item.origin === 'מרת"ק'
+    );
+    
+    // Subtract quantities already taken for the same item name
+    const alreadyTaken = receiptItems
+      .filter(receiptItem => receiptItem.name === selectedItem.name && receiptItem.origin === 'מרת"ק')
+      .reduce((sum, receiptItem) => sum + (receiptItem.quantity || 1), 0);
+    
+    return Math.max(1, sameNameItems.length - alreadyTaken);
+  }, [selectedItem, availableItems, receiptItems]);
+
+  // Update quantity when item changes
+  React.useEffect(() => {
+    if (selectedItem && selectedItem.origin === 'מרת"ק') {
+      setSelectedQuantity(Math.min(selectedQuantity, maxAvailableQuantity));
+    } else {
+      setSelectedQuantity(1);
+    }
+  }, [selectedItem, selectedQuantity, maxAvailableQuantity]);
+
   const addItem = () => {
     if (!selectedItemId) return;
     
-    // Find only from available items (no fallback to all items)
-    const item = availableItems.find(i => i.id === selectedItemId);
+    // Find only from filtered available items
+    const item = filteredAvailableItems.find(i => i.id === selectedItemId);
     if (!item) return;
 
-    const newReceiptItem: ReceiptItem = {
-      id: item.id,
-      name: item.name,
-      origin: item.origin,
-      idNumber: item.idNumber || ''
-    };
+    if (item.origin === 'מרת"ק') {
+      // For מרת"ק items, we need to find multiple items with the same name
+      const sameNameItems = availableItems.filter(availableItem => 
+        availableItem.name === item.name && 
+        availableItem.origin === 'מרת"ק' &&
+        !receiptItems.some(receiptItem => receiptItem.id === availableItem.id)
+      );
+      
+      // Add the selected quantity as individual items
+      const newReceiptItems: ReceiptItem[] = [];
+      for (let i = 0; i < selectedQuantity && i < sameNameItems.length; i++) {
+        const itemToAdd = sameNameItems[i];
+        newReceiptItems.push({
+          id: itemToAdd.id,
+          name: itemToAdd.name,
+          origin: itemToAdd.origin,
+          idNumber: itemToAdd.idNumber || '',
+          quantity: 1 // Each item has quantity 1, but we track it for display
+        });
+      }
+      
+      setReceiptItems([...receiptItems, ...newReceiptItems]);
+    } else {
+      // For other items, add single item
+      const newReceiptItem: ReceiptItem = {
+        id: item.id,
+        name: item.name,
+        origin: item.origin,
+        idNumber: item.idNumber || ''
+      };
+      
+      setReceiptItems([...receiptItems, newReceiptItem]);
+    }
     
-    setReceiptItems([...receiptItems, newReceiptItem]);
     setSelectedItemId('');
+    setSelectedQuantity(1);
+    setItemSearchQuery(''); // Clear search when item is added
     
     // Refresh available items to ensure real-time updates
     refetchAvailableItems();
@@ -198,6 +282,38 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
                   </div>
                 )}
                 <div className="add-item-section">
+                  {/* Search Input */}
+                  <div className="item-search-row mb-3">
+                    <div className="input-group">
+                      <span className="input-group-text">
+                        <i className="fas fa-search"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="חפש פריטים לפי שם, מקור או מספר צ'..."
+                        value={itemSearchQuery}
+                        onChange={(e) => setItemSearchQuery(e.target.value)}
+                        disabled={itemsLoading}
+                      />
+                      {itemSearchQuery && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => setItemSearchQuery('')}
+                          title="נקה חיפוש"
+                        >
+                          <i className="fas fa-times"></i>
+                        </button>
+                      )}
+                    </div>
+                    {itemSearchQuery && (
+                      <small className="text-muted mt-1 d-block">
+                        נמצאו {filteredAvailableItems.length} פריטים מתוך {availableItems.length}
+                      </small>
+                    )}
+                  </div>
+                  
                   <div className="item-select-row">
                     <select 
                       className="form-select"
@@ -206,27 +322,64 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
                       disabled={itemsLoading}
                     >
                       <option value="">
-                        {itemsLoading ? 'טוען פריטים...' : 'בחר פריט להוספה...'}
+                        {itemsLoading ? 'טוען פריטים...' : 
+                         itemSearchQuery ? `בחר מתוך ${filteredAvailableItems.length} פריטים שנמצאו...` :
+                         'בחר פריט להוספה...'}
                       </option>
-                      {!itemsLoading && availableItems.length === 0 && (
+                      {!itemsLoading && filteredAvailableItems.length === 0 && itemSearchQuery && (
+                        <option value="" disabled>לא נמצאו פריטים התואמים לחיפוש</option>
+                      )}
+                      {!itemsLoading && availableItems.length === 0 && !itemSearchQuery && (
                         <option value="" disabled>אין פריטים זמינים</option>
                       )}
-                      {availableItems.map(item => (
+                      {filteredAvailableItems.map(item => (
                         <option key={item.id} value={item.id}>
                           {item.name} ({item.origin}) {item.idNumber && `- ${item.idNumber}`}
                         </option>
                       ))}
                     </select>
                   </div>
+                  
+                  {/* Quantity selector for מרת"ק items */}
+                  {selectedItem && selectedItem.origin === 'מרת"ק' && (
+                    <div className="quantity-select-row mt-3">
+                      <label htmlFor="quantity-select" className="form-label">
+                        <i className="fas fa-sort-numeric-up me-2"></i>
+                        כמות (זמין: {maxAvailableQuantity})
+                      </label>
+                      <select
+                        id="quantity-select"
+                        className="form-select"
+                        value={selectedQuantity}
+                        onChange={(e) => setSelectedQuantity(parseInt(e.target.value))}
+                        disabled={itemsLoading || maxAvailableQuantity === 0}
+                      >
+                        {Array.from({ length: maxAvailableQuantity }, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num}>
+                            {num}
+                          </option>
+                        ))}
+                      </select>
+                      {maxAvailableQuantity === 0 && (
+                        <small className="text-warning mt-1 d-block">
+                          <i className="fas fa-exclamation-triangle me-1"></i>
+                          אין כמות זמינה עבור פריט זה
+                        </small>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="item-actions-row">
                     <button 
                       type="button" 
                       className="btn btn-success add-item-btn"
                       onClick={addItem}
-                      disabled={!selectedItemId || itemsLoading}
+                      disabled={!selectedItemId || itemsLoading || (selectedItem?.origin === 'מרת"ק' && maxAvailableQuantity === 0)}
                     >
                       <i className="fas fa-plus me-1"></i>
-                      הוסף פריט
+                      {selectedItem && selectedItem.origin === 'מרת"ק' && selectedQuantity > 1 
+                        ? `הוסף ${selectedQuantity} פריטים`
+                        : 'הוסף פריט'}
                     </button>
                     <button 
                       type="button" 
@@ -254,13 +407,48 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
                 </div>
                 <div className="section-content">
                   <div className="items-list">
-                    {receiptItems.map(item => (
-                      <ItemCard
-                        key={item.id}
-                        item={item}
-                        onRemove={removeItem}
-                      />
-                    ))}
+                    {receiptItems
+                      .reduce((grouped: { item: ReceiptItem, count: number }[], item) => {
+                        if (item.origin === 'מרת"ק') {
+                          const existing = grouped.find(g => g.item.name === item.name && g.item.origin === 'מרת"ק');
+                          if (existing) {
+                            existing.count++;
+                          } else {
+                            grouped.push({ item: { ...item, quantity: 1 }, count: 1 });
+                          }
+                        } else {
+                          grouped.push({ item, count: 1 });
+                        }
+                        return grouped;
+                      }, [])
+                      .map((groupedItem, index) => (
+                        <ItemCard
+                          key={`${groupedItem.item.name}-${groupedItem.item.origin}-${index}`}
+                          item={{
+                            ...groupedItem.item,
+                            quantity: groupedItem.item.origin === 'מרת"ק' ? groupedItem.count : undefined
+                          }}
+                          onRemove={(id) => {
+                            if (groupedItem.item.origin === 'מרת"ק') {
+                              // Remove all items with the same name for מרת"ק
+                              const itemsToRemove = receiptItems
+                                .filter(receiptItem => 
+                                  receiptItem.name === groupedItem.item.name && 
+                                  receiptItem.origin === 'מרת"ק'
+                                )
+                                .map(item => item.id);
+                              
+                              setReceiptItems(items => 
+                                items.filter(item => !itemsToRemove.includes(item.id))
+                              );
+                            } else {
+                              removeItem(id);
+                            }
+                            refetchAvailableItems();
+                          }}
+                        />
+                      ))
+                    }
                   </div>
                 </div>
               </div>

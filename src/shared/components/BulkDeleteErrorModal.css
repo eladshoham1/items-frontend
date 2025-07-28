@@ -1,0 +1,75 @@
+/* BulkDeleteErrorModal.css */
+
+.bulk-delete-error-modal {
+  direction: rtl;
+}
+
+.bulk-delete-error-modal .stat-box {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.bulk-delete-error-modal .stat-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.bulk-delete-error-modal .stat-number {
+  font-family: 'Arial', sans-serif;
+  line-height: 1;
+}
+
+.bulk-delete-error-modal .stat-label {
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.bulk-delete-error-modal .failed-items-list {
+  direction: rtl;
+}
+
+.bulk-delete-error-modal .failed-item {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 8px;
+}
+
+.bulk-delete-error-modal .failed-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.bulk-delete-error-modal .resolution-section ul {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Ensure proper RTL support for the row */
+.bulk-delete-error-modal .row {
+  margin-right: -0.75rem;
+  margin-left: -0.75rem;
+}
+
+.bulk-delete-error-modal .row > * {
+  padding-right: 0.75rem;
+  padding-left: 0.75rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 576px) {
+  .bulk-delete-error-modal .stat-box {
+    min-height: 70px;
+    padding: 0.75rem !important;
+  }
+  
+  .bulk-delete-error-modal .stat-number {
+    font-size: 1.5rem !important;
+  }
+  
+  .bulk-delete-error-modal .stat-label {
+    font-size: 0.75rem;
+  }
+}

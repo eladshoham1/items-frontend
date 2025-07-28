@@ -30,6 +30,7 @@ export interface ReceiptItem {
   origin: string;
   name: string;
   idNumber?: string;
+  quantity?: number; // For מרת"ק items
 }
 
 export interface CreateReceiptRequest {

@@ -22,6 +22,11 @@ export const userService = {
     return apiService.delete<void>(`/users/${userId}`);
   },
 
+  // Delete multiple users
+  async deleteMany(ids: string[]): Promise<any> {
+    return apiService.delete<any>('/users', { data: { ids } });
+  },
+
   // Get user by ID
   async getById(userId: string): Promise<User> {
     return apiService.get<User>(`/users/${userId}`);

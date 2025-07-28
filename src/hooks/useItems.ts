@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { itemService } from '../services';
 import { Item, CreateItemRequest } from '../types';
-import { extractApiError } from '../utils';
+import { extractApiError, extractBulkDeleteResponse } from '../utils';
 
 export const useItems = () => {
   const [items, setItems] = useState<Item[]>([]);
@@ -127,6 +127,64 @@ export const useItems = () => {
     }
   };
 
+  const deleteManyItems = async (itemIds: string[]): Promise<{ 
+    success: boolean; 
+    error?: string; 
+    isConflict?: boolean;
+    bulkError?: { 
+      deletedCount: number; 
+      errors: string[]; 
+      message: string; 
+    } 
+  }> => {
+    try {
+      setError(null);
+      const response = await itemService.deleteMany(itemIds);
+      
+      // Check if response contains bulk delete information
+      const { isSuccess, hasConflicts, bulkResult } = extractBulkDeleteResponse(response);
+      
+      if (isSuccess) {
+        await fetchItems(); // Refresh the list
+        return { success: true };
+      } else if (hasConflicts && bulkResult) {
+        // Handle bulk delete conflicts (still refresh to show what was deleted)
+        await fetchItems();
+        return { 
+          success: false, 
+          error: bulkResult.message,
+          isConflict: true,
+          bulkError: {
+            deletedCount: bulkResult.deletedCount,
+            errors: bulkResult.errors,
+            message: bulkResult.message
+          }
+        };
+      } else {
+        // Unknown response format
+        await fetchItems();
+        return { 
+          success: false, 
+          error: 'תגובה לא צפויה מהשרת'
+        };
+      }
+    } catch (err) {
+      // Handle actual HTTP errors
+      const apiError = extractApiError(err);
+      
+      if (!apiError.isConflict) {
+        setError(apiError.message);
+      }
+      
+      console.error('Failed to delete items:', err);
+      return { 
+        success: false, 
+        error: apiError.message,
+        isConflict: apiError.isConflict
+      };
+    }
+  };
+
   useEffect(() => {
     fetchItems();
   }, []);
@@ -141,6 +199,7 @@ export const useItems = () => {
     createItem,
     updateItem,
     deleteItem,
+    deleteManyItems,
     markItemReceived,
     markItemReturned,
   };

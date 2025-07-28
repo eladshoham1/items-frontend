@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import ItemForm from './ItemForm';
 import { useItems } from '../../hooks';
@@ -8,10 +8,11 @@ import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
 const ItemsTab: React.FC = () => {
-  const { items, loading, error, refetch, deleteItem } = useItems();
+  const { items, loading, error, refetch, deleteManyItems } = useItems();
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [conflictError, setConflictError] = useState<{
     isOpen: boolean;
     message: string;
@@ -20,6 +21,20 @@ const ItemsTab: React.FC = () => {
     isOpen: false,
     message: '',
     itemName: '',
+  });
+
+  const [bulkDeleteError, setBulkDeleteError] = useState<{
+    isOpen: boolean;
+    message: string;
+    deletedCount: number;
+    totalCount: number;
+    errors: string[];
+  }>({
+    isOpen: false,
+    message: '',
+    deletedCount: 0,
+    totalCount: 0,
+    errors: [],
   });
 
   const { paginatedItems, totalPages } = paginate(
@@ -44,25 +59,52 @@ const ItemsTab: React.FC = () => {
     refetch(); // Refresh the items list after modal closes
   };
 
-  const handleDeleteItem = async (itemId: string) => {
-    const item = items.find(i => i.id === itemId);
-    const itemName = item?.name || 'פריט לא ידוע';
+  const handleSelectAllItems = () => {
+    if (selectedItemIds.length === paginatedItems.length) {
+      setSelectedItemIds([]);
+    } else {
+      setSelectedItemIds(paginatedItems.map(item => item.id));
+    }
+  };
+
+  const handleToggleItemSelection = (itemId: string) => {
+    setSelectedItemIds(prev => 
+      prev.includes(itemId) 
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedItemIds.length === 0) return;
+
+    const selectedItems = items.filter(item => selectedItemIds.includes(item.id));
+    const itemNames = selectedItems.map(item => item.name).join(', ');
     
-    if (window.confirm(`האם אתה בטוח שברצונך למחוק את הפריט "${itemName}"?`)) {
-      const result = await deleteItem(itemId);
-      if (result.success) {
-        // Item deleted successfully, list will be refreshed automatically
-      } else if (result.isConflict) {
-        // Show detailed conflict error modal
-        setConflictError({
-          isOpen: true,
-          message: result.error || 'שגיאת התנגשות',
-          itemName,
-        });
-      } else {
-        // Show generic error
-        alert(`שגיאה במחיקת הפריט: ${result.error || 'שגיאה לא ידועה'}`);
-      }
+    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את הפריטים הבאים?\n\n${itemNames}\n\n(${selectedItemIds.length} פריטים)`)) return;
+
+    const result = await deleteManyItems(selectedItemIds);
+    if (result.success) {
+      setSelectedItemIds([]);
+    } else if (result.isConflict && result.bulkError) {
+      // Show bulk delete error modal
+      setBulkDeleteError({
+        isOpen: true,
+        message: result.bulkError.message,
+        deletedCount: result.bulkError.deletedCount,
+        totalCount: selectedItemIds.length,
+        errors: result.bulkError.errors,
+      });
+      setSelectedItemIds([]);
+    } else if (result.isConflict) {
+      // Show regular conflict error modal
+      setConflictError({
+        isOpen: true,
+        message: result.error || 'שגיאת התנגשות במחיקת פריטים',
+        itemName: `${selectedItemIds.length} פריטים`,
+      });
+    } else {
+      alert(`שגיאה במחיקת הפריטים: ${result.error || 'שגיאה לא ידועה'}`);
     }
   };
 
@@ -91,9 +133,26 @@ const ItemsTab: React.FC = () => {
       <div className="card-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 className="mb-0">ציוד</h2>
-          <button className="btn btn-primary" onClick={handleAddClick}>
-            הוסף פריט חדש
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            {selectedItemIds.length > 0 && (
+              <>
+                <span className="badge bg-primary">
+                  {selectedItemIds.length} נבחרו
+                </span>
+                <button 
+                  className="btn btn-danger btn-sm" 
+                  onClick={handleBulkDelete}
+                  disabled={selectedItemIds.length === 0}
+                >
+                  <i className="fas fa-trash me-1"></i>
+                  מחק נבחרים ({selectedItemIds.length})
+                </button>
+              </>
+            )}
+            <button className="btn btn-primary" onClick={handleAddClick}>
+              הוסף פריט חדש
+            </button>
+          </div>
         </div>
       </div>
 
@@ -102,6 +161,15 @@ const ItemsTab: React.FC = () => {
           <table className="table">
             <thead>
               <tr>
+                <th style={{ width: '50px' }}>
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={selectedItemIds.length === paginatedItems.length && paginatedItems.length > 0}
+                    onChange={handleSelectAllItems}
+                    title="בחר הכל"
+                  />
+                </th>
                 <th>שם פריט</th>
                 <th>מקור</th>
                 <th>מספר צ'</th>
@@ -113,6 +181,14 @@ const ItemsTab: React.FC = () => {
             <tbody>
               {paginatedItems.map((item: Item) => (
                 <tr key={item.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selectedItemIds.includes(item.id)}
+                      onChange={() => handleToggleItemSelection(item.id)}
+                    />
+                  </td>
                   <td>{item.name}</td>
                   <td>{item.origin}</td>
                   <td>{item.idNumber || 'לא זמין'}</td>
@@ -125,12 +201,6 @@ const ItemsTab: React.FC = () => {
                         onClick={() => handleItemClick(item)}
                       >
                         עדכן
-                      </button>
-                      <button 
-                        className="btn btn-sm btn-danger" 
-                        onClick={() => handleDeleteItem(item.id)}
-                      >
-                        מחק
                       </button>
                     </div>
                   </td>
@@ -175,6 +245,23 @@ const ItemsTab: React.FC = () => {
         title={`לא ניתן למחוק את הפריט "${conflictError.itemName}"`}
         message={conflictError.message}
         resolutionMessage={getConflictResolutionMessage('item')}
+        type="item"
+      />
+
+      <BulkDeleteErrorModal
+        isOpen={bulkDeleteError.isOpen}
+        onClose={() => setBulkDeleteError({ 
+          isOpen: false, 
+          message: '', 
+          deletedCount: 0, 
+          totalCount: 0, 
+          errors: [] 
+        })}
+        title="תוצאות מחיקה מרובה - פריטים"
+        message={bulkDeleteError.message}
+        deletedCount={bulkDeleteError.deletedCount}
+        totalCount={bulkDeleteError.totalCount}
+        errors={bulkDeleteError.errors}
         type="item"
       />
     </div>

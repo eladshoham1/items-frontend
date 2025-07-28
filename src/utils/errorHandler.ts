@@ -7,6 +7,13 @@ export interface ApiError {
   isValidation: boolean;
 }
 
+export interface BulkDeleteError {
+  deleted: boolean;
+  deletedCount: number;
+  message: string;
+  errors: string[];
+}
+
 /**
  * Extracts meaningful error information from API responses
  */
@@ -128,4 +135,72 @@ export const getConflictResolutionMessage = (type: 'user' | 'item'): string => {
 • מחק את הקבלה המכילה את הפריט
     `.trim();
   }
+};
+
+/**
+ * Extracts bulk delete error information from API responses
+ */
+export const extractBulkDeleteError = (error: unknown): { isBulkError: boolean; bulkError?: BulkDeleteError; apiError?: ApiError } => {
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as AxiosError;
+    const responseData = axiosError.response?.data as any;
+    
+    // Check if it's a bulk delete error response (now returns 200 OK with error details)
+    if (responseData && 
+        typeof responseData.deleted === 'boolean' && 
+        typeof responseData.deletedCount === 'number' && 
+        responseData.message && 
+        Array.isArray(responseData.errors)) {
+      
+      return {
+        isBulkError: true,
+        bulkError: {
+          deleted: responseData.deleted,
+          deletedCount: responseData.deletedCount,
+          message: responseData.message,
+          errors: responseData.errors
+        }
+      };
+    }
+  }
+  
+  // Fall back to regular API error extraction
+  return {
+    isBulkError: false,
+    apiError: extractApiError(error)
+  };
+};
+
+/**
+ * Extracts bulk delete information from successful API responses (200 OK)
+ */
+export const extractBulkDeleteResponse = (responseData: any): { 
+  isSuccess: boolean; 
+  hasConflicts: boolean; 
+  bulkResult?: BulkDeleteError 
+} => {
+  // Check if it's a bulk delete response structure
+  if (responseData && 
+      typeof responseData.deleted === 'boolean' && 
+      typeof responseData.deletedCount === 'number' && 
+      responseData.message && 
+      Array.isArray(responseData.errors)) {
+    
+    return {
+      isSuccess: responseData.deleted && responseData.errors.length === 0,
+      hasConflicts: !responseData.deleted || responseData.errors.length > 0,
+      bulkResult: {
+        deleted: responseData.deleted,
+        deletedCount: responseData.deletedCount,
+        message: responseData.message,
+        errors: responseData.errors
+      }
+    };
+  }
+  
+  // Not a bulk delete response, assume success
+  return {
+    isSuccess: true,
+    hasConflicts: false
+  };
 };

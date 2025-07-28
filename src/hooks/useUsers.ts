@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { userService } from '../services';
 import { User, CreateUserRequest } from '../types';
-import { extractApiError } from '../utils';
+import { extractApiError, extractBulkDeleteResponse } from '../utils';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -75,21 +75,56 @@ export const useUsers = () => {
     }
   };
 
-  const deleteUser = async (userId: string): Promise<{ success: boolean; error?: string; isConflict?: boolean }> => {
+  const deleteManyUsers = async (userIds: string[]): Promise<{ 
+    success: boolean; 
+    error?: string; 
+    isConflict?: boolean;
+    bulkError?: { 
+      deletedCount: number; 
+      errors: string[]; 
+      message: string; 
+    } 
+  }> => {
     try {
       setError(null);
-      await userService.delete(userId);
-      await fetchUsers(); // Refresh the list
-      return { success: true };
+      const response = await userService.deleteMany(userIds);
+      
+      // Check if response contains bulk delete information
+      const { isSuccess, hasConflicts, bulkResult } = extractBulkDeleteResponse(response);
+      
+      if (isSuccess) {
+        await fetchUsers(); // Refresh the list
+        return { success: true };
+      } else if (hasConflicts && bulkResult) {
+        // Handle bulk delete conflicts (still refresh to show what was deleted)
+        await fetchUsers();
+        return { 
+          success: false, 
+          error: bulkResult.message,
+          isConflict: true,
+          bulkError: {
+            deletedCount: bulkResult.deletedCount,
+            errors: bulkResult.errors,
+            message: bulkResult.message
+          }
+        };
+      } else {
+        // Unknown response format
+        await fetchUsers();
+        return { 
+          success: false, 
+          error: 'תגובה לא צפויה מהשרת'
+        };
+      }
     } catch (err) {
+      // Handle actual HTTP errors
       const apiError = extractApiError(err);
       
-      // Don't set general error state for conflicts - let the component handle it
       if (!apiError.isConflict) {
         setError(apiError.message);
       }
       
-      console.error('Failed to delete user:', err);
+      console.error('Failed to delete users:', err);
       return { 
         success: false, 
         error: apiError.message,
@@ -109,6 +144,6 @@ export const useUsers = () => {
     refetch: fetchUsers,
     createUser,
     updateUser,
-    deleteUser,
+    deleteManyUsers,
   };
 };

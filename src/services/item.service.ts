@@ -43,4 +43,9 @@ export const itemService = {
     console.log('delete item id:', itemId);
     return apiService.delete<void>(`/items/${itemId}`);
   },
+
+  // Delete multiple items
+  async deleteMany(ids: string[]): Promise<any> {
+    return apiService.delete<any>('/items', { data: { ids } });
+  },
 };
