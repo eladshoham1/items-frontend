@@ -9,5 +9,7 @@ export interface Item {
   isAvailable: boolean;
 }
 
-export type CreateItemRequest = Omit<Item, 'id'>;
+export type CreateItemRequest = Omit<Item, 'id'> & {
+  quantity?: number;
+};
 export type UpdateItemRequest = Partial<CreateItemRequest> & { id: ID };

@@ -25,6 +25,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     origin: 'מרת"ק',
     isAvailable: true,
   });
+  const [quantity, setQuantity] = useState<number>(1);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [conflictError, setConflictError] = useState<{
@@ -46,6 +47,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
         origin: item.origin,
         isAvailable: item.isAvailable,
       });
+      // Reset quantity to 1 when editing existing item
+      setQuantity(1);
+    } else {
+      // Reset quantity when creating new item
+      setQuantity(1);
     }
   }, [item]);
 
@@ -88,27 +94,45 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     setIsSubmitting(true);
 
     try {
-      let result: { success: boolean; error?: string; isConflict?: boolean };
-      
       if (item?.id) {
-        // For updates, exclude isAvailable from the request body
-        const { isAvailable, ...updateData } = formData;
-        result = await updateItem(item.id, updateData);
+        // For updates, exclude isAvailable and quantity from the request body
+        const { isAvailable, quantity: _, ...updateData } = formData;
+        const result = await updateItem(item.id, updateData);
+        
+        if (result.success) {
+          onSuccess();
+        } else if (result.isConflict) {
+          setConflictError({
+            isOpen: true,
+            message: result.error || 'פריט עם מספר צ\' זה כבר קיים במערכת',
+            itemName: formData.name
+          });
+        } else {
+          alert(result.error || 'שגיאה בעדכון הפריט');
+        }
       } else {
-        result = await createItem(formData);
-      }
-
-      if (result.success) {
-        onSuccess();
-      } else if (result.isConflict) {
-        // Show detailed conflict error modal
-        setConflictError({
-          isOpen: true,
-          message: result.error || 'פריט עם מספר צ\' זה כבר קיים במערכת',
-          itemName: formData.name
-        });
-      } else {
-        alert(result.error || 'שגיאה בשמירת הפריט');
+        // For creating new items, include quantity for מרת"ק items
+        const requestData: CreateItemRequest = {
+          ...formData,
+          ...(formData.origin === 'מרת"ק' && quantity > 1 ? { quantity } : {})
+        };
+        
+        const result = await createItem(requestData);
+        
+        if (result.success) {
+          if (formData.origin === 'מרת"ק' && quantity > 1) {
+            alert(`נוצרו בהצלחה ${quantity} פריטים`);
+          }
+          onSuccess();
+        } else if (result.isConflict) {
+          setConflictError({
+            isOpen: true,
+            message: result.error || 'פריט עם מספר צ\' זה כבר קיים במערכת',
+            itemName: formData.name
+          });
+        } else {
+          alert(result.error || 'שגיאה בשמירת הפריט');
+        }
       }
     } catch (error) {
       console.error('Error submitting item:', error);
@@ -147,6 +171,34 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
             ))}
           </select>
         </div>
+
+        {/* Quantity selector - only for new מרת"ק items */}
+        {!item && formData.origin === 'מרת"ק' && (
+          <div className="form-group">
+            <label className="form-label">כמות ליצירה</label>
+            <div className="d-flex align-items-center gap-3">
+              <input
+                type="number"
+                className="form-control"
+                value={quantity}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 1;
+                  setQuantity(Math.max(1, Math.min(100, value)));
+                }}
+                min="1"
+                max="100"
+                style={{ 
+                  direction: 'ltr',
+                  width: '100px'
+                }}
+                placeholder="1"
+              />
+              <span className="text-muted" style={{ fontSize: '13px' }}>
+                פריטים (1-100)
+              </span>
+            </div>
+          </div>
+        )}
         
         {formData.origin === 'כ"ס' && (
           <div className="form-group">
@@ -179,7 +231,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
             ביטול
           </button>
           <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'שומר...' : (item ? 'עדכן' : 'צור')}
+            {isSubmitting ? 'שומר...' : (
+              item ? 'עדכן' : (
+                formData.origin === 'מרת"ק' && quantity > 1 ? `צור ${quantity} פריטים` : 'צור פריט'
+              )
+            )}
           </button>
         </div>
       </form>

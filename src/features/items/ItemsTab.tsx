@@ -13,6 +13,7 @@ const ItemsTab: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [conflictError, setConflictError] = useState<{
     isOpen: boolean;
     message: string;
@@ -37,8 +38,16 @@ const ItemsTab: React.FC = () => {
     errors: [],
   });
 
+  // Filter items based on search term
+  const filteredItems = items.filter(item => 
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
   const { paginatedItems, totalPages } = paginate(
-    items,
+    filteredItems,
     currentPage,
     UI_CONFIG.TABLE_PAGE_SIZE
   );
@@ -73,6 +82,13 @@ const ItemsTab: React.FC = () => {
         ? prev.filter(id => id !== itemId)
         : [...prev, itemId]
     );
+  };
+
+  // Reset page when search term changes
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+    setSelectedItemIds([]);
   };
 
   const handleBulkDelete = async () => {
@@ -157,6 +173,40 @@ const ItemsTab: React.FC = () => {
       </div>
 
       <div className="card-body">
+        {/* Search Input */}
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="fas fa-search"></i>
+              </span>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="חפש פריטים לפי שם, מקור, מספר צ' או הערה..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                style={{ direction: 'rtl' }}
+              />
+              {searchTerm && (
+                <button
+                  className="btn btn-outline-secondary"
+                  type="button"
+                  onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                  title="נקה חיפוש"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              )}
+            </div>
+            {searchTerm && (
+              <small className="text-muted mt-1 d-block">
+                נמצאו {filteredItems.length} פריטים מתוך {items.length}
+              </small>
+            )}
+          </div>
+        </div>
+
         <div className="table-responsive">
           <table className="table">
             <thead>
