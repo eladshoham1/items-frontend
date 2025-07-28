@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useUsers, useAvailableItems, useReceipts } from '../../hooks';
-import { ReceiptItem } from '../../types';
+import { ReceiptItem, Receipt } from '../../types';
 import { SignaturePad } from './SignaturePad';
 import './ReceiptForm.css';
 
 interface ReceiptFormProps {
+  receipt?: Receipt | null;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -53,7 +54,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
   );
 };
 
-const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
+const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel }) => {
   const { users } = useUsers();
   const { 
     availableItems: serverAvailableItems, 
@@ -61,7 +62,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
     error: itemsError, 
     refetch: refetchAvailableItems 
   } = useAvailableItems();
-  const { createReceipt } = useReceipts();
+  const { createReceipt, updateReceipt } = useReceipts();
   
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([]);
@@ -72,7 +73,22 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
   const [error, setError] = useState<string>('');
   const [itemSearchQuery, setItemSearchQuery] = useState<string>('');
 
-  // Use server-side available items and filter out locally selected items
+  // Initialize form with existing receipt data when editing
+  useEffect(() => {
+    if (receipt) {
+      setSelectedUser(receipt.user.id);
+      // Convert BackendReceiptItem to ReceiptItem format
+      const convertedItems: ReceiptItem[] = receipt.receiptItems?.map(item => ({
+        id: item.itemId, // Use itemId as the main id
+        origin: item.item?.origin || 'מרת"ק',
+        name: item.item?.name || 'פריט לא ידוע',
+        quantity: 1, // Default quantity since BackendReceiptItem doesn't have quantity
+        note: item.item?.note
+      })) || [];
+      setReceiptItems(convertedItems);
+      setSignature(''); // Reset signature for re-signing
+    }
+  }, [receipt]);
   const availableItems = useMemo(() => {
     return serverAvailableItems.filter(item => 
       !receiptItems.some(receiptItem => receiptItem.id === item.id)
@@ -210,17 +226,28 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
         date: new Date().toISOString()
       };
 
-      const success = await createReceipt(receiptData);
-      if (success) {
-        // Refresh available items after successful receipt creation
-        refetchAvailableItems();
-        onSuccess();
+      if (receipt) {
+        // For editing, use the update method
+        const success = await updateReceipt(receipt.id, receiptData);
+        if (success) {
+          refetchAvailableItems();
+          onSuccess();
+        } else {
+          setError('שגיאה בעדכון הקבלה');
+        }
       } else {
-        setError('שגיאה ביצירת הקבלה');
+        // Create new receipt
+        const success = await createReceipt(receiptData);
+        if (success) {
+          refetchAvailableItems();
+          onSuccess();
+        } else {
+          setError('שגיאה ביצירת הקבלה');
+        }
       }
     } catch (error) {
-      console.error('Error creating receipt:', error);
-      setError('שגיאה ביצירת הקבלה');
+      console.error('Error with receipt:', error);
+      setError(receipt ? 'שגיאה בעדכון הקבלה' : 'שגיאה ביצירת הקבלה');
     } finally {
       setIsSubmitting(false);
     }
@@ -461,6 +488,11 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
                   <i className="fas fa-signature me-2"></i>
                   חתימה
                 </h5>
+                {receipt && (
+                  <small className="text-muted">
+                    * נדרשת חתימה חדשה לאישור השינויים
+                  </small>
+                )}
               </div>
               <div className="section-content">
                 <div className="signature-selection-row">
@@ -499,12 +531,12 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ onSuccess, onCancel }) => {
                   <div className="spinner-border spinner-border-sm me-2" role="status">
                     <span className="visually-hidden">Loading...</span>
                   </div>
-                  יוצר קבלה...
+                  {receipt ? 'מעדכן קבלה...' : 'יוצר קבלה...'}
                 </>
               ) : (
                 <>
-                  <i className="fas fa-save me-2"></i>
-                  צור קבלה
+                  <i className={`fas ${receipt ? 'fa-edit' : 'fa-save'} me-2`}></i>
+                  {receipt ? 'עדכן קבלה' : 'צור קבלה'}
                 </>
               )}
             </button>

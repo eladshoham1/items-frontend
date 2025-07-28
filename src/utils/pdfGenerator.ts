@@ -16,13 +16,67 @@ const formatDate = (dateString: string): string => {
 
 // Create HTML template for the receipt
 const createReceiptHTML = (receipt: Receipt): string => {
-  const itemsRows = receipt.receiptItems?.map((receiptItem, index) => `
+  // Process items to merge quantities for מרת"ק items
+  const processedItems: Array<{
+    name: string;
+    origin: string;
+    idNumber: string;
+    note: string;
+    quantity: number;
+  }> = [];
+
+  receipt.receiptItems?.forEach((receiptItem) => {
+    const itemName = receiptItem.item.name || '';
+    const itemOrigin = receiptItem.item.origin || '';
+    const itemIdNumber = receiptItem.item.idNumber || '';
+    const itemNote = receiptItem.item.note || '';
+
+    // Check if this is a מרת"ק item and if we already have an item with the same name
+    if (itemOrigin === 'מרת"ק') {
+      const existingItem = processedItems.find(
+        item => item.name === itemName && item.origin === itemOrigin
+      );
+      
+      if (existingItem) {
+        // Merge with existing item by increasing quantity
+        existingItem.quantity += 1;
+        // Combine notes if different
+        if (itemNote && !existingItem.note.includes(itemNote)) {
+          existingItem.note = existingItem.note ? `${existingItem.note}, ${itemNote}` : itemNote;
+        }
+        // Keep the first ID number, or combine if different
+        if (itemIdNumber && !existingItem.idNumber.includes(itemIdNumber)) {
+          existingItem.idNumber = existingItem.idNumber ? `${existingItem.idNumber}, ${itemIdNumber}` : itemIdNumber;
+        }
+      } else {
+        // Add new מרת"ק item
+        processedItems.push({
+          name: itemName,
+          origin: itemOrigin,
+          idNumber: itemIdNumber,
+          note: itemNote,
+          quantity: 1
+        });
+      }
+    } else {
+      // For non-מרת"ק items, always add as separate items
+      processedItems.push({
+        name: itemName,
+        origin: itemOrigin,
+        idNumber: itemIdNumber,
+        note: itemNote,
+        quantity: 1
+      });
+    }
+  });
+
+  const itemsRows = processedItems.map((item, index) => `
     <tr>
       <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
-      <td style="text-align: right; padding: 8px; border: 1px solid #ddd;">${receiptItem.item.name || ''}</td>
-      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${receiptItem.item.origin || ''}</td>
-      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${receiptItem.item.idNumber || ''}</td>
-      <td style="text-align: right; padding: 8px; border: 1px solid #ddd;">${receiptItem.item.note || ''}</td>
+      <td style="text-align: right; padding: 8px; border: 1px solid #ddd;">${item.name}</td>
+      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.origin}</td>
+      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.idNumber}</td>
+      <td style="text-align: center; padding: 8px; border: 1px solid #ddd; font-weight: 600;">${item.quantity}</td>
     </tr>
   `).join('') || '';
 
@@ -288,10 +342,10 @@ const createReceiptHTML = (receipt: Receipt): string => {
             <thead>
               <tr>
                 <th style="width: 8%;">#</th>
-                <th style="width: 30%;">שם הפריט</th>
-                <th style="width: 15%;">מקור</th>
-                <th style="width: 20%;">מספר צ'</th>
-                <th style="width: 27%;">הערות</th>
+                <th style="width: 40%;">שם הפריט</th>
+                <th style="width: 20%;">מקור</th>
+                <th style="width: 22%;">מספר צ'</th>
+                <th style="width: 10%;">כמות</th>
               </tr>
             </thead>
             <tbody>

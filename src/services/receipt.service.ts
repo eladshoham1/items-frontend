@@ -16,6 +16,20 @@ export const receiptService = {
     });
   },
 
+  // Update an existing receipt
+  async update(id: string, receiptData: CreateReceiptRequest): Promise<Receipt> {
+    return apiService.patch<Receipt>(`/receipts/${id}`, receiptData, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  },
+
+  // Delete a receipt
+  async delete(id: string): Promise<void> {
+    return apiService.delete<void>(`/receipts/${id}`);
+  },
+
   // Return items from receipt
   async returnItems(returnData: ReturnReceiptRequest): Promise<void> {
     return apiService.patch<void>('/receipts/return', returnData, {

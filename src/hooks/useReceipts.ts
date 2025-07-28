@@ -50,6 +50,42 @@ export const useReceipts = () => {
     }
   }, []);
 
+  const updateReceipt = useCallback(async (
+    id: string,
+    receiptData: CreateReceiptRequest,
+    file?: File
+  ): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await receiptService.update(id, receiptData);
+      // Refetch all receipts to get updated data
+      await fetchReceipts();
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update receipt');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchReceipts]);
+
+  const deleteReceipt = useCallback(async (id: string): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await receiptService.delete(id);
+      // Remove the receipt from local state
+      setReceipts(prev => prev.filter(receipt => receipt.id !== id));
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete receipt');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const returnReceipt = useCallback(async (
     returnData: ReturnReceiptRequest,
     file?: File
@@ -97,6 +133,8 @@ export const useReceipts = () => {
     error,
     fetchReceipts,
     createReceipt,
+    updateReceipt,
+    deleteReceipt,
     returnReceipt,
     returnSelectedItems,
   };
