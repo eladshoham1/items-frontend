@@ -23,29 +23,55 @@ export const useUsers = () => {
     }
   };
 
-  const createUser = async (userData: CreateUserRequest): Promise<boolean> => {
+  const createUser = async (userData: CreateUserRequest): Promise<{ success: boolean; error?: { status: number; message: string } }> => {
     try {
       setError(null);
       await userService.create(userData);
       await fetchUsers(); // Refresh the list
-      return true;
+      return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create user');
+      const apiError = extractApiError(err);
+      setError(apiError.message);
       console.error('Failed to create user:', err);
-      return false;
+      
+      // Return detailed error information for conflict handling
+      if (apiError.status === 409) {
+        return { 
+          success: false, 
+          error: { 
+            status: 409, 
+            message: apiError.message 
+          } 
+        };
+      }
+      
+      return { success: false };
     }
   };
 
-  const updateUser = async (userId: string, userData: Partial<CreateUserRequest>): Promise<boolean> => {
+  const updateUser = async (userId: string, userData: Partial<CreateUserRequest>): Promise<{ success: boolean; error?: { status: number; message: string } }> => {
     try {
       setError(null);
       await userService.update(userId, userData);
       await fetchUsers(); // Refresh the list
-      return true;
+      return { success: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user');
+      const apiError = extractApiError(err);
+      setError(apiError.message);
       console.error('Failed to update user:', err);
-      return false;
+      
+      // Return detailed error information for conflict handling
+      if (apiError.status === 409) {
+        return { 
+          success: false, 
+          error: { 
+            status: 409, 
+            message: apiError.message 
+          } 
+        };
+      }
+      
+      return { success: false };
     }
   };
 

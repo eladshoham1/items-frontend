@@ -94,6 +94,5 @@ export const useDashboardStats = () => {
     stats,
     loading,
     error,
-    refetch: fetchStats,
   };
 };

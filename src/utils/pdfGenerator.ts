@@ -102,13 +102,9 @@ const createReceiptHTML = (receipt: Receipt): string => {
         
         .info-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr 1fr 1fr;
           gap: 8px;
           text-align: right;
-        }
-        
-        .info-grid .info-item:last-child {
-          grid-column: 1 / -1;
         }
         
         .info-item {
@@ -252,8 +248,8 @@ const createReceiptHTML = (receipt: Receipt): string => {
     <body>
       <div class="receipt-container">
         <div class="header">
-          <div class="title">קבלה על ציוד</div>
-          <div class="subtitle">מסמך רשמי למסירת ציוד</div>
+          <div class="title">טופס החתמת ציוד</div>
+          <div class="subtitle">מסמך זה מהווה מסמך רשמי על החתמת ציוד טופס 1008</div>
         </div>
         
         <div class="info-section">
@@ -266,6 +262,10 @@ const createReceiptHTML = (receipt: Receipt): string => {
             <div class="info-item hebrew-text">
               <span class="info-label">דרגה:</span>
               <span class="info-value">${receipt.user.rank}</span>
+            </div>
+            <div class="info-item hebrew-text">
+              <span class="info-label">מספר אישי:</span>
+              <span class="info-value">${receipt.user.personalNumber}</span>
             </div>
             <div class="info-item hebrew-text">
               <span class="info-label">טלפון:</span>

@@ -12,7 +12,7 @@ export interface ReportItem {
 
 export interface DailyReportResponse {
   items: ReportItem[];
-  total: number;
+  quantity: number;
   timestamp: string;
 }
 
@@ -25,24 +25,23 @@ export interface UpdateReportRequest {
   items: ReportStatusUpdate[];
 }
 
+export interface SignUser {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  personalNumber: number;
+  quantity: number;
+}
+
+export interface LocationData {
+  signUsers: SignUser[];
+}
+
+export interface ItemData {
+  quantity: number;
+  locations: Record<string, LocationData>;
+}
+
 export interface DashboardStatistics {
-  totalUsers: number;
-  totalItems: number;
-  totalReceipts: number;
-  activeReports: number;
-  // Matrix data structure
-  matrix: Record<string, Record<string, number>>; // location -> item -> count
-  locations: string[];
-  itemNames: string[];
-  totals: {
-    byLocation: Record<string, number>;
-    byItem: Record<string, number>;
-    grand: number;
-  };
-  metadata: {
-    locationsCount: number;
-    itemsCount: number;
-    totalAssignments: number;
-    generatedAt: string;
-  };
+  [itemName: string]: ItemData;
 }

@@ -34,10 +34,8 @@ const DailyReport: React.FC = () => {
         </div>
         <div className="card-body">
           <div className="alert alert-info">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">טוען...</span>
-            </div>
-            <span className="ms-2">טוען נתונים...</span>
+            <div className="spinner"></div>
+            <span>טוען נתונים...</span>
           </div>
         </div>
       </div>
