@@ -17,9 +17,74 @@ const ReceiptsTab: React.FC = () => {
   const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState<string>('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedReceipts = () => {
+    if (!receipts || !Array.isArray(receipts) || !sortConfig) {
+      return receipts;
+    }
+
+    return [...receipts].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortConfig.key) {
+        case 'date':
+          aValue = new Date(a.createdAt).getTime();
+          bValue = new Date(b.createdAt).getTime();
+          break;
+        case 'name':
+          aValue = a.user.name;
+          bValue = b.user.name;
+          break;
+        case 'phone':
+          aValue = a.user.phoneNumber;
+          bValue = b.user.phoneNumber;
+          break;
+        case 'items':
+          aValue = a.receiptItems?.length || 0;
+          bValue = b.receiptItems?.length || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aValue.localeCompare(bValue, 'he') 
+          : bValue.localeCompare(aValue, 'he');
+      }
+
+      if (sortConfig.direction === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
+  };
 
   const { paginatedItems: paginatedReceipts, totalPages } = paginate(
-    receipts,
+    getSortedReceipts(),
     currentPage,
     UI_CONFIG.TABLE_PAGE_SIZE
   );
@@ -140,10 +205,58 @@ const ReceiptsTab: React.FC = () => {
           <table className="table">
             <thead>
               <tr>
-                <th>תאריך מלא</th>
-                <th>שם המקבל</th>
-                <th>טלפון</th>
-                <th>פריטים</th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('date')}
+                  title="לחץ למיון לפי תאריך"
+                  data-sorted={sortConfig?.key === 'date' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>תאריך מלא</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('date')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('name')}
+                  title="לחץ למיון לפי שם המקבל"
+                  data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>שם המקבל</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('name')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('phone')}
+                  title="לחץ למיון לפי טלפון"
+                  data-sorted={sortConfig?.key === 'phone' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>טלפון</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('phone')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('items')}
+                  title="לחץ למיון לפי פריטים"
+                  data-sorted={sortConfig?.key === 'items' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>פריטים</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('items')}
+                    </div>
+                  </div>
+                </th>
                 <th>פעולות</th>
               </tr>
             </thead>

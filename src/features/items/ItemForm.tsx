@@ -111,9 +111,16 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           alert(result.error || 'שגיאה בעדכון הפריט');
         }
       } else {
-        // For creating new items, include quantity for מרת"ק items
+        // For creating new items, include quantity for מרת"ק items and exclude idNumber for מרת"ק items
+        const baseData = { ...formData };
+        
+        // Remove idNumber for מרת"ק items
+        if (formData.origin === 'מרת"ק') {
+          delete baseData.idNumber;
+        }
+        
         const requestData: CreateItemRequest = {
-          ...formData,
+          ...baseData,
           ...(formData.origin === 'מרת"ק' && quantity > 1 ? { quantity } : {})
         };
         

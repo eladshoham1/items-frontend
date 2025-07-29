@@ -14,6 +14,11 @@ const Dashboard: React.FC = () => {
     users: [],
     position: { x: 0, y: 0 }
   });
+  
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
 
   // Extract unique locations and items from the data
   const { items, locations } = useMemo(() => {
@@ -56,6 +61,74 @@ const Dashboard: React.FC = () => {
 
   const handleCloseTooltip = () => {
     setTooltipData(prev => ({ ...prev, show: false }));
+  };
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedItems = () => {
+    if (!items || !Array.isArray(items) || !sortConfig) {
+      return items;
+    }
+
+    return [...items].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = a;
+          bValue = b;
+          break;
+        case 'signed':
+          aValue = getItemSignedTotal(a);
+          bValue = getItemSignedTotal(b);
+          break;
+        case 'available':
+          aValue = (stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0) - getItemSignedTotal(a);
+          bValue = (stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0) - getItemSignedTotal(b);
+          break;
+        case 'total':
+          aValue = stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0;
+          bValue = stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0;
+          break;
+        default:
+          // For location columns
+          if (sortConfig.key.startsWith('location_')) {
+            const location = sortConfig.key.replace('location_', '');
+            aValue = getCellData(a, location).signedQuantity;
+            bValue = getCellData(b, location).signedQuantity;
+          } else {
+            return 0;
+          }
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aValue.localeCompare(bValue, 'he') 
+          : bValue.localeCompare(aValue, 'he');
+      }
+
+      if (sortConfig.direction === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
   };
 
   const getCellData = (itemName: string, location: string) => {
@@ -182,10 +255,13 @@ const Dashboard: React.FC = () => {
                       fontWeight: '600',
                       borderBottom: '3px solid #3498db',
                       textAlign: 'center',
-                      boxShadow: '2px 0 4px rgba(0,0,0,0.1)'
+                      boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
+                      cursor: 'pointer'
                     }}
+                    onClick={() => handleSort('name')}
                   >
                     פריט
+                    {getSortIcon('name')}
                   </th>
                   {locations.map(location => (
                     <th 
@@ -198,10 +274,13 @@ const Dashboard: React.FC = () => {
                         padding: '16px 8px',
                         fontSize: '13px',
                         fontWeight: '600',
-                        borderBottom: '3px solid #3498db'
+                        borderBottom: '3px solid #3498db',
+                        cursor: 'pointer'
                       }}
+                      onClick={() => handleSort(`location_${location}`)}
                     >
                       {location}
+                      {getSortIcon(`location_${location}`)}
                     </th>
                   ))}
                   <th 
@@ -213,10 +292,13 @@ const Dashboard: React.FC = () => {
                       padding: '16px 8px',
                       fontSize: '13px',
                       fontWeight: '600',
-                      borderBottom: '3px solid #2ecc71'
+                      borderBottom: '3px solid #2ecc71',
+                      cursor: 'pointer'
                     }}
+                    onClick={() => handleSort('signed')}
                   >
                     חתומים
+                    {getSortIcon('signed')}
                   </th>
                   <th 
                     className="text-center" 
@@ -227,10 +309,13 @@ const Dashboard: React.FC = () => {
                       padding: '16px 8px',
                       fontSize: '13px',
                       fontWeight: '600',
-                      borderBottom: '3px solid #af7ac5'
+                      borderBottom: '3px solid #af7ac5',
+                      cursor: 'pointer'
                     }}
+                    onClick={() => handleSort('available')}
                   >
                     זמינים
+                    {getSortIcon('available')}
                   </th>
                   <th 
                     className="text-center" 
@@ -241,15 +326,18 @@ const Dashboard: React.FC = () => {
                       padding: '16px 8px',
                       fontSize: '13px',
                       fontWeight: '600',
-                      borderBottom: '3px solid #f39c12'
+                      borderBottom: '3px solid #f39c12',
+                      cursor: 'pointer'
                     }}
+                    onClick={() => handleSort('total')}
                   >
                     סה"כ
+                    {getSortIcon('total')}
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {items && Array.isArray(items) ? items.map((item, itemIndex) => {
+                {getSortedItems() && Array.isArray(getSortedItems()) ? getSortedItems().map((item, itemIndex) => {
                   if (!item || typeof item !== 'string') return null;
                   
                   return (

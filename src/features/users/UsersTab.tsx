@@ -14,6 +14,10 @@ const UsersTab: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
   const [conflictError, setConflictError] = useState<{
     isOpen: boolean;
     message: string;
@@ -38,17 +42,82 @@ const UsersTab: React.FC = () => {
     errors: [],
   });
 
-  // Filter users based on search term
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.personalNumber.toString().includes(searchTerm) ||
-    user.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
+  };
+
+  // Filter and sort users based on search term and sort config
+  const filteredAndSortedUsers = (() => {
+    let filtered = users.filter(user => 
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.personalNumber.toString().includes(searchTerm) ||
+      user.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (sortConfig) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'name':
+            aValue = a.name;
+            bValue = b.name;
+            break;
+          case 'personalNumber':
+            aValue = a.personalNumber;
+            bValue = b.personalNumber;
+            break;
+          case 'phoneNumber':
+            aValue = a.phoneNumber;
+            bValue = b.phoneNumber;
+            break;
+          case 'rank':
+            aValue = a.rank;
+            bValue = b.rank;
+            break;
+          case 'location':
+            aValue = a.location;
+            bValue = b.location;
+            break;
+          default:
+            return 0;
+        }
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue, 'he') 
+            : bValue.localeCompare(aValue, 'he');
+        }
+
+        if (sortConfig.direction === 'asc') {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+      });
+    }
+
+    return filtered;
+  })();
 
   const { paginatedItems: paginatedUsers, totalPages } = paginate(
-    filteredUsers,
+    filteredAndSortedUsers,
     currentPage,
     UI_CONFIG.TABLE_PAGE_SIZE
   );
@@ -206,7 +275,7 @@ const UsersTab: React.FC = () => {
             </div>
             {searchTerm && (
               <small className="text-muted mt-1 d-block">
-                נמצאו {filteredUsers.length} משתמשים מתוך {users.length}
+                נמצאו {filteredAndSortedUsers.length} משתמשים מתוך {users.length}
               </small>
             )}
           </div>
@@ -225,11 +294,71 @@ const UsersTab: React.FC = () => {
                     title="בחר הכל"
                   />
                 </th>
-                <th>שם</th>
-                <th>מספר אישי</th>
-                <th>טלפון</th>
-                <th>דרגה</th>
-                <th>מיקום</th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('name')}
+                  title="לחץ למיון לפי שם"
+                  data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>שם</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('name')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('personalNumber')}
+                  title="לחץ למיון לפי מספר אישי"
+                  data-sorted={sortConfig?.key === 'personalNumber' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>מספר אישי</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('personalNumber')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('phoneNumber')}
+                  title="לחץ למיון לפי טלפון"
+                  data-sorted={sortConfig?.key === 'phoneNumber' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>טלפון</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('phoneNumber')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('rank')}
+                  title="לחץ למיון לפי דרגה"
+                  data-sorted={sortConfig?.key === 'rank' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>דרגה</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('rank')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('location')}
+                  title="לחץ למיון לפי מיקום"
+                  data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>מיקום</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('location')}
+                    </div>
+                  </div>
+                </th>
                 <th>פעולות</th>
               </tr>
             </thead>

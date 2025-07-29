@@ -14,6 +14,10 @@ const ItemsTab: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
   const [conflictError, setConflictError] = useState<{
     isOpen: boolean;
     message: string;
@@ -38,16 +42,77 @@ const ItemsTab: React.FC = () => {
     errors: [],
   });
 
-  // Filter items based on search term
-  const filteredItems = items.filter(item => 
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
+  };
+
+  // Filter and sort items based on search term and sort config
+  const filteredAndSortedItems = (() => {
+    let filtered = items.filter(item => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    if (sortConfig) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'name':
+            aValue = a.name;
+            bValue = b.name;
+            break;
+          case 'origin':
+            aValue = a.origin;
+            bValue = b.origin;
+            break;
+          case 'idNumber':
+            aValue = a.idNumber || '';
+            bValue = b.idNumber || '';
+            break;
+          case 'note':
+            aValue = a.note || '';
+            bValue = b.note || '';
+            break;
+          default:
+            return 0;
+        }
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue, 'he') 
+            : bValue.localeCompare(aValue, 'he');
+        }
+
+        if (sortConfig.direction === 'asc') {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+      });
+    }
+
+    return filtered;
+  })();
 
   const { paginatedItems, totalPages } = paginate(
-    filteredItems,
+    filteredAndSortedItems,
     currentPage,
     UI_CONFIG.TABLE_PAGE_SIZE
   );
@@ -201,7 +266,7 @@ const ItemsTab: React.FC = () => {
             </div>
             {searchTerm && (
               <small className="text-muted mt-1 d-block">
-                נמצאו {filteredItems.length} פריטים מתוך {items.length}
+                נמצאו {filteredAndSortedItems.length} פריטים מתוך {items.length}
               </small>
             )}
           </div>
@@ -220,10 +285,58 @@ const ItemsTab: React.FC = () => {
                     title="בחר הכל"
                   />
                 </th>
-                <th>שם פריט</th>
-                <th>מקור</th>
-                <th>מספר צ'</th>
-                <th>הערה</th>
+                <th 
+                  className="sortable-header"
+                  onClick={() => handleSort('name')}
+                  title="לחץ למיון לפי שם פריט"
+                  data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>שם פריט</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('name')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header"
+                  onClick={() => handleSort('origin')}
+                  title="לחץ למיון לפי מקור"
+                  data-sorted={sortConfig?.key === 'origin' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>מקור</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('origin')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header"
+                  onClick={() => handleSort('idNumber')}
+                  title="לחץ למיון לפי מספר צ'"
+                  data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>מספר צ'</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('idNumber')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header"
+                  onClick={() => handleSort('note')}
+                  title="לחץ למיון לפי הערה"
+                  data-sorted={sortConfig?.key === 'note' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>הערה</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('note')}
+                    </div>
+                  </div>
+                </th>
                 <th>סטטוס</th>
                 <th>פעולות</th>
               </tr>
