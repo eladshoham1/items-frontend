@@ -35,7 +35,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
         await auth.signOut();
         
         // Show error message
-        onAuthError(`Access denied. The email address "${result.user.email}" is not authorized to access this system. Please contact your administrator.`);
+        onAuthError(`גישה נדחתה. כתובת האימייל "${result.user.email}" אינה מורשית לגשת למערכת. אנא פנו למנהל המערכת.`);
         return;
       }
       
@@ -49,35 +49,38 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
       
-      let errorMessage = 'Failed to sign in with Google. ';
+      let errorMessage = 'נכשל בהתחברות עם Google. ';
       
       switch (error.code) {
         case 'auth/popup-closed-by-user':
-          errorMessage += 'Sign-in popup was closed. Please try again.';
+          errorMessage += 'החלון נסגר. אנא נסו שוב.';
           break;
         case 'auth/popup-blocked':
-          errorMessage += 'Sign-in popup was blocked by your browser. Please allow popups and try again.';
+          errorMessage += 'החלון נחסם על ידי הדפדפן. אנא אשרו חלונות קופצים ונסו שוב.';
           break;
         case 'auth/cancelled-popup-request':
-          errorMessage += 'Another sign-in popup is already open.';
+          errorMessage += 'חלון התחברות אחר כבר פתוח.';
           break;
         case 'auth/operation-not-allowed':
-          errorMessage += 'Google sign-in is not enabled. Please contact support.';
+          errorMessage += 'התחברות עם Google אינה מופעלת. אנא פנו לתמיכה.';
           break;
         case 'auth/invalid-api-key':
-          errorMessage += 'Invalid API key. Please contact support.';
+          errorMessage += 'מפתח API לא תקין. אנא פנו לתמיכה.';
           break;
         case 'auth/network-request-failed':
-          errorMessage += 'Network error. Please check your connection and try again.';
+          errorMessage += 'שגיאת רשת. אנא בדקו את החיבור ונסו שוב.';
           break;
         case 'auth/too-many-requests':
-          errorMessage += 'Too many failed attempts. Please try again later.';
+          errorMessage += 'יותר מדי ניסיונות כושלים. אנא נסו שוב מאוחר יותר.';
           break;
         case 'auth/user-disabled':
-          errorMessage += 'Your account has been disabled. Please contact support.';
+          errorMessage += 'החשבון שלכם הושבת. אנא פנו לתמיכה.';
+          break;
+        case 'auth/unauthorized-domain':
+          errorMessage += 'הדומיין הזה אינו מורשה לאימות. אנא פנו למנהל המערכת להוספת הדומיין לרשימת הדומיינים המורשים ב-Firebase.';
           break;
         default:
-          errorMessage += error.message || 'Please try again or contact support.';
+          errorMessage += error.message || 'אנא נסו שוב או פנו לתמיכה.';
       }
       
       console.log('User-facing error message:', errorMessage);
@@ -92,9 +95,9 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
     <div className="google-auth-container">
       <div className="google-auth-card">
         <div className="google-auth-header">
-          <h2 className="google-auth-title">Welcome</h2>
+          <h2 className="google-auth-title">ברוכים הבאים</h2>
           <p className="google-auth-subtitle">
-            Sign in with your authorized Google account
+            התחברו עם חשבון Google המורשה שלכם
           </p>
         </div>
 
@@ -113,12 +116,12 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  <span>Continue with Google</span>
+                  <span>המשך עם Google</span>
                 </>
               ) : (
                 <>
                   <div className="loading-spinner"></div>
-                  <span>Signing in...</span>
+                  <span>מתחבר...</span>
                 </>
               )}
             </div>
@@ -126,10 +129,10 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
 
           <div className="google-auth-info">
             <p>
-              By signing in, you agree to our terms of service and privacy policy.
+              על ידי התחברות, אתם מסכימים לתנאי השירות ולמדיניות הפרטיות שלנו.
             </p>
             <p className="auth-restriction-notice">
-              🔒 Access is restricted to authorized email addresses only.
+              🔒 הגישה מוגבלת לכתובות אימייל מורשות בלבד.
             </p>
           </div>
         </div>

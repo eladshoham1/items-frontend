@@ -4,11 +4,11 @@
 // Read allowed emails from environment variable
 // Format: "email1@domain.com,email2@domain.com,email3@domain.com"
 const getAllowedEmailsFromEnv = (): string[] => {
-  const envEmails = process.env.ALLOWED_EMAILS || 'eladshoham1@gmail.com,momogelis@gmail.com';
-  console.log('🔍 Checking ALLOWED_EMAILS environment variable:', envEmails);
+  const envEmails = process.env.REACT_APP_ALLOWED_EMAILS || 'eladshoham1@gmail.com,momogelis@gmail.com';
+  console.log('🔍 Checking REACT_APP_ALLOWED_EMAILS environment variable:', envEmails);
   if (!envEmails) {
-    console.warn('⚠️ ALLOWED_EMAILS not found in environment variables');
-    console.warn('📝 Please add ALLOWED_EMAILS to your .env file');
+    console.warn('⚠️ REACT_APP_ALLOWED_EMAILS not found in environment variables');
+    console.warn('📝 Please add REACT_APP_ALLOWED_EMAILS to your .env file');
     return [];
   }
   

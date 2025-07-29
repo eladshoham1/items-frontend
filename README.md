@@ -28,12 +28,7 @@ src/
 
 ### Environment Variables
 
-Create a `.env.local` file in the root directory:
-
-```bash
-# API Configuration
-API_URL=http://localhost:3001
-```
+Create a `.env` file in the root directory:
 
 ### Changing Server URL
 
