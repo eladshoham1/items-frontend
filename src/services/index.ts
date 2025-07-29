@@ -4,3 +4,4 @@ export { userService } from './user.service';
 export { itemService } from './item.service';
 export { receiptService } from './receipt.service';
 export { reportService } from './report.service';
+export { managementService } from './management.service';

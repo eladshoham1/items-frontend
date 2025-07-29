@@ -1,8 +1,8 @@
-import { ID, Origin } from './common.types';
+import { ID } from './common.types';
 
 export interface Item {
   id: ID;
-  origin: Origin;
+  origin: string;
   name: string;
   idNumber?: string;
   note?: string;

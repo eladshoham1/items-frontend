@@ -20,38 +20,38 @@ const Dashboard: React.FC = () => {
     direction: 'asc' | 'desc';
   } | null>(null);
 
-  // Extract unique locations and items from the data
-  const { items, locations } = useMemo(() => {
-    if (!stats || typeof stats !== 'object') return { items: [], locations: [] };
+  // Extract unique units and items from the data
+  const { items, units } = useMemo(() => {
+    if (!stats || typeof stats !== 'object') return { items: [], units: [] };
     
     try {
       const items = Object.keys(stats);
-      const locationSet = new Set<string>();
+      const unitSet = new Set<string>();
       
       items.forEach(item => {
-        if (stats[item] && stats[item].locations && typeof stats[item].locations === 'object') {
-          Object.keys(stats[item].locations).forEach(location => {
-            if (location && typeof location === 'string') {
-              locationSet.add(location);
+        if (stats[item] && stats[item].units && typeof stats[item].units === 'object') {
+          Object.keys(stats[item].units).forEach(unit => {
+            if (unit && typeof unit === 'string') {
+              unitSet.add(unit);
             }
           });
         }
       });
       
-      return { items, locations: Array.from(locationSet).sort() };
+      return { items, units: Array.from(unitSet).sort() };
     } catch (error) {
       console.error('Error processing dashboard stats:', error);
-      return { items: [], locations: [] };
+      return { items: [], units: [] };
     }
   }, [stats]);
 
-  const handleCellClick = (event: React.MouseEvent, users: SignUser[]) => {
+  const handleCellClick = (event: React.MouseEvent, users: SignUser[], itemName: string, unitName: string) => {
     if (users.length === 0) return;
     
     const rect = event.currentTarget.getBoundingClientRect();
     setTooltipData({
       show: true,
-      users,
+      users: users.map(user => ({ ...user, itemName, unitName })),
       position: {
         x: rect.left + rect.width / 2,
         y: rect.top
@@ -98,11 +98,11 @@ const Dashboard: React.FC = () => {
           bValue = stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0;
           break;
         default:
-          // For location columns
-          if (sortConfig.key.startsWith('location_')) {
-            const location = sortConfig.key.replace('location_', '');
-            aValue = getCellData(a, location).signedQuantity;
-            bValue = getCellData(b, location).signedQuantity;
+          // For unit columns
+          if (sortConfig.key.startsWith('unit_')) {
+            const unit = sortConfig.key.replace('unit_', '');
+            aValue = getCellData(a, unit).signedQuantity;
+            bValue = getCellData(b, unit).signedQuantity;
           } else {
             return 0;
           }
@@ -131,40 +131,52 @@ const Dashboard: React.FC = () => {
       : <i className="fas fa-sort-down ms-1"></i>;
   };
 
-  const getCellData = (itemName: string, location: string) => {
+  const getCellData = (itemName: string, unit: string) => {
     try {
-      if (!stats || !stats[itemName] || !stats[itemName].locations || !stats[itemName].locations[location]) {
+      if (!stats || !stats[itemName] || !stats[itemName].units || !stats[itemName].units[unit]) {
         return { signedQuantity: 0, totalQuantity: 0, users: [] };
       }
       
-      const locationData = stats[itemName].locations[location];
-      if (!locationData || !locationData.signUsers || !Array.isArray(locationData.signUsers)) {
+      const unitData = stats[itemName].units[unit];
+      if (!unitData || !unitData.locations || typeof unitData.locations !== 'object') {
         return { signedQuantity: 0, totalQuantity: 0, users: [] };
       }
       
-      const users = locationData.signUsers;
-      const signedQuantity = users.reduce((sum, user) => {
-        return sum + (user && typeof user.quantity === 'number' ? user.quantity : 0);
-      }, 0);
+      // Aggregate all users from all locations within this unit
+      const allUsers: SignUser[] = [];
+      let totalSignedQuantity = 0;
+      
+      Object.keys(unitData.locations).forEach(locationName => {
+        const locationData = unitData.locations[locationName];
+        if (locationData && locationData.signUsers && Array.isArray(locationData.signUsers)) {
+          locationData.signUsers.forEach((user: any) => {
+            if (user && typeof user.quantity === 'number') {
+              allUsers.push({ ...user, location: locationName });
+              totalSignedQuantity += user.quantity;
+            }
+          });
+        }
+      });
+      
       const totalQuantity = stats[itemName] && typeof stats[itemName].quantity === 'number' ? stats[itemName].quantity : 0;
       
-      return { signedQuantity, totalQuantity, users };
+      return { signedQuantity: totalSignedQuantity, totalQuantity, users: allUsers };
     } catch (error) {
-      console.error('Error getting cell data:', error, { itemName, location });
+      console.error('Error getting cell data:', error, { itemName, unit });
       return { signedQuantity: 0, totalQuantity: 0, users: [] };
     }
   };
 
-  // Calculate total signed quantities per item (across all locations)
+  // Calculate total signed quantities per item (across all units)
   const getItemSignedTotal = (itemName: string) => {
     try {
-      if (!locations || !Array.isArray(locations) || !stats || !stats[itemName]) {
+      if (!units || !Array.isArray(units) || !stats || !stats[itemName]) {
         return 0;
       }
       
-      return locations.reduce((total, location) => {
-        if (!location || typeof location !== 'string') return total;
-        const { signedQuantity } = getCellData(itemName, location);
+      return units.reduce((total: number, unit: string) => {
+        if (!unit || typeof unit !== 'string') return total;
+        const { signedQuantity } = getCellData(itemName, unit);
         return total + (typeof signedQuantity === 'number' ? signedQuantity : 0);
       }, 0);
     } catch (error) {
@@ -232,7 +244,7 @@ const Dashboard: React.FC = () => {
                 marginLeft: '16px'
               }}
             >
-              {(items && Array.isArray(items) ? items.length : 0)} פריטים • {(locations && Array.isArray(locations) ? locations.length : 0)} מיקומים
+              {(items && Array.isArray(items) ? items.length : 0)} פריטים • {(units && Array.isArray(units) ? units.length : 0)} יחידות
             </span>
           </div>
         </div>
@@ -263,9 +275,9 @@ const Dashboard: React.FC = () => {
                     פריט
                     {getSortIcon('name')}
                   </th>
-                  {locations.map(location => (
+                  {units.map(unit => (
                     <th 
-                      key={location} 
+                      key={unit} 
                       className="text-center" 
                       style={{ 
                         minWidth: '120px', 
@@ -277,10 +289,10 @@ const Dashboard: React.FC = () => {
                         borderBottom: '3px solid #3498db',
                         cursor: 'pointer'
                       }}
-                      onClick={() => handleSort(`location_${location}`)}
+                      onClick={() => handleSort(`unit_${unit}`)}
                     >
-                      {location}
-                      {getSortIcon(`location_${location}`)}
+                      {unit}
+                      {getSortIcon(`unit_${unit}`)}
                     </th>
                   ))}
                   <th 
@@ -372,15 +384,15 @@ const Dashboard: React.FC = () => {
                     >
                       {item}
                     </td>
-                    {locations && Array.isArray(locations) ? locations.map(location => {
-                      if (!location || typeof location !== 'string') return null;
+                    {units && Array.isArray(units) ? units.map(unit => {
+                      if (!unit || typeof unit !== 'string') return null;
                       
-                      const { signedQuantity, users } = getCellData(item, location);
+                      const { signedQuantity, users } = getCellData(item, unit);
                       const hasUsers = users && Array.isArray(users) && users.length > 0;
                       
                       return (
                         <td 
-                          key={`${item}-${location}`}
+                          key={`${item}-${unit}`}
                           className="text-center"
                           style={{ 
                             cursor: hasUsers ? 'pointer' : 'default',
@@ -390,7 +402,7 @@ const Dashboard: React.FC = () => {
                             backgroundColor: hasUsers ? '#e8f5e8' : '#f8f9fa',
                             borderLeft: hasUsers ? '3px solid #27ae60' : '1px solid #dee2e6'
                           }}
-                          onClick={(e) => handleCellClick(e, users || [])}
+                          onClick={(e) => handleCellClick(e, users || [], item, unit)}
                           title={hasUsers ? 'לחץ לפרטים נוספים' : 'אין משתמשים רשומים'}
                           onMouseEnter={(e) => {
                             if (hasUsers) {
@@ -521,127 +533,223 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tooltip Modal */}
+      {/* User Details Table - Appears below main table when clicked */}
       {tooltipData.show && (
-        <>
+        <div className="card shadow-lg border-0 mt-3" style={{ 
+          borderRadius: '12px', 
+          overflow: 'hidden'
+        }}>
           <div 
-            className="modal-backdrop fade show" 
-            onClick={handleCloseTooltip}
-            style={{ zIndex: 1040 }}
-          ></div>
-          <div 
-            className="modal fade show d-block" 
-            style={{ zIndex: 1050 }}
-            onClick={handleCloseTooltip}
+            className="card-header border-0" 
+            style={{ 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              padding: '20px 24px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              direction: 'rtl'
+            }}
           >
-            <div 
-              className="modal-dialog modal-dialog-centered"
-              onClick={(e) => e.stopPropagation()}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '24px' }}>👥</span>
+              <h5 style={{ 
+                fontSize: '18px', 
+                fontWeight: '700',
+                margin: 0,
+                color: 'white'
+              }}>
+                פרטי משתמשים רשומים ({tooltipData.users.length})
+              </h5>
+            </div>
+            <button 
+              type="button" 
+              onClick={handleCloseTooltip}
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                borderRadius: '6px',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: 'white',
+                fontSize: '16px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              }}
             >
-              <div className="modal-content shadow-lg" style={{ borderRadius: '12px', border: 'none' }}>
-                <div 
-                  className="modal-header border-0" 
-                  style={{ 
-                    background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
-                    color: 'white',
-                    borderRadius: '12px 12px 0 0',
-                    padding: '20px 24px',
-                    display: 'block',
-                    textAlign: 'right',
-                    direction: 'rtl'
-                  }}
-                >
-                  <div style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-                    <span style={{ fontSize: '24px', display: 'inline-block', verticalAlign: 'middle', marginLeft: '12px' }}>👥</span>
-                    <h5 style={{ 
-                      fontSize: '18px', 
-                      fontWeight: '600',
-                      margin: 0,
-                      display: 'inline-block',
-                      verticalAlign: 'middle'
-                    }}>
-                      פרטי משתמשים רשומים
-                    </h5>
-                  </div>
-                  <button 
-                    type="button" 
-                    className="btn-close btn-close-white" 
-                    onClick={handleCloseTooltip}
-                    style={{ 
-                      filter: 'brightness(0) invert(1)',
-                      opacity: 1,
-                      position: 'absolute',
-                      left: '24px',
-                      top: '20px'
-                    }}
-                  ></button>
-                </div>
-                <div className="modal-body" style={{ padding: '24px' }}>
-                  <div className="table-responsive">
-                    <table className="table table-hover" style={{ marginBottom: '20px' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#f8fafc' }}>
-                          <th style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#2c3e50', border: 'none' }}>שם</th>
-                          <th style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#2c3e50', border: 'none' }}>מספר אישי</th>
-                          <th style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#2c3e50', border: 'none' }}>טלפון</th>
-                          <th style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#2c3e50', border: 'none' }}>כמות</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {tooltipData.users.map((user, index) => (
-                          <tr 
-                            key={user.id || index}
-                            style={{ 
-                              borderBottom: '1px solid #e2e8f0',
-                              transition: 'background-color 0.2s ease'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                          >
-                            <td style={{ padding: '12px 16px', fontSize: '13px', color: '#34495e' }}>{user.name}</td>
-                            <td style={{ padding: '12px 16px', fontSize: '13px', color: '#34495e' }}>{user.personalNumber}</td>
-                            <td style={{ padding: '12px 16px', fontSize: '13px', color: '#34495e' }}>{user.phoneNumber}</td>
-                            <td style={{ padding: '12px 16px' }}>
-                              <span 
-                                className="badge" 
-                                style={{ 
-                                  backgroundColor: '#3498db',
-                                  color: 'white',
-                                  padding: '6px 12px',
-                                  borderRadius: '15px',
-                                  fontSize: '12px',
-                                  fontWeight: '600'
-                                }}
-                              >
-                                {user.quantity}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div 
-                    style={{ 
-                      background: 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)',
+              ×
+            </button>
+          </div>
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
+                  <tr>
+                    <th style={{ 
+                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
                       color: 'white',
                       padding: '16px 20px',
-                      borderRadius: '10px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #3498db',
+                      textAlign: 'right'
+                    }}>
+                      שם
+                    </th>
+                    <th style={{ 
+                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                      color: 'white',
+                      padding: '16px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #3498db',
                       textAlign: 'center'
-                    }}
-                  >
-                    <div style={{ fontSize: '14px', marginBottom: '4px', opacity: 0.9 }}>
-                      סה"כ כמות חתומה
-                    </div>
-                    <div style={{ fontSize: '24px', fontWeight: '700' }}>
-                      {tooltipData.users.reduce((sum, user) => sum + user.quantity, 0)}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                    }}>
+                      מספר אישי
+                    </th>
+                    <th style={{ 
+                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                      color: 'white',
+                      padding: '16px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #3498db',
+                      textAlign: 'center'
+                    }}>
+                      טלפון
+                    </th>
+                    <th style={{ 
+                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                      color: 'white',
+                      padding: '16px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #3498db',
+                      textAlign: 'center'
+                    }}>
+                      מיקום
+                    </th>
+                    <th style={{ 
+                      background: 'linear-gradient(135deg, #16a085 0%, #1abc9c 100%)', 
+                      color: 'white',
+                      padding: '16px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #2ecc71',
+                      textAlign: 'center'
+                    }}>
+                      כמות
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tooltipData.users.map((user, index) => (
+                    <tr 
+                      key={user.id || index}
+                      style={{ 
+                        backgroundColor: index % 2 === 0 ? '#f8fafc' : 'white',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#e3f2fd';
+                        e.currentTarget.style.transform = 'scale(1.01)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#f8fafc' : 'white';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <td style={{ 
+                        padding: '16px 20px', 
+                        fontSize: '14px', 
+                        color: '#2c3e50',
+                        fontWeight: '600',
+                        textAlign: 'right'
+                      }}>
+                        {user.name}
+                      </td>
+                      <td style={{ 
+                        padding: '16px 20px', 
+                        fontSize: '14px', 
+                        color: '#495057',
+                        textAlign: 'center',
+                        fontFamily: 'monospace'
+                      }}>
+                        {user.personalNumber}
+                      </td>
+                      <td style={{ 
+                        padding: '16px 20px', 
+                        fontSize: '14px', 
+                        color: '#495057',
+                        textAlign: 'center',
+                        fontFamily: 'monospace'
+                      }}>
+                        {user.phoneNumber}
+                      </td>
+                      <td style={{ 
+                        padding: '16px 20px', 
+                        fontSize: '14px', 
+                        color: '#495057',
+                        textAlign: 'center',
+                        fontWeight: '500'
+                      }}>
+                        {(user as any).location || 'N/A'}
+                      </td>
+                      <td style={{ 
+                        padding: '16px 20px', 
+                        textAlign: 'center',
+                        backgroundColor: '#e8f5e8'
+                      }}>
+                        <span 
+                          className="badge" 
+                          style={{ 
+                            backgroundColor: '#27ae60',
+                            color: 'white',
+                            fontSize: '13px',
+                            padding: '8px 12px',
+                            borderRadius: '20px',
+                            fontWeight: '600',
+                            boxShadow: '0 2px 4px rgba(39, 174, 96, 0.3)',
+                            border: '2px solid #2ecc71'
+                          }}
+                        >
+                          {user.quantity}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div 
+              className="card-footer border-0"
+              style={{ 
+                background: 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)',
+                color: 'white',
+                padding: '16px 20px',
+                textAlign: 'center',
+                fontSize: '15px',
+                fontWeight: '600'
+              }}
+            >
+              סה"כ כמות חתומה: <span style={{ fontSize: '18px', fontWeight: '700' }}>{tooltipData.users.reduce((sum, user) => sum + user.quantity, 0)}</span>
             </div>
           </div>
-        </>
+        </div>
       )}
     </>
   );

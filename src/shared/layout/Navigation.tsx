@@ -15,6 +15,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
     { key: 'receipts', label: 'קבלות', icon: '📄' },
     { key: 'users', label: 'משתמשים', icon: '👥' },
     { key: 'items', label: 'ציוד', icon: '📦' },
+    { key: 'management', label: 'ניהול מערכת', icon: '⚙️' },
   ];
 
   const handleTabClick = (tab: string) => {

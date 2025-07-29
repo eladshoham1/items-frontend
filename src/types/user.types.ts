@@ -1,12 +1,13 @@
-import { ID, Location, Rank } from './common.types';
+import { ID } from './common.types';
 
 export interface User {
   id: ID;
   name: string;
   personalNumber: number;
   phoneNumber: string;
-  rank: Rank;
-  location: Location;
+  rank: string;
+  location: string;
+  unit: string;
   role?: string;
 }
 

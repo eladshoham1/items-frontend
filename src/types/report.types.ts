@@ -31,15 +31,20 @@ export interface SignUser {
   phoneNumber: string;
   personalNumber: number;
   quantity: number;
+  location?: string; // Added for location information in user details
 }
 
 export interface LocationData {
   signUsers: SignUser[];
 }
 
+export interface UnitData {
+  locations: Record<string, LocationData>;
+}
+
 export interface ItemData {
   quantity: number;
-  locations: Record<string, LocationData>;
+  units: Record<string, UnitData>;
 }
 
 export interface DashboardStatistics {

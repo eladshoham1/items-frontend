@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { User, CreateUserRequest, ranks, locations } from '../../types';
+import { User, CreateUserRequest } from '../../types';
 import { useUsers } from '../../hooks';
+import { useManagement } from '../../contexts';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
 import { ConflictErrorModal } from '../../shared/components';
 
@@ -16,20 +17,35 @@ interface FormErrors {
   phoneNumber?: string;
   rank?: string;
   location?: string;
+  unit?: string;
 }
 
 const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
   const { createUser, updateUser } = useUsers();
+  const { 
+    ranks, 
+    locations, 
+    units, 
+    loading: managementLoading
+  } = useManagement();
+  
   const [formData, setFormData] = useState<CreateUserRequest>({
     name: '',
     personalNumber: 0,
     phoneNumber: '',
-    rank: ranks[0],
-    location: locations[0],
+    rank: '',
+    location: '',
+    unit: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConflictModal, setShowConflictModal] = useState(false);
+
+  // Filter locations based on selected unit
+  const selectedUnit = units.find(unit => unit.name === formData.unit);
+  const availableLocations = selectedUnit 
+    ? locations.filter(location => location.unitId === selectedUnit.id)
+    : [];
 
   useEffect(() => {
     if (user) {
@@ -39,9 +55,25 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
         phoneNumber: user.phoneNumber,
         rank: user.rank,
         location: user.location,
+        unit: user.unit,
       });
     }
   }, [user]);
+
+  // Reset location when unit changes or locations are filtered
+  useEffect(() => {
+    if (formData.unit && formData.location) {
+      const selectedUnit = units.find(unit => unit.name === formData.unit);
+      if (selectedUnit) {
+        const isLocationValid = locations.some(
+          location => location.name === formData.location && location.unitId === selectedUnit.id
+        );
+        if (!isLocationValid) {
+          setFormData(prev => ({ ...prev, location: '' }));
+        }
+      }
+    }
+  }, [formData.unit, formData.location, locations, units]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -66,23 +98,44 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
       newErrors.location = 'מיקום חובה';
     }
 
+    if (!validateRequired(formData.unit)) {
+      newErrors.unit = 'יחידה חובה';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleInputChange = (field: keyof CreateUserRequest, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: field === 'name' ? value : 
-               field === 'personalNumber' ? (value === '' ? 0 : parseInt(value, 10) || 0) :
-               sanitizeInput(value),
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: field === 'name' ? value : 
+                 field === 'personalNumber' ? (value === '' ? 0 : parseInt(value, 10) || 0) :
+                 sanitizeInput(value),
+      };
+      
+      // Reset location when unit changes
+      if (field === 'unit') {
+        newData.location = '';
+      }
+      
+      return newData;
+    });
     
     // Clear error when user starts typing
     if (errors[field as keyof FormErrors]) {
       setErrors(prev => ({
         ...prev,
         [field]: undefined,
+      }));
+    }
+    
+    // Also clear location error when unit changes
+    if (field === 'unit' && errors.location) {
+      setErrors(prev => ({
+        ...prev,
+        location: undefined,
       }));
     }
   };
@@ -169,12 +222,32 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
             value={formData.rank} 
             onChange={e => handleInputChange('rank', e.target.value)} 
             required
+            disabled={managementLoading}
           >
+            <option value="">בחר דרגה</option>
             {ranks.map(rank => (
-              <option key={rank} value={rank}>{rank}</option>
+              <option key={rank.id} value={rank.name}>{rank.name}</option>
             ))}
           </select>
           {errors.rank && <div className="form-error">{errors.rank}</div>}
+        </div>
+        
+        <div className="form-group">
+          <label className="form-label">יחידה</label>
+          <select 
+            className={`form-control ${errors.unit ? 'is-invalid' : ''}`}
+            name="unit" 
+            value={formData.unit} 
+            onChange={e => handleInputChange('unit', e.target.value)} 
+            required
+            disabled={managementLoading}
+          >
+            <option value="">בחר יחידה</option>
+            {units.map(unit => (
+              <option key={unit.id} value={unit.name}>{unit.name}</option>
+            ))}
+          </select>
+          {errors.unit && <div className="form-error">{errors.unit}</div>}
         </div>
         
         <div className="form-group">
@@ -185,9 +258,13 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
             value={formData.location} 
             onChange={e => handleInputChange('location', e.target.value)} 
             required
+            disabled={managementLoading || !formData.unit}
           >
-            {locations.map(location => (
-              <option key={location} value={location}>{location}</option>
+            <option value="">
+              {!formData.unit ? 'בחר יחידה קודם' : 'בחר מיקום'}
+            </option>
+            {availableLocations.map(location => (
+              <option key={location.id} value={location.name}>{location.name}</option>
             ))}
           </select>
           {errors.location && <div className="form-error">{errors.location}</div>}

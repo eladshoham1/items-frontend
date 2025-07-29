@@ -5,9 +5,11 @@ import { DailyReport } from './features/reports';
 import { ReceiptsTab } from './features/receipts';
 import { UsersTab } from './features/users';
 import { ItemsTab } from './features/items';
+import { ManagementTab } from './features/management';
+import { ManagementProvider } from './contexts';
 import './shared/styles';
 
-type Tab = 'dashboard' | 'dailyReport' | 'receipts' | 'users' | 'items';
+type Tab = 'dashboard' | 'dailyReport' | 'receipts' | 'users' | 'items' | 'management';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -24,18 +26,22 @@ const App: React.FC = () => {
         return <UsersTab />;
       case 'items':
         return <ItemsTab />;
+      case 'management':
+        return <ManagementTab />;
       default:
         return null;
     }
   };
 
   return (
-    <Layout>
-      <Navigation activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} />
-      <div className="content-container">
-        {renderTabContent()}
-      </div>
-    </Layout>
+    <ManagementProvider>
+      <Layout>
+        <Navigation activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as Tab)} />
+        <div className="content-container">
+          {renderTabContent()}
+        </div>
+      </Layout>
+    </ManagementProvider>
   );
 };
 

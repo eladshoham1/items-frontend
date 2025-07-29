@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Item, CreateItemRequest, origins } from '../../types';
+import { Item, CreateItemRequest } from '../../types';
 import { useItems } from '../../hooks';
+import { useManagement } from '../../contexts';
 import { validateRequired, sanitizeInput, getConflictResolutionMessage } from '../../utils';
 import { ConflictErrorModal } from '../../shared/components';
 
@@ -18,11 +19,17 @@ interface FormErrors {
 
 const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   const { createItem, updateItem } = useItems();
+  const { 
+    origins, 
+    itemNames, 
+    loading: managementLoading
+  } = useManagement();
+  
   const [formData, setFormData] = useState<CreateItemRequest>({
     name: '',
     idNumber: '',
     note: '',
-    origin: 'מרת"ק',
+    origin: '',
     isAvailable: true,
   });
   const [quantity, setQuantity] = useState<number>(1);
@@ -154,13 +161,19 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
       <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label className="form-label">שם פריט</label>
-          <input 
+          <select 
             className={`form-control ${errors.name ? 'is-invalid' : ''}`}
             name="name" 
             value={formData.name} 
             onChange={e => handleInputChange('name', e.target.value)} 
-            required 
-          />
+            required
+            disabled={managementLoading}
+          >
+            <option value="">בחר שם פריט</option>
+            {itemNames.map(itemName => (
+              <option key={itemName.id} value={itemName.name}>{itemName.name}</option>
+            ))}
+          </select>
           {errors.name && <div className="form-error">{errors.name}</div>}
         </div>
 
@@ -172,9 +185,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
             value={formData.origin} 
             onChange={e => handleInputChange('origin', e.target.value)} 
             required
+            disabled={managementLoading}
           >
+            <option value="">בחר מקור</option>
             {origins.map(origin => (
-              <option key={origin} value={origin}>{origin}</option>
+              <option key={origin.id} value={origin.name}>{origin.name}</option>
             ))}
           </select>
         </div>
