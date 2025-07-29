@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { getAuth } from 'firebase/auth';
 import { API_CONFIG, FEATURES } from '../config/app.config';
 
 class ApiService {
@@ -17,7 +18,20 @@ class ApiService {
   private setupInterceptors(): void {
     // Request interceptor
     this.api.interceptors.request.use(
-      (config) => {
+      async (config) => {
+        try {
+          const auth = getAuth();
+          const user = auth.currentUser;
+          if (user) {
+            const token = await user.getIdToken();
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (error) {
+          if (FEATURES.ENABLE_LOGGING) {
+            console.warn('⚠️ Failed to get auth token:', error);
+          }
+        }
+
         if (FEATURES.ENABLE_LOGGING) {
           console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
         }
@@ -43,6 +57,17 @@ class ApiService {
         if (FEATURES.ENABLE_LOGGING) {
           console.error('❌ Response Error:', error);
         }
+
+        // Handle authentication errors
+        if (error.response?.status === 401) {
+          // Token might be expired or invalid
+          const auth = getAuth();
+          if (auth.currentUser) {
+            console.warn('🔒 Authentication error - token may be expired');
+            // Optionally, you could force token refresh here or redirect to login
+          }
+        }
+
         return Promise.reject(error);
       }
     );
