@@ -67,7 +67,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, user, o
                   )}
                   <div className="user-details">
                     <span className="user-name">{user.displayName || 'User'}</span>
-                    <span className="user-email">📧 {user.email}</span>
+                    <span className="user-email">{user.email}</span>
                   </div>
                 </div>
                 {onLogout && (
