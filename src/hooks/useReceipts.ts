@@ -44,7 +44,8 @@ export const useReceipts = () => {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create receipt');
-      return false;
+      // Re-throw the error so the component can handle specific error types (like 409)
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -64,7 +65,8 @@ export const useReceipts = () => {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update receipt');
-      return false;
+      // Re-throw the error so the component can handle specific error types (like 409)
+      throw err;
     } finally {
       setLoading(false);
     }

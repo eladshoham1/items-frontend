@@ -228,26 +228,53 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
 
       if (receipt) {
         // For editing, use the update method
-        const success = await updateReceipt(receipt.id, receiptData);
-        if (success) {
-          refetchAvailableItems();
-          onSuccess();
-        } else {
-          setError('שגיאה בעדכון הקבלה');
-        }
+        await updateReceipt(receipt.id, receiptData);
+        refetchAvailableItems();
+        onSuccess();
       } else {
         // Create new receipt
-        const success = await createReceipt(receiptData);
-        if (success) {
-          refetchAvailableItems();
-          onSuccess();
-        } else {
-          setError('שגיאה ביצירת הקבלה');
-        }
+        await createReceipt(receiptData);
+        refetchAvailableItems();
+        onSuccess();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error with receipt:', error);
-      setError(receipt ? 'שגיאה בעדכון הקבלה' : 'שגיאה ביצירת הקבלה');
+      console.error('Error response:', error?.response);
+      console.error('Error status:', error?.response?.status || error?.status);
+      console.error('Error data:', error?.response?.data);
+      
+      // Handle 409 conflict error specifically
+      if (error?.response?.status === 409 || error?.status === 409) {
+        const conflictMessage = error?.response?.data?.message || error?.message || '';
+        console.log('409 Conflict detected. Message:', conflictMessage);
+        
+        if (conflictMessage.includes('Items are not available') || conflictMessage.includes('already signed for')) {
+          // Extract unavailable items from the error message
+          const match = conflictMessage.match(/already signed for\): (.+)$/);
+          const unavailableItems = match ? match[1] : 'פריטים מסוימים';
+          
+          setError(
+            `שגיאה: חלק מהפריטים כבר נחתמו על ידי משתמש אחר ולא זמינים יותר.\n\n` +
+            `פריטים לא זמינים: ${unavailableItems}\n\n` +
+            `אנא רענן את רשימת הפריטים הזמינים והסר את הפריטים שכבר נלקחו.`
+          );
+          
+          // Automatically refresh available items to show current state
+          refetchAvailableItems();
+        } else {
+          // Any 409 error, even if message doesn't match expected pattern
+          setError(
+            `שגיאה: פריטים אינם זמינים (409 Conflict)\n\n` +
+            `הודעת השרת: ${conflictMessage}\n\n` +
+            `אנא רענן את רשימת הפריטים הזמינים ונסה שוב.`
+          );
+          refetchAvailableItems();
+        }
+      } else {
+        // Handle other types of errors
+        const errorMessage = error?.response?.data?.message || error?.message || '';
+        setError(receipt ? `שגיאה בעדכון הקבלה: ${errorMessage}` : `שגיאה ביצירת הקבלה: ${errorMessage}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -258,9 +285,43 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
       <div className="receipt-form-content">
         <form onSubmit={handleSubmit} className="receipt-form">
           {error && (
-            <div className="alert alert-danger mb-4" role="alert">
-              <i className="fas fa-exclamation-circle me-2"></i>
-              {error}
+            <div className={`alert ${error.includes('כבר נחתמו על ידי משתמש אחר') || error.includes('409 Conflict') ? 'alert-warning' : 'alert-danger'} mb-4`} role="alert">
+              <div className="d-flex align-items-start">
+                <i className={`fas ${error.includes('כבר נחתמו על ידי משתמש אחר') || error.includes('409 Conflict') ? 'fa-exclamation-triangle' : 'fa-exclamation-circle'} me-2 mt-1`}></i>
+                <div className="flex-grow-1">
+                  <div style={{ whiteSpace: 'pre-line' }}>{error}</div>
+                  {(error.includes('כבר נחתמו על ידי משתמש אחר') || error.includes('409 Conflict')) && (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary me-2"
+                        onClick={() => {
+                          refetchAvailableItems();
+                          setError('');
+                        }}
+                      >
+                        <i className="fas fa-sync-alt me-1"></i>
+                        רענן פריטים זמינים
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-secondary"
+                        onClick={() => {
+                          // Clear items that might not be available anymore
+                          setReceiptItems([]);
+                          setSelectedItemId('');
+                          setItemSearchQuery('');
+                          refetchAvailableItems();
+                          setError('');
+                        }}
+                      >
+                        <i className="fas fa-trash-alt me-1"></i>
+                        נקה את כל הפריטים והתחל מחדש
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
