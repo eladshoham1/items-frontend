@@ -4,9 +4,9 @@ export const validatePhoneNumber = (phone: string): boolean => {
 };
 
 export const validatePersonalNumber = (personalNumber: number): boolean => {
-  // Basic validation for personal number (adjust as needed)
+  // Validation for personal number - must be exactly 7 digits
   const numberStr = personalNumber.toString();
-  return numberStr.length >= 6 && numberStr.length <= 15;
+  return numberStr.length === 7 && /^[0-9]{7}$/.test(numberStr);
 };
 
 export const validateRequired = (value: string): boolean => {

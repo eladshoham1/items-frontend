@@ -83,7 +83,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
     }
 
     if (!validatePersonalNumber(formData.personalNumber)) {
-      newErrors.personalNumber = 'מספר אישי לא תקין';
+      newErrors.personalNumber = 'מספר אישי חייב להיות בדיוק 7 ספרות';
     }
 
     if (!validatePhoneNumber(formData.phoneNumber)) {

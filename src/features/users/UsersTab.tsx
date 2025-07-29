@@ -66,7 +66,8 @@ const UsersTab: React.FC = () => {
       user.personalNumber.toString().includes(searchTerm) ||
       user.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.location.toLowerCase().includes(searchTerm.toLowerCase())
+      user.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.unit.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (sortConfig) {
@@ -94,6 +95,10 @@ const UsersTab: React.FC = () => {
           case 'location':
             aValue = a.location;
             bValue = b.location;
+            break;
+          case 'unit':
+            aValue = a.unit;
+            bValue = b.unit;
             break;
           default:
             return 0;
@@ -257,7 +262,7 @@ const UsersTab: React.FC = () => {
               <input
                 type="text"
                 className="form-control"
-                placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה או מיקום..."
+                placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה, מיקום או מסגרת..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 style={{ direction: 'rtl' }}
@@ -348,6 +353,19 @@ const UsersTab: React.FC = () => {
                 </th>
                 <th 
                   className="sortable-header" 
+                  onClick={() => handleSort('unit')}
+                  title="לחץ למיון לפי מסגרת"
+                  data-sorted={sortConfig?.key === 'unit' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>מסגרת</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('unit')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header" 
                   onClick={() => handleSort('location')}
                   title="לחץ למיון לפי מיקום"
                   data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
@@ -377,6 +395,7 @@ const UsersTab: React.FC = () => {
                   <td>{user.personalNumber}</td>
                   <td>{user.phoneNumber}</td>
                   <td>{user.rank}</td>
+                  <td>{user.unit}</td>
                   <td>{user.location}</td>
                   <td>
                     <div className="btn-group">
