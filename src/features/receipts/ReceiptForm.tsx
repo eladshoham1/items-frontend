@@ -246,7 +246,6 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
       // Handle 409 conflict error specifically
       if (error?.response?.status === 409 || error?.status === 409) {
         const conflictMessage = error?.response?.data?.message || error?.message || '';
-        console.log('409 Conflict detected. Message:', conflictMessage);
         
         if (conflictMessage.includes('Items are not available') || conflictMessage.includes('already signed for')) {
           // Extract unavailable items from the error message

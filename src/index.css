@@ -1,4 +1,4 @@
-/* Global Styles */
+/* Global reset and basic styles */
 * {
   margin: 0;
   padding: 0;
@@ -7,74 +7,14 @@
 
 body {
   font-family: 'Arial', sans-serif;
-  background-color: #f4f7fc;
-  color: #333;
+  background-color: #f8fafc;
+  color: #1a1a1a;
   direction: rtl;
   padding: 0 20px;
+  line-height: 1.6;
 }
 
-h1 {
-  text-align: center;
-  font-size: 2.5rem;
-  color: #333;
-  margin-top: 20px;
-}
-
-button {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  text-align: center;
-  cursor: pointer;
-  font-size: 1rem;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-}
-
-button:hover {
-  background-color: #45a049;
-}
-
-button:disabled {
-  background-color: #d3d3d3;
-  cursor: not-allowed;
-}
-
-/* Tab Buttons */
-.tabs {
-  display: flex;
-  justify-content: center;
-  margin: 20px 0;
-}
-
-.tab-button {
-  background-color: #f1f1f1;
-  border: 1px solid #ccc;
-  padding: 10px 20px;
-  margin: 0 10px;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.tab-button.active {
-  background-color: #007BFF;
-  color: white;
-  border-color: #007BFF;
-}
-
-.form-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Form Styling */
+/* Legacy form styles - kept for backward compatibility */
 .input-group {
   margin-bottom: 20px;
 }
@@ -94,14 +34,6 @@ button:disabled {
 }
 
 .input-group select {
-  appearance: none;
-  background-color: #fff;
-  background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6"%3E%3Cpath fill="%23444" d="M9 1L5 5 1 1z" /%3E%3C/svg%3E');
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-}
-
-.input-group select {
   width: 100%;
   padding: 10px;
   font-size: 1rem;
@@ -111,62 +43,9 @@ button:disabled {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath fill='%23444' d='M6 7L0 0h12z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: left 10px center;
   background-size: 12px 7px;
   padding-left: 30px;
-}
-
-
-.item-card {
-  margin-bottom: 20px;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-}
-
-.remove-btn {
-  background-color: #f44336;
-  padding: 5px 10px;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.remove-btn:hover {
-  background-color: #d32f2f;
-}
-
-.add-item-btn {
-  background-color: #2196F3;
-  color: white;
-  padding: 10px 20px;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.error-message {
-  color: #f44336;
-  font-size: 0.9rem;
-  margin-bottom: 20px;
-}
-
-.submit-btn {
-  width: 100%;
-  padding: 15px;
-  font-size: 1.2rem;
-  background-color: #007BFF;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.submit-btn:hover {
-  background-color: #0056b3;
 }

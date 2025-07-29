@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { User } from 'firebase/auth';
 import './Navigation.css';
 
 interface NavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  user?: User;
+  onLogout?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
+const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, user, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const tabs = [
@@ -50,6 +53,35 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
               </button>
             </li>
           ))}
+          
+          {user && (
+            <li className="nav-item nav-user-info">
+              <div className="user-info">
+                <div className="user-profile">
+                  {user.photoURL && (
+                    <img 
+                      src={user.photoURL} 
+                      alt="Profile" 
+                      className="user-avatar"
+                    />
+                  )}
+                  <div className="user-details">
+                    <span className="user-name">{user.displayName || 'User'}</span>
+                    <span className="user-email">📧 {user.email}</span>
+                  </div>
+                </div>
+                {onLogout && (
+                  <button
+                    className="logout-button"
+                    onClick={onLogout}
+                    title="התנתק"
+                  >
+                    🚪 התנתק
+                  </button>
+                )}
+              </div>
+            </li>
+          )}
         </ul>
       </div>
     </nav>

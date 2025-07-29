@@ -32,12 +32,12 @@ Create a `.env.local` file in the root directory:
 
 ```bash
 # API Configuration
-REACT_APP_API_URL=http://localhost:3001
+API_URL=http://localhost:3001
 ```
 
 ### Changing Server URL
 
-To change the server URL, update the `REACT_APP_API_URL` environment variable in:
+To change the server URL, update the `API_URL` environment variable in:
 - `.env.local` for local development
 - Your deployment environment variables for production
 

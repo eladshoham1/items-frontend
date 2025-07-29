@@ -3,7 +3,7 @@ const API_PREFIX = 'api';
 
 export const API_CONFIG = {
   API_PREFIX,
-  BASE_URL: (process.env.REACT_APP_API_URL || 'http://localhost:3001') + '/' + API_PREFIX,
+  BASE_URL: (process.env.API_URL || 'http://localhost:3001') + '/' + API_PREFIX,
   TIMEOUT: 10000,
   HEADERS: {
     'Content-Type': 'application/json',
