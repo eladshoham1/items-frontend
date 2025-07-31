@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Receipt, CreateReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest } from '../types';
+import { Receipt, CreateReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest, PendingReceipt, CreatePendingReceiptRequest, SignPendingReceiptRequest } from '../types';
 import { receiptService } from '../services';
 
 export const useReceipts = () => {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [pendingReceipts, setPendingReceipts] = useState<PendingReceipt[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,16 +126,102 @@ export const useReceipts = () => {
     }
   }, [fetchReceipts]);
 
+  // Pending receipt methods
+  const fetchPendingReceipts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await receiptService.getPendingReceipts();
+      console.log('Fetched pending receipts:', data);
+      if (Array.isArray(data)) {
+        setPendingReceipts(data);
+      } else {
+        console.warn('getPendingReceipts returned non-array data:', data);
+        setPendingReceipts([]);
+      }
+    } catch (err) {
+      console.error('Error fetching pending receipts:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch pending receipts');
+      setPendingReceipts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchMyPendingReceipts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await receiptService.getMyPendingReceipts();
+      console.log('Fetched my pending receipts:', data);
+      if (Array.isArray(data)) {
+        setPendingReceipts(data);
+      } else {
+        console.warn('getMyPendingReceipts returned non-array data:', data);
+        setPendingReceipts([]);
+      }
+    } catch (err) {
+      console.error('Error fetching my pending receipts:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch pending receipts');
+      setPendingReceipts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createPendingReceipt = useCallback(async (
+    data: CreatePendingReceiptRequest
+  ): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const newPendingReceipt = await receiptService.createPendingReceipt(data);
+      setPendingReceipts(prev => [newPendingReceipt, ...prev]);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create pending receipt');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const signPendingReceipt = useCallback(async (
+    receiptId: string,
+    data: SignPendingReceiptRequest
+  ): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const signedReceipt = await receiptService.signPendingReceipt(receiptId, data);
+      // Remove from pending receipts
+      setPendingReceipts(prev => prev.filter(receipt => receipt.id !== receiptId));
+      // Add to regular receipts
+      setReceipts(prev => [signedReceipt, ...prev]);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to sign pending receipt');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchReceipts();
   }, [fetchReceipts]);
 
   return {
     receipts,
+    pendingReceipts,
     loading,
     error,
     fetchReceipts,
+    fetchPendingReceipts,
+    fetchMyPendingReceipts,
     createReceipt,
+    createPendingReceipt,
+    signPendingReceipt,
     updateReceipt,
     deleteReceipt,
     returnReceipt,

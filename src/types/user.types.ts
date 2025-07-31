@@ -8,6 +8,8 @@ export const ranks = [
 
 export type Rank = typeof ranks[number];
 
+export type UserRole = 'admin' | 'user';
+
 export interface User {
   id: ID;
   name: string;
@@ -16,7 +18,8 @@ export interface User {
   location: string;
   unit: string;
   rank: string;
-  role?: string;
+  isAdmin: boolean;
+  firebaseUid?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,7 +29,17 @@ export interface CreateUserRequest {
   personalNumber: number;
   phoneNumber: string;
   rank: string;
-  locationId: string; // Server expects location ID only
+  firebaseUid?: string;
+  locationId: string;
 }
 
-export type UpdateUserRequest = Partial<CreateUserRequest> & { id: ID };
+export interface UpdateUserRequest {
+  name?: string;
+  personalNumber?: number;
+  phoneNumber?: string;
+  rank?: string;
+  role?: UserRole;
+  isAdmin?: boolean;
+  firebaseUid?: string;
+  locationId?: string;
+}

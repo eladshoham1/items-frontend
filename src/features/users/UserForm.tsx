@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { User, CreateUserRequest, ranks } from '../../types';
+import { User, CreateUserRequest, UpdateUserRequest, ranks } from '../../types';
 import { useUsers } from '../../hooks';
 import { useManagement } from '../../contexts';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
@@ -7,6 +7,7 @@ import { ConflictErrorModal } from '../../shared/components';
 
 interface UserFormProps {
   user: User | null;
+  isAdmin?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -17,21 +18,27 @@ interface FormErrors {
   phoneNumber?: string;
   locationId?: string;
   rank?: string;
+  isAdmin?: string;
 }
 
-const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
+interface FormData extends CreateUserRequest {
+  isAdmin?: boolean;
+}
+
+const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, onCancel }) => {
   const { createUser, updateUser } = useUsers();
   const { 
     locations, 
     loading: managementLoading
   } = useManagement();
   
-  const [formData, setFormData] = useState<CreateUserRequest>({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     personalNumber: 0,
     phoneNumber: '',
     locationId: '',
     rank: '',
+    isAdmin: false,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,6 +57,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
         phoneNumber: user.phoneNumber,
         locationId: matchingLocation?.id || '',
         rank: user.rank,
+        isAdmin: user.isAdmin,
       });
     }
   }, [user, locations]);
@@ -81,13 +89,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleInputChange = (field: keyof CreateUserRequest, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => {
       const newData = {
         ...prev,
         [field]: field === 'name' ? value : 
-                 field === 'personalNumber' ? (value === '' ? 0 : parseInt(value, 10) || 0) :
-                 sanitizeInput(value),
+                 field === 'personalNumber' ? (value === '' ? 0 : parseInt(value as string, 10) || 0) :
+                 field === 'isAdmin' ? value as boolean :
+                 sanitizeInput(value as string),
       };
       
       return newData;
@@ -115,7 +124,21 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
       let result: { success: boolean; error?: { status: number; message: string } };
       
       if (user?.id) {
-        result = await updateUser(user.id, formData);
+        // For updating, we need to exclude firebaseUid from the request
+        const updateData: UpdateUserRequest = {
+          name: formData.name,
+          personalNumber: formData.personalNumber,
+          phoneNumber: formData.phoneNumber,
+          locationId: formData.locationId,
+          rank: formData.rank,
+        };
+        
+        // Only allow admin to update isAdmin
+        if (isAdmin && formData.isAdmin !== undefined) {
+          updateData.isAdmin = formData.isAdmin;
+        }
+        
+        result = await updateUser(user.id, updateData);
       } else {
         result = await createUser(formData);
       }
@@ -226,6 +249,23 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSuccess, onCancel }) => {
           </select>
           {errors.locationId && <div className="form-error">{errors.locationId}</div>}
         </div>
+        
+        {isAdmin && user && (
+          <div className="form-group">
+            <label className="form-label">
+              <input 
+                type="checkbox"
+                className="form-checkbox"
+                name="isAdmin" 
+                checked={formData.isAdmin || false}
+                onChange={e => handleInputChange('isAdmin', e.target.checked)} 
+              />
+              <span className="checkbox-label">הרשאות מנהל מערכת</span>
+            </label>
+            {errors.isAdmin && <div className="form-error">{errors.isAdmin}</div>}
+          </div>
+        )}
+        
         
         <div className="btn-group btn-group-end">
           <button type="button" className="btn btn-ghost" onClick={onCancel}>

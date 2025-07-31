@@ -1,25 +1,41 @@
 import React, { useState } from 'react';
-import { User } from 'firebase/auth';
+import { User as FirebaseUser } from 'firebase/auth';
+import { User } from '../../types';
 import './Navigation.css';
 
 interface NavigationProps {
   activeTab: string;
+  availableTabs: string[];
   onTabChange: (tab: string) => void;
-  user?: User;
+  user?: FirebaseUser;
+  userProfile?: User | null;
+  isAdmin?: boolean;
   onLogout?: () => void;
 }
 
-const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, user, onLogout }) => {
+const Navigation: React.FC<NavigationProps> = ({ 
+  activeTab, 
+  availableTabs,
+  onTabChange, 
+  user, 
+  userProfile,
+  isAdmin,
+  onLogout 
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const tabs = [
+  const allTabs = [
     { key: 'dashboard', label: 'לוח בקרה', icon: '📊' },
     { key: 'dailyReport', label: 'דו"ח יומי', icon: '📋' },
     { key: 'receipts', label: 'קבלות', icon: '📄' },
     { key: 'users', label: 'משתמשים', icon: '👥' },
     { key: 'items', label: 'ציוד', icon: '📦' },
     { key: 'management', label: 'ניהול מערכת', icon: '⚙️' },
+    { key: 'settings', label: 'הגדרות', icon: '🔧' },
   ];
+
+  // Filter tabs based on available tabs
+  const visibleTabs = allTabs.filter(tab => availableTabs.includes(tab.key));
 
   const handleTabClick = (tab: string) => {
     onTabChange(tab);
@@ -42,7 +58,7 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, user, o
         </button>
         
         <ul className={`nav-menu ${isMenuOpen ? 'nav-menu-open' : ''}`}>
-          {tabs.map(({ key, label, icon }) => (
+          {visibleTabs.map(({ key, label, icon }) => (
             <li key={key} className="nav-item">
               <button
                 className={`nav-link ${activeTab === key ? 'nav-link-active' : ''}`}
@@ -66,7 +82,10 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange, user, o
                     />
                   )}
                   <div className="user-details">
-                    <span className="user-name">{user.displayName || 'User'}</span>
+                    <span className="user-name">
+                      {userProfile?.name || user.displayName || 'User'}
+                      {isAdmin && <span className="admin-badge"> (מנהל)</span>}
+                    </span>
                     <span className="user-email">{user.email}</span>
                   </div>
                 </div>

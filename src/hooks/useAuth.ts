@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { auth } from '../firebase';
 import { User, onAuthStateChanged, signOut } from 'firebase/auth';
-import { isUserAuthorized } from '../config/allowedUsers';
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -11,26 +10,14 @@ export const useAuth = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Check if the user is still authorized
-        if (!isUserAuthorized(user.email)) {
-          console.warn('❌ Unauthorized user detected, signing out:', user.email);
-          try {
-            await signOut(auth);
-          } catch (error) {
-            console.error('Error signing out unauthorized user:', error);
-          }
-          setUser(null);
-          setError('Your access has been revoked. Please contact your administrator.');
-        } else {
-          console.log('✅ User authenticated and authorized:', {
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            uid: user.uid
-          });
-          setUser(user);
-          setError(null);
-        }
+        console.log('✅ User authenticated:', {
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          uid: user.uid
+        });
+        setUser(user);
+        setError(null);
       } else {
         setUser(null);
         setError(null);

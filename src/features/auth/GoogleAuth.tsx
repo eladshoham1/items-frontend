@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { auth, googleProvider, signInWithPopup } from '../../firebase';
 import { User } from 'firebase/auth';
-import { isUserAuthorized } from '../../config/allowedUsers';
 import './GoogleAuth.css';
 
 interface GoogleAuthProps {
@@ -27,21 +26,9 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
       console.log('User name:', result.user.displayName);
       console.log('User photo:', result.user.photoURL);
       
-      // Check if the user's email is authorized
-      if (!isUserAuthorized(result.user.email)) {
-        console.warn('❌ Unauthorized email attempt:', result.user.email);
-        
-        // Sign out the unauthorized user
-        await auth.signOut();
-        
-        // Show error message
-        onAuthError(`גישה נדחתה. כתובת האימייל "${result.user.email}" אינה מורשית לגשת למערכת. אנא פנו למנהל המערכת.`);
-        return;
-      }
+      console.log('✅ User signed in successfully:', result.user.email);
       
-      console.log('✅ User email authorized:', result.user.email);
-      
-      // User signed in successfully and is authorized
+      // User signed in successfully
       onAuthSuccess(result.user);
       
     } catch (error: any) {
@@ -97,7 +84,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
         <div className="google-auth-header">
           <h2 className="google-auth-title">ברוכים הבאים</h2>
           <p className="google-auth-subtitle">
-            התחברו עם חשבון Google המורשה שלכם
+            התחברו עם חשבון Google שלכם
           </p>
         </div>
 
@@ -130,9 +117,6 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
           <div className="google-auth-info">
             <p>
               על ידי התחברות, אתם מסכימים לתנאי השירות ולמדיניות הפרטיות שלנו.
-            </p>
-            <p className="auth-restriction-notice">
-              🔒 הגישה מוגבלת לכתובות אימייל מורשות בלבד.
             </p>
           </div>
         </div>

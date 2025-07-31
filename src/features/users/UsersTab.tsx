@@ -7,7 +7,11 @@ import { User } from '../../types';
 import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
-const UsersTab: React.FC = () => {
+interface UsersTabProps {
+  isAdmin?: boolean;
+}
+
+const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
   const { users, loading, error, deleteManyUsers, refetch } = useUsers();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -137,11 +141,6 @@ const UsersTab: React.FC = () => {
     await refetch(); // Explicitly refresh the users list
   };
 
-  const handleAddClick = () => {
-    setSelectedUser(null);
-    setIsModalOpen(true);
-  };
-
   const handleSelectUser = (user: User) => {
     setSelectedUser(user);
     setIsModalOpen(true);
@@ -244,9 +243,6 @@ const UsersTab: React.FC = () => {
                 </button>
               </>
             )}
-            <button className="btn btn-primary" onClick={handleAddClick}>
-              הוסף משתמש חדש
-            </button>
           </div>
         </div>
       </div>
@@ -434,6 +430,7 @@ const UsersTab: React.FC = () => {
       >
         <UserForm
           user={selectedUser}
+          isAdmin={isAdmin}
           onSuccess={handleSuccess}
           onCancel={handleCloseModal}
         />

@@ -1,0 +1,227 @@
+import React, { useState } from 'react';
+import { CreateUserRequest, ranks } from '../../types';
+import { useManagement } from '../../contexts';
+import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
+
+interface UserProfileSetupProps {
+  onComplete: (profileData: Omit<CreateUserRequest, 'firebaseUid'>) => void;
+  userEmail: string;
+  isAdmin: boolean;
+  isLoading?: boolean;
+  error?: string | null;
+}
+
+interface FormErrors {
+  name?: string;
+  personalNumber?: string;
+  phoneNumber?: string;
+  locationId?: string;
+  rank?: string;
+}
+
+const UserProfileSetup: React.FC<UserProfileSetupProps> = ({ 
+  onComplete, 
+  userEmail,
+  isAdmin,
+  isLoading = false,
+  error = null 
+}) => {
+  const { 
+    locations, 
+    loading: managementLoading
+  } = useManagement();
+  
+  const [formData, setFormData] = useState<Omit<CreateUserRequest, 'firebaseUid'>>({
+    name: '',
+    personalNumber: 0,
+    phoneNumber: '',
+    locationId: '',
+    rank: '',
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!validateRequired(formData.name)) {
+      newErrors.name = 'שם חובה';
+    }
+
+    if (!validatePersonalNumber(formData.personalNumber)) {
+      newErrors.personalNumber = 'מספר אישי חייב להיות בדיוק 7 ספרות';
+    }
+
+    if (!validatePhoneNumber(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'מספר טלפון לא תקין';
+    }
+
+    if (!validateRequired(formData.locationId)) {
+      newErrors.locationId = 'מיקום חובה';
+    }
+
+    if (!validateRequired(formData.rank)) {
+      newErrors.rank = 'דרגה חובה';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: field === 'name' ? value : 
+                 field === 'personalNumber' ? (value === '' ? 0 : parseInt(value, 10) || 0) :
+                 sanitizeInput(value),
+      };
+      
+      return newData;
+    });
+    
+    // Clear error when user starts typing
+    if (errors[field as keyof FormErrors]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    onComplete(formData);
+  };
+
+  return (
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+      <div className="card shadow-lg" style={{ maxWidth: '500px', width: '100%' }}>
+        <div className="card-header text-center bg-primary text-white">
+          <h2 className="mb-0">השלמת פרטים אישיים</h2>
+          <p className="mb-0 mt-2">שלום {userEmail}</p>
+          <small>נדרשת השלמת פרטים להמשך השימוש במערכת</small>
+        </div>
+        
+        <div className="card-body">
+          {error && (
+            <div className="alert alert-danger mb-3">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit}>
+            <div className="form-group mb-3">
+              <label className="form-label required">שם מלא</label>
+              <input 
+                className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                name="name" 
+                value={formData.name} 
+                onChange={e => handleInputChange('name', e.target.value)} 
+                required 
+                placeholder="הזן את שמך המלא"
+              />
+              {errors.name && <div className="form-error">{errors.name}</div>}
+            </div>
+            
+            <div className="form-group mb-3">
+              <label className="form-label required">מספר אישי</label>
+              <input 
+                type="number"
+                className={`form-control ${errors.personalNumber ? 'is-invalid' : ''}`}
+                name="personalNumber" 
+                value={formData.personalNumber || ''} 
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value === '' || (/^[0-9]{1,7}$/.test(value) && value.length <= 7)) {
+                    handleInputChange('personalNumber', value);
+                  }
+                }}
+                onInput={e => {
+                  const target = e.target as HTMLInputElement;
+                  if (target.value.length > 7) {
+                    target.value = target.value.slice(0, 7);
+                  }
+                }}
+                placeholder="הזן 7 ספרות"
+                min="1000000"
+                max="9999999"
+                required 
+              />
+              {errors.personalNumber && <div className="form-error">{errors.personalNumber}</div>}
+            </div>
+            
+            <div className="form-group mb-3">
+              <label className="form-label required">מספר טלפון</label>
+              <input 
+                className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
+                name="phoneNumber" 
+                value={formData.phoneNumber} 
+                onChange={e => handleInputChange('phoneNumber', e.target.value)} 
+                required 
+                placeholder="05xxxxxxxx"
+              />
+              {errors.phoneNumber && <div className="form-error">{errors.phoneNumber}</div>}
+            </div>
+            
+            <div className="form-group mb-3">
+              <label className="form-label required">דרגה</label>
+              <select 
+                className={`form-control ${errors.rank ? 'is-invalid' : ''}`}
+                name="rank" 
+                value={formData.rank} 
+                onChange={e => handleInputChange('rank', e.target.value)} 
+                required
+              >
+                <option value="">בחר דרגה</option>
+                {ranks.map(rank => (
+                  <option key={rank} value={rank}>{rank}</option>
+                ))}
+              </select>
+              {errors.rank && <div className="form-error">{errors.rank}</div>}
+            </div>
+            
+            <div className="form-group mb-4">
+              <label className="form-label required">מיקום</label>
+              <select 
+                className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
+                name="locationId" 
+                value={formData.locationId} 
+                onChange={e => handleInputChange('locationId', e.target.value)} 
+                required
+                disabled={managementLoading}
+              >
+                <option value="">בחר מיקום</option>
+                {locations.map(location => (
+                  <option key={location.id} value={location.id}>{location.name}</option>
+                ))}
+              </select>
+              {errors.locationId && <div className="form-error">{errors.locationId}</div>}
+            </div>
+            
+            <button 
+              type="submit" 
+              className="btn btn-primary w-100" 
+              disabled={isLoading || managementLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  שומר...
+                </>
+              ) : (
+                'השלם רישום'
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default UserProfileSetup;

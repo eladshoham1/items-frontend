@@ -60,3 +60,33 @@ export interface ReturnItemsRequest {
   receiptId: ID;
   receiptItemIds: string[];
 }
+
+export interface PendingReceipt {
+  id: ID;
+  receiptItems: BackendReceiptItem[];
+  userId: ID;
+  user: {
+    id: string;
+    name: string;
+    personalNumber: number;
+    phoneNumber: string;
+    rank: string;
+    location?: {
+      name: string;
+      unit?: {
+        name: string;
+      };
+    };
+  };
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface CreatePendingReceiptRequest {
+  userId: ID;
+  itemIds: string[];
+}
+
+export interface SignPendingReceiptRequest {
+  signature: string;
+}

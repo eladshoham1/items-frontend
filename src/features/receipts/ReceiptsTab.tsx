@@ -1,450 +1,302 @@
-import React, { useState } from 'react';
-import { ServerError } from '../../shared/components';
+import React, { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { Receipt, User } from '../../types';
+import { useReceipts } from '../../hooks';
+import { paginate } from '../../utils';
+import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
 import ReceiptForm from './ReceiptForm';
-import { useReceipts } from '../../hooks';
-import { Receipt } from '../../types';
-import { paginate, generateReceiptPDF } from '../../utils';
-import { UI_CONFIG } from '../../config/app.config';
+import WithdrawForm from '../../components/receipts/ReturnForm';
+import CreatePendingReceiptForm from './CreatePendingReceiptForm';
+import PendingReceiptsList from './PendingReceiptsList';
+import '../../shared/styles/components.css';
 
-const ReceiptsTab: React.FC = () => {
-  const { receipts, loading, error, fetchReceipts, deleteReceipt } = useReceipts();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
-  const [deleteConfirmText, setDeleteConfirmText] = useState<string>('');
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: 'asc' | 'desc';
-  } | null>(null);
+const timestampToDate = (timestamp: string): string => {
+    return format(new Date(timestamp), 'dd/MM/yy HH:mm:ss');
+};
 
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
+interface ReceiptsTabProps {
+    userProfile: User;
+    isAdmin: boolean;
+}
 
-  const getSortedReceipts = () => {
-    if (!receipts || !Array.isArray(receipts) || !sortConfig) {
-      return receipts;
-    }
+const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
+    const { receipts } = useReceipts();
+    const { 
+        pendingReceipts, 
+        fetchPendingReceipts, 
+        fetchMyPendingReceipts 
+    } = useReceipts();
+    
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'receipts' | 'pending' | 'my-pending' | 'create-pending'>('receipts');
 
-    return [...receipts].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+    const { paginatedItems: paginatedReceipts, totalPages } = paginate(receipts, currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
 
-      switch (sortConfig.key) {
-        case 'date':
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
-          break;
-        case 'name':
-          aValue = a.user.name;
-          bValue = b.user.name;
-          break;
-        case 'phone':
-          aValue = a.user.phoneNumber;
-          bValue = b.user.phoneNumber;
-          break;
-        case 'items':
-          aValue = a.receiptItems?.length || 0;
-          bValue = b.receiptItems?.length || 0;
-          break;
-        default:
-          return 0;
-      }
+    // Load pending receipts when tab changes
+    useEffect(() => {
+        if (activeTab === 'pending' && isAdmin) {
+            fetchPendingReceipts();
+        } else if (activeTab === 'my-pending') {
+            fetchMyPendingReceipts();
+        }
+    }, [activeTab, isAdmin, fetchPendingReceipts, fetchMyPendingReceipts]);
 
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortConfig.direction === 'asc' 
-          ? aValue.localeCompare(bValue, 'he') 
-          : bValue.localeCompare(aValue, 'he');
-      }
+    const handleTabChange = (tab: 'receipts' | 'pending' | 'my-pending' | 'create-pending') => {
+        setActiveTab(tab);
+        setCurrentPage(1);
+    };
 
-      if (sortConfig.direction === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
-  };
+    const handlePendingReceiptsRefresh = () => {
+        if (isAdmin) {
+            fetchPendingReceipts();
+        }
+        fetchMyPendingReceipts();
+    };
 
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
+    const handleAddClick = () => {
+        setSelectedReceipt(null);
+        setIsModalOpen(true);
+    };
 
-  const { paginatedItems: paginatedReceipts, totalPages } = paginate(
-    getSortedReceipts(),
-    currentPage,
-    UI_CONFIG.TABLE_PAGE_SIZE
-  );
+    const handleSelectReceipt = (receipt: Receipt) => {
+        setSelectedReceipt(receipt);
+        setIsModalOpen(true);
+    };
 
-  const handleReceiptClick = async (receipt: Receipt) => {
-    setGeneratingPdfId(receipt.id);
-    try {
-      await generateReceiptPDF(receipt);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('שגיאה ביצירת PDF. אנא נסה שוב.');
-    } finally {
-      setGeneratingPdfId(null);
-    }
-  };
+    const handleCloseModal = () => {
+        setSelectedReceipt(null);
+        setIsModalOpen(false);
+    };
 
-  const handleAddClick = () => {
-    setIsModalOpen(true);
-  };
+    const generateHtml = (receipt: Receipt) => {
+        const tableRows = receipt.receiptItems?.map((receiptItem) => `
+      <tr>
+        <td>${receiptItem.item.itemName?.name || 'פריט לא ידוע'}</td>
+        <td>לא</td>
+        <td>${receiptItem.item.idNumber || ''}</td>
+        <td>${receiptItem.item.note || ''}</td>
+      </tr>
+    `).join('') || '';
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+        const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="he" dir="rtl">
+      <head>
+        <meta charset="UTF-8">
+        <title>קבלה - ${receipt.user.name}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            padding: 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #333;
+            padding: 8px 12px;
+            text-align: right;
+          }
+          th {
+            background-color: #2980b9;
+            color: white;
+          }
+          .signature {
+            margin-top: 40px;
+            text-align: center;
+          }
+          .signature img {
+            max-width: 300px;
+            border: 1px solid #333;
+          }
+        </style>
+      </head>
+      <body>
+        <h2>קבלה עבור ${receipt.user.name} - ${timestampToDate(receipt.updatedAt || '00')}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>שם</th>
+              <th>צופן</th>
+              <th>מספר צ'</th>
+              <th>הערה</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+  
+        <div class="signature">
+          <h3>חתימה</h3>
+          ${receipt.signature ? `<img src="${receipt.signature}" alt="חתימה">` : '<p>אין חתימה</p>'}
+        </div>
+      </body>
+      </html>
+    `;
 
-  const handleReturnItems = (receipt: Receipt) => {
-    setSelectedReceipt(receipt);
-    setIsEditModalOpen(true);
-  };
+        return htmlContent;
+    };
 
-  const handleCloseReturnModal = () => {
-    setIsEditModalOpen(false);
-    setSelectedReceipt(null);
-  };
+    const downloadReceiptHtml = (receipt: any) => {
+        const html = generateHtml(receipt);
+        const blob = new Blob([html], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `receipt-${receipt.user.name}-${timestampToDate(receipt.updatedAt)}.html`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    };
 
-  const handleReturnSuccess = async () => {
-    handleCloseReturnModal();
-    await fetchReceipts(); // Refresh the receipts list
-  };
-
-  const handleSuccess = async () => {
-    handleCloseModal();
-    await fetchReceipts(); // Refresh the receipts list
-  };
-
-  const handleDeleteClick = (receipt: Receipt) => {
-    setSelectedReceipt(receipt);
-    setDeleteConfirmText('');
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleCloseDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setSelectedReceipt(null);
-    setDeleteConfirmText('');
-    setIsDeleting(false);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedReceipt || deleteConfirmText !== 'מחק') {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      const success = await deleteReceipt(selectedReceipt.id);
-      if (success) {
-        handleCloseDeleteModal();
-        // No need to refresh - the hook already removes the item from state
-      } else {
-        alert('שגיאה במחיקת הקבלה');
-      }
-    } catch (error) {
-      console.error('Error deleting receipt:', error);
-      alert('שגיאה במחיקת הקבלה');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="card">
-        <div className="card-header">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="mb-0">קבלות</h2>
-            <button className="btn btn-primary" onClick={handleAddClick}>
-              צור קבלה חדשה
+    const renderTabButtons = () => (
+        <div className="tab-nav" style={{ direction: 'rtl' }}>
+            <button
+                className={`tab-nav-item ${activeTab === 'receipts' ? 'active' : ''}`}
+                onClick={() => handleTabChange('receipts')}
+            >
+                <i className="fas fa-receipt me-2"></i>
+                קבלות
             </button>
-          </div>
+            
+            <button
+                className={`tab-nav-item ${activeTab === 'my-pending' ? 'active' : ''}`}
+                onClick={() => handleTabChange('my-pending')}
+            >
+                <i className="fas fa-clock me-2"></i>
+                קבלות ממתינות שלי
+            </button>
+
+            {isAdmin && (
+                <>
+                    <button
+                        className={`tab-nav-item ${activeTab === 'pending' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('pending')}
+                    >
+                        <i className="fas fa-list me-2"></i>
+                        כל הקבלות הממתינות
+                    </button>
+                    
+                    <button
+                        className={`tab-nav-item ${activeTab === 'create-pending' ? 'active' : ''}`}
+                        onClick={() => handleTabChange('create-pending')}
+                    >
+                        <i className="fas fa-plus me-2"></i>
+                        צור קבלה ממתינה
+                    </button>
+                </>
+            )}
         </div>
-        <div className="card-body">
-          <div className="alert alert-info">
-            <div className="spinner"></div>
-            <span>טוען נתונים...</span>
-          </div>
-        </div>
-      </div>
     );
-  }
 
-  if (error) {
-    return <ServerError />;
-  }
-
-  return (
-    <div className="card">
-      <div className="card-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="mb-0">קבלות</h2>
-          <button className="btn btn-primary" onClick={handleAddClick}>
-            צור קבלה חדשה
-          </button>
-        </div>
-      </div>
-
-      <div className="card-body">
-        <div className="table-responsive">
-          <table className="table">
-            <thead>
-              <tr>
-                <th 
-                  className="sortable-header" 
-                  onClick={() => handleSort('date')}
-                  title="לחץ למיון לפי תאריך"
-                  data-sorted={sortConfig?.key === 'date' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>תאריך מלא</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('date')}
-                    </div>
-                  </div>
-                </th>
-                <th 
-                  className="sortable-header" 
-                  onClick={() => handleSort('name')}
-                  title="לחץ למיון לפי שם המקבל"
-                  data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>שם המקבל</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('name')}
-                    </div>
-                  </div>
-                </th>
-                <th 
-                  className="sortable-header" 
-                  onClick={() => handleSort('phone')}
-                  title="לחץ למיון לפי טלפון"
-                  data-sorted={sortConfig?.key === 'phone' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>טלפון</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('phone')}
-                    </div>
-                  </div>
-                </th>
-                <th 
-                  className="sortable-header" 
-                  onClick={() => handleSort('items')}
-                  title="לחץ למיון לפי פריטים"
-                  data-sorted={sortConfig?.key === 'items' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>פריטים</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('items')}
-                    </div>
-                  </div>
-                </th>
-                <th>פעולות</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedReceipts.map((receipt: Receipt) => (
-                <tr key={receipt.id}>
-                  <td>{new Date(receipt.createdAt).toLocaleDateString('he-IL', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</td>
-                  <td>{receipt.user.name}</td>
-                  <td>{receipt.user.phoneNumber}</td>
-                  <td>{receipt.receiptItems?.length || 0} פריטים</td>
-                  <td>
-                    <div className="d-flex justify-content-start">
-                      <button 
-                        className="btn btn-sm btn-outline-primary" 
-                        onClick={() => handleReceiptClick(receipt)}
-                        disabled={generatingPdfId === receipt.id}
-                        title="הורד קבלה כ-PDF"
-                        style={{ minWidth: '100px', marginLeft: '5px', marginRight: '5px' }}
-                      >
-                        {generatingPdfId === receipt.id ? (
-                          <>
-                            <div className="spinner-border spinner-border-sm me-1" role="status">
-                              <span className="visually-hidden">Loading...</span>
-                            </div>
-                            יוצר PDF...
-                          </>
-                        ) : (
-                          <>
-                            <i className="fas fa-download me-1"></i>
-                            הורד PDF
-                          </>
-                        )}
-                      </button>
-                      
-                      <button 
-                        className="btn btn-sm btn-outline-secondary" 
-                        onClick={() => handleReturnItems(receipt)}
-                        title="ערוך קבלה"
-                        style={{ minWidth: '100px', marginLeft: '5px', marginRight: '5px' }}
-                      >
-                        <i className="fas fa-edit me-1"></i>
-                        ערוך קבלה
-                      </button>
-
-                      <button 
-                        className="btn btn-sm btn-danger" 
-                        onClick={() => handleDeleteClick(receipt)}
-                        title="מחק קבלה"
-                        style={{ minWidth: '80px', marginLeft: '5px', marginRight: '5px' }}
-                      >
-                        <i className="fas fa-trash me-1"></i>
-                        מחק
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {totalPages > 1 && (
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`btn btn-sm ${currentPage === page ? 'btn-primary' : 'btn-outline'}`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        title="צור קבלה חדשה"
-        size="lg"
-      >
-        <ReceiptForm
-          onSuccess={handleSuccess}
-          onCancel={handleCloseModal}
-        />
-      </Modal>
-
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={handleCloseReturnModal}
-        title="ערוך קבלה"
-        size="lg"
-      >
-        <ReceiptForm
-          receipt={selectedReceipt}
-          onSuccess={handleReturnSuccess}
-          onCancel={handleCloseReturnModal}
-        />
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={handleCloseDeleteModal}
-        title="מחק קבלה"
-        size="md"
-      >
-        <div className="p-4">
-          {selectedReceipt && (
-            <>
-              <div className="alert alert-danger" role="alert">
-                <i className="fas fa-exclamation-triangle me-2"></i>
-                <strong>אזהרה!</strong> פעולה זו תמחק את הקבלה לצמיתות ולא ניתן יהיה לשחזר אותה.
-              </div>
-              
-              <div className="mb-3">
-                <h6>פרטי הקבלה למחיקה:</h6>
-                <ul className="list-unstyled">
-                  <li><strong>תאריך:</strong> {new Date(selectedReceipt.createdAt).toLocaleDateString('he-IL', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</li>
-                  <li><strong>שם המקבל:</strong> {selectedReceipt.user.name}</li>
-                  <li><strong>פריטים:</strong> {selectedReceipt.receiptItems?.length || 0} פריטים</li>
-                </ul>
-              </div>
-
-              <div className="mb-4">
-                <label className="form-label">
-                  <strong>כדי לאשר את המחיקה, הקלד "מחק" בתיבת הטקסט:</strong>
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  placeholder="הקלד 'מחק' כדי לאשר"
-                  style={{ direction: 'rtl' }}
-                />
-              </div>
-
-              <div className="d-flex justify-content-end gap-2">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={handleCloseDeleteModal}
-                  disabled={isDeleting}
-                >
-                  <i className="fas fa-times me-1"></i>
-                  ביטול
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={handleConfirmDelete}
-                  disabled={deleteConfirmText !== 'מחק' || isDeleting}
-                >
-                  {isDeleting ? (
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'receipts':
+                return (
                     <>
-                      <div className="spinner-border spinner-border-sm me-1" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </div>
-                      מוחק...
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                            <h3>קבלות</h3>
+                            <button className="button secondary" onClick={handleAddClick}>
+                                <i className="fas fa-plus me-2"></i>
+                                צור קבלה חדשה
+                            </button>
+                        </div>
+
+                        <table className="users-table">
+                            <thead>
+                                <tr>
+                                    <th>שם החותם</th>
+                                    <th>טלפון</th>
+                                    <th>תאריך מלא</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedReceipts.map(receipt =>
+                                    <tr key={receipt.id}>
+                                        <td>{receipt.user.name}</td>
+                                        <td>{receipt.user.phoneNumber}</td>
+                                        <td>{timestampToDate(receipt.createdAt)}</td>
+                                        <td>
+                                            <button className="button" onClick={() => handleSelectReceipt(receipt)}>החזרה</button>
+                                            <button className="button" onClick={() => downloadReceiptHtml(receipt)}>הורדה</button>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+
+                        <div className="pagination">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button key={page} onClick={() => setCurrentPage(page)} className={`pagination-btn${currentPage === page ? ' active' : ''}`}>
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
                     </>
-                  ) : (
-                    <>
-                      <i className="fas fa-trash me-1"></i>
-                      מחק קבלה
-                    </>
-                  )}
-                </button>
-              </div>
-            </>
-          )}
+                );
+
+            case 'my-pending':
+                return (
+                    <PendingReceiptsList
+                        pendingReceipts={pendingReceipts}
+                        onRefresh={handlePendingReceiptsRefresh}
+                    />
+                );
+
+            case 'pending':
+                return isAdmin ? (
+                    <PendingReceiptsList
+                        pendingReceipts={pendingReceipts}
+                        onRefresh={handlePendingReceiptsRefresh}
+                    />
+                ) : null;
+
+            case 'create-pending':
+                return isAdmin ? (
+                    <CreatePendingReceiptForm
+                        onSuccess={() => {
+                            handleTabChange('pending');
+                            handlePendingReceiptsRefresh();
+                        }}
+                        onCancel={() => handleTabChange('receipts')}
+                    />
+                ) : null;
+
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="surface users-tab-container">
+            {renderTabButtons()}
+            {renderTabContent()}
+
+            {isModalOpen && (
+                <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
+                    {selectedReceipt ?
+                        <WithdrawForm
+                            receipt={selectedReceipt}
+                            onSuccess={() => { }}
+                            onCancel={handleCloseModal}
+                        />
+                        :
+                        <ReceiptForm
+                            receipt={selectedReceipt}
+                            onSuccess={() => { }}
+                            onCancel={handleCloseModal}
+                        />
+                    }
+                </Modal>
+            )}
         </div>
-      </Modal>
-    </div>
-  );
+    );
 };
 
 export default ReceiptsTab;

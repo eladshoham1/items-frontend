@@ -6,18 +6,39 @@ import { ReceiptsTab } from './features/receipts';
 import { UsersTab } from './features/users';
 import { ItemsTab } from './features/items';
 import { ManagementTab } from './features/management';
+import { SettingsTab } from './features/settings';
 import { GoogleAuth } from './features/auth';
 import { ManagementProvider } from './contexts';
-import { useAuth } from './hooks';
+import { useAuth, useUserProfile } from './hooks';
+import { UserProfileSetup } from './components/auth';
 import { User } from 'firebase/auth';
 import './shared/styles';
 
-type Tab = 'dashboard' | 'dailyReport' | 'receipts' | 'users' | 'items' | 'management';
+type Tab = 'dashboard' | 'dailyReport' | 'receipts' | 'users' | 'items' | 'management' | 'settings';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [authError, setAuthError] = useState<string | null>(null);
-  const { user, isLoading, logout } = useAuth();
+  const { user: firebaseUser, isLoading: authLoading, logout } = useAuth();
+  const { 
+    userProfile, 
+    isLoading: profileLoading, 
+    needsProfile, 
+    error: profileError,
+    isAdmin,
+    createUserProfile
+  } = useUserProfile();
+
+  // Debug logging
+  console.log('App render - Current state:', {
+    firebaseUser: firebaseUser?.email,
+    userProfile: userProfile,
+    profileLoading,
+    needsProfile,
+    profileError,
+    isAdmin,
+    authLoading
+  });
 
   const handleAuthSuccess = (user: User) => {
     console.log('Authentication successful:', user.email, user.displayName);
@@ -36,8 +57,21 @@ const App: React.FC = () => {
     }
   };
 
-  // Show loading spinner while checking authentication
-  if (isLoading) {
+  const handleProfileComplete = async (profileData: Parameters<typeof createUserProfile>[0]) => {
+    try {
+      const success = await createUserProfile(profileData);
+      if (success) {
+        // Profile created successfully, the useUserProfile hook has already updated the state
+        console.log('Profile created successfully');
+        // No need to refetch as createUserProfile already updates the state
+      }
+    } catch (error) {
+      console.error('Error creating profile:', error);
+    }
+  };
+
+  // Show loading spinner while checking authentication or profile
+  if (authLoading || profileLoading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -52,7 +86,7 @@ const App: React.FC = () => {
   }
 
   // Show Google authentication if user is not authenticated
-  if (!user) {
+  if (!firebaseUser) {
     return (
       <>
         <GoogleAuth onAuthSuccess={handleAuthSuccess} onAuthError={handleAuthError} />
@@ -88,20 +122,79 @@ const App: React.FC = () => {
     );
   }
 
+  // Show profile setup if user needs to complete their profile
+  if (needsProfile) {
+    console.log('App: Showing profile setup because needsProfile =', needsProfile);
+    console.log('App: Current userProfile =', userProfile);
+    console.log('App: Current profileLoading =', profileLoading);
+    return (
+      <ManagementProvider>
+        <UserProfileSetup
+          onComplete={handleProfileComplete}
+          userEmail={firebaseUser.email || ''}
+          isAdmin={isAdmin}
+          isLoading={profileLoading}
+          error={profileError}
+        />
+      </ManagementProvider>
+    );
+  }
+
+  // Show error if profile couldn't be loaded
+  if (!userProfile) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        fontSize: '1.2rem'
+      }}>
+        <div className="alert alert-danger">
+          {profileError || 'שגיאה בטעינת פרופיל המשתמש'}
+        </div>
+        <button 
+          className="btn btn-primary" 
+          onClick={() => window.location.reload()}
+        >
+          נסה שוב
+        </button>
+      </div>
+    );
+  }
+
+  const getAvailableTabs = (): Tab[] => {
+    if (isAdmin) {
+      return ['dashboard', 'dailyReport', 'receipts', 'users', 'items', 'management', 'settings'];
+    } else {
+      return ['dailyReport', 'receipts', 'settings'];
+    }
+  };
+
+  const availableTabs = getAvailableTabs();
+  
+  // Redirect to available tab if current tab is not accessible
+  if (!availableTabs.includes(activeTab)) {
+    setActiveTab(availableTabs[0]);
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return isAdmin ? <Dashboard /> : null;
       case 'dailyReport':
-        return <DailyReport />;
+        return <DailyReport userProfile={userProfile} isAdmin={isAdmin} />;
       case 'receipts':
-        return <ReceiptsTab />;
+        return <ReceiptsTab userProfile={userProfile} isAdmin={isAdmin} />;
       case 'users':
-        return <UsersTab />;
+        return isAdmin ? <UsersTab isAdmin={isAdmin} /> : null;
       case 'items':
-        return <ItemsTab />;
+        return isAdmin ? <ItemsTab /> : null;
       case 'management':
-        return <ManagementTab />;
+        return isAdmin ? <ManagementTab /> : null;
+      case 'settings':
+        return <SettingsTab userProfile={userProfile} isAdmin={isAdmin} />;
       default:
         return null;
     }
@@ -111,9 +204,12 @@ const App: React.FC = () => {
     <ManagementProvider>
       <Layout>
         <Navigation 
-          activeTab={activeTab} 
+          activeTab={activeTab}
+          availableTabs={availableTabs}
           onTabChange={(tab) => setActiveTab(tab as Tab)}
-          user={user}
+          user={firebaseUser}
+          userProfile={userProfile}
+          isAdmin={isAdmin}
           onLogout={handleLogout}
         />
         <div className="content-container">

@@ -2,9 +2,14 @@ import React, { useState } from 'react';
 import { ServerError } from '../../shared/components';
 import { useReports } from '../../hooks';
 import { getCurrentDate } from '../../utils';
-import { ReportStatusUpdate } from '../../types';
+import { ReportStatusUpdate, User } from '../../types';
 
-const DailyReport: React.FC = () => {
+interface DailyReportProps {
+  userProfile: User | null;
+  isAdmin: boolean;
+}
+
+const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const { reportItems, loading, error, updateReportStatus, toggleReportStatus } = useReports();
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -30,9 +35,17 @@ const DailyReport: React.FC = () => {
 
   // Sort items based on sort config
   const sortedReportItems = (() => {
-    if (!sortConfig) return reportItems;
+    // Role-based filtering: users see only their items, admins see all
+    let filteredItems = reportItems;
+    if (!isAdmin && userProfile) {
+      filteredItems = reportItems.filter(item => 
+        item.userName === userProfile.name
+      );
+    }
 
-    return [...reportItems].sort((a, b) => {
+    if (!sortConfig) return filteredItems;
+
+    return [...filteredItems].sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
