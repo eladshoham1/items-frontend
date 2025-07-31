@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { UnitsTab } from './UnitsTab';
-import { LocationsTab } from './LocationsTab';
-import { RanksTab } from './RanksTab';
-import { OriginsTab } from './OriginsTab';
-import { ItemNamesTab } from './ItemNamesTab';
+import { UnitsTab, LocationsTab, ItemNamesTab } from './index';
 
 const ManagementTab: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState('units');
@@ -11,8 +7,6 @@ const ManagementTab: React.FC = () => {
   const subTabs = [
     { key: 'units', label: 'יחידות', icon: '🏢' },
     { key: 'locations', label: 'מיקומים', icon: '📍' },
-    { key: 'ranks', label: 'דרגות', icon: '⭐' },
-    { key: 'origins', label: 'מקורות', icon: '📌' },
     { key: 'itemNames', label: 'שמות פריטים', icon: '📝' },
   ];
 
@@ -22,10 +16,6 @@ const ManagementTab: React.FC = () => {
         return <UnitsTab />;
       case 'locations':
         return <LocationsTab />;
-      case 'ranks':
-        return <RanksTab />;
-      case 'origins':
-        return <OriginsTab />;
       case 'itemNames':
         return <ItemNamesTab />;
       default:
@@ -38,17 +28,22 @@ const ManagementTab: React.FC = () => {
       <div className="card-header">
         <h2 className="mb-0">ניהול מערכת</h2>
         <p className="text-muted mb-3">
-          ניהול נתוני בסיס: יחידות, מיקומים, דרגות, מקורות ושמות פריטים
+          ניהול נתוני בסיס: יחידות, מיקומים ושמות פריטים
         </p>
         
         {/* Sub-navigation */}
-        <div className="btn-group" role="group">
+        <div style={{ 
+          textAlign: 'right',
+          width: '100%',
+          direction: 'rtl'
+        }}>
           {subTabs.map(({ key, label, icon }) => (
             <button
               key={key}
               type="button"
               className={`btn ${activeSubTab === key ? 'btn-primary' : 'btn-outline-primary'}`}
               onClick={() => setActiveSubTab(key)}
+              style={{ marginLeft: '8px' }}
             >
               <span className="me-2">{icon}</span>
               {label}

@@ -65,9 +65,9 @@ const UsersTab: React.FC = () => {
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.personalNumber.toString().includes(searchTerm) ||
       user.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.unit.toLowerCase().includes(searchTerm.toLowerCase())
+      user.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.rank.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (sortConfig) {
@@ -88,10 +88,6 @@ const UsersTab: React.FC = () => {
             aValue = a.phoneNumber;
             bValue = b.phoneNumber;
             break;
-          case 'rank':
-            aValue = a.rank;
-            bValue = b.rank;
-            break;
           case 'location':
             aValue = a.location;
             bValue = b.location;
@@ -99,6 +95,10 @@ const UsersTab: React.FC = () => {
           case 'unit':
             aValue = a.unit;
             bValue = b.unit;
+            break;
+          case 'rank':
+            aValue = a.rank;
+            bValue = b.rank;
             break;
           default:
             return 0;
@@ -398,14 +398,12 @@ const UsersTab: React.FC = () => {
                   <td>{user.unit}</td>
                   <td>{user.location}</td>
                   <td>
-                    <div className="btn-group">
-                      <button 
-                        className="btn btn-sm btn-outline" 
-                        onClick={() => handleSelectUser(user)}
-                      >
-                        עדכן
-                      </button>
-                    </div>
+                    <button 
+                      className="btn btn-sm btn-outline" 
+                      onClick={() => handleSelectUser(user)}
+                    >
+                      עדכן
+                    </button>
                   </td>
                 </tr>
               ))}

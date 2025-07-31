@@ -32,7 +32,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
         />
       </div>
       <div className="item-info">
-        <div className="item-name">{item.item.name}</div>
+        <div className="item-name">{item.item.itemName?.name || 'פריט לא ידוע'}</div>
         <div className="item-details">
           {item.item.idNumber && (
             <span className="item-badge item-badge-id">
@@ -40,7 +40,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
             </span>
           )}
           <span className="item-badge item-badge-origin">
-            מקור: {item.item.origin}
+            צופן: לא
           </span>
           {item.item.note && (
             <span className="item-badge item-badge-note">

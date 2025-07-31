@@ -16,53 +16,42 @@ const formatDate = (dateString: string): string => {
 
 // Create HTML template for the receipt
 const createReceiptHTML = (receipt: Receipt): string => {
-  // Process items to merge quantities for מרת"ק items
+  // Process items to merge quantities for items with same names
   const processedItems: Array<{
     name: string;
-    origin: string;
+    isNeedReport: boolean;
     idNumber: string;
     note: string;
     quantity: number;
   }> = [];
 
   receipt.receiptItems?.forEach((receiptItem) => {
-    const itemName = receiptItem.item.name || '';
-    const itemOrigin = receiptItem.item.origin || '';
+    const itemName = receiptItem.item.itemName?.name || '';
+    const itemIsNeedReport = false; // This info is not available in the new structure
     const itemIdNumber = receiptItem.item.idNumber || '';
     const itemNote = receiptItem.item.note || '';
 
-    // Check if this is a מרת"ק item and if we already have an item with the same name
-    if (itemOrigin === 'מרת"ק') {
-      const existingItem = processedItems.find(
-        item => item.name === itemName && item.origin === itemOrigin
-      );
-      
-      if (existingItem) {
-        // Merge with existing item by increasing quantity
-        existingItem.quantity += 1;
-        // Combine notes if different
-        if (itemNote && !existingItem.note.includes(itemNote)) {
-          existingItem.note = existingItem.note ? `${existingItem.note}, ${itemNote}` : itemNote;
-        }
-        // Keep the first ID number, or combine if different
-        if (itemIdNumber && !existingItem.idNumber.includes(itemIdNumber)) {
-          existingItem.idNumber = existingItem.idNumber ? `${existingItem.idNumber}, ${itemIdNumber}` : itemIdNumber;
-        }
-      } else {
-        // Add new מרת"ק item
-        processedItems.push({
-          name: itemName,
-          origin: itemOrigin,
-          idNumber: itemIdNumber,
-          note: itemNote,
-          quantity: 1
-        });
+    // Check if we already have an item with the same name for quantity grouping
+    const existingItem = processedItems.find(
+      item => item.name === itemName
+    );
+    
+    if (existingItem) {
+      // Merge with existing item by increasing quantity
+      existingItem.quantity += 1;
+      // Combine notes if different
+      if (itemNote && !existingItem.note.includes(itemNote)) {
+        existingItem.note = existingItem.note ? `${existingItem.note}, ${itemNote}` : itemNote;
+      }
+      // Keep the first ID number, or combine if different
+      if (itemIdNumber && !existingItem.idNumber.includes(itemIdNumber)) {
+        existingItem.idNumber = existingItem.idNumber ? `${existingItem.idNumber}, ${itemIdNumber}` : itemIdNumber;
       }
     } else {
-      // For non-מרת"ק items, always add as separate items
+      // Add new item
       processedItems.push({
         name: itemName,
-        origin: itemOrigin,
+        isNeedReport: itemIsNeedReport,
         idNumber: itemIdNumber,
         note: itemNote,
         quantity: 1
@@ -74,7 +63,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
     <tr>
       <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
       <td style="text-align: right; padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.origin}</td>
+      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.isNeedReport ? 'כן' : 'לא'}</td>
       <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.idNumber}</td>
       <td style="text-align: center; padding: 8px; border: 1px solid #ddd; font-weight: 600;">${item.quantity}</td>
     </tr>
@@ -322,16 +311,16 @@ const createReceiptHTML = (receipt: Receipt): string => {
               <span class="info-value">${receipt.user.personalNumber}</span>
             </div>
             <div class="info-item hebrew-text">
+              <span class="info-label">מסגרת:</span>
+              <span class="info-value">${receipt.user.location?.unit?.name || 'לא צוין'}</span>
+            </div>
+            <div class="info-item hebrew-text">
+              <span class="info-label">מיקום:</span>
+              <span class="info-value">${receipt.user.location?.name || 'לא צוין'}</span>
+            </div>
+            <div class="info-item hebrew-text">
               <span class="info-label">טלפון:</span>
               <span class="info-value">${receipt.user.phoneNumber}</span>
-            </div>
-            <div class="info-item hebrew-text">
-              <span class="info-label">יחידה:</span>
-              <span class="info-value">${receipt.user.location}</span>
-            </div>
-            <div class="info-item hebrew-text">
-              <span class="info-label">תאריך מלא:</span>
-              <span class="info-value">${formatDate(receipt.createdAt)}</span>
             </div>
           </div>
         </div>
@@ -343,7 +332,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
               <tr>
                 <th style="width: 8%;">#</th>
                 <th style="width: 40%;">שם הפריט</th>
-                <th style="width: 20%;">מקור</th>
+                <th style="width: 20%;">צופן</th>
                 <th style="width: 22%;">מספר צ'</th>
                 <th style="width: 10%;">כמות</th>
               </tr>
@@ -352,6 +341,9 @@ const createReceiptHTML = (receipt: Receipt): string => {
               ${itemsRows}
             </tbody>
           </table>
+          <div style="text-align: left; margin-top: 10px; font-size: 11px; color: #666;">
+            <strong>תאריך מלא:</strong> ${formatDate(receipt.createdAt)}
+          </div>
         </div>
         
         <div class="signature-section">
@@ -453,7 +445,7 @@ export const generateReceiptPDF = async (receipt: Receipt): Promise<void> => {
     doc.text('Items:', 20, y);
     y += 10;
     receipt.receiptItems?.forEach((item, index) => {
-      doc.text(`${index + 1}. ${item.item.name} (${item.item.origin})`, 20, y);
+      doc.text(`${index + 1}. ${item.item.itemName?.name || 'Unknown Item'}`, 20, y);
       y += 8;
     });
     

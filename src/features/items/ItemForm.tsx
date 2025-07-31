@@ -4,6 +4,7 @@ import { useItems } from '../../hooks';
 import { useManagement } from '../../contexts';
 import { validateRequired, sanitizeInput, getConflictResolutionMessage } from '../../utils';
 import { ConflictErrorModal } from '../../shared/components';
+import './ItemForm.css';
 
 interface ItemFormProps {
   item: Item | null;
@@ -20,7 +21,6 @@ interface FormErrors {
 const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   const { createItem, updateItem } = useItems();
   const { 
-    origins, 
     itemNames, 
     loading: managementLoading
   } = useManagement();
@@ -29,7 +29,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     name: '',
     idNumber: '',
     note: '',
-    origin: '',
+    isNeedReport: false,
     isAvailable: true,
   });
   const [quantity, setQuantity] = useState<number>(1);
@@ -48,10 +48,10 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   useEffect(() => {
     if (item) {
       setFormData({
-        name: item.name,
+        name: item.itemName?.name || '',
         idNumber: item.idNumber || '',
         note: item.note || '',
-        origin: item.origin,
+        isNeedReport: item.isNeedReport || false,
         isAvailable: item.isAvailable,
       });
       // Reset quantity to 1 when editing existing item
@@ -62,6 +62,16 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     }
   }, [item]);
 
+  // Clear idNumber when isNeedReport becomes false, and reset quantity when isNeedReport becomes true
+  useEffect(() => {
+    if (!formData.isNeedReport && formData.idNumber) {
+      setFormData(prev => ({ ...prev, idNumber: '' }));
+    }
+    if (formData.isNeedReport && quantity > 1) {
+      setQuantity(1);
+    }
+  }, [formData.isNeedReport, formData.idNumber, quantity]);
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -69,8 +79,8 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
       newErrors.name = 'שם פריט חובה';
     }
 
-    if (formData.origin === 'כ"ס' && !validateRequired(formData.idNumber || '')) {
-      newErrors.idNumber = 'מספר צ\' חובה עבור כ"ס';
+    if (formData.isNeedReport && !validateRequired(formData.idNumber || '')) {
+      newErrors.idNumber = 'מספר צ\' חובה עבור פריטים בצופן';
     }
 
     setErrors(newErrors);
@@ -104,6 +114,10 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
       if (item?.id) {
         // For updates, exclude isAvailable and quantity from the request body
         const { isAvailable, quantity: _, ...updateData } = formData;
+        // Remove idNumber if isNeedReport is false
+        if (!formData.isNeedReport) {
+          delete updateData.idNumber;
+        }
         const result = await updateItem(item.id, updateData);
         
         if (result.success) {
@@ -118,23 +132,21 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           alert(result.error || 'שגיאה בעדכון הפריט');
         }
       } else {
-        // For creating new items, include quantity for מרת"ק items and exclude idNumber for מרת"ק items
-        const baseData = { ...formData };
-        
-        // Remove idNumber for מרת"ק items
-        if (formData.origin === 'מרת"ק') {
-          delete baseData.idNumber;
+        // For creating new items, exclude isAvailable from the request body
+        const { isAvailable, ...formDataWithoutAvailable } = formData;
+        const requestData = {
+          ...formDataWithoutAvailable,
+          ...(quantity > 1 ? { quantity } : {})
+        };
+        // Remove idNumber if isNeedReport is false
+        if (!formData.isNeedReport) {
+          delete requestData.idNumber;
         }
         
-        const requestData: CreateItemRequest = {
-          ...baseData,
-          ...(formData.origin === 'מרת"ק' && quantity > 1 ? { quantity } : {})
-        };
-        
-        const result = await createItem(requestData);
+        const result = await createItem(requestData as CreateItemRequest);
         
         if (result.success) {
-          if (formData.origin === 'מרת"ק' && quantity > 1) {
+          if (quantity > 1) {
             alert(`נוצרו בהצלחה ${quantity} פריטים`);
           }
           onSuccess();
@@ -158,44 +170,53 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label">שם פריט</label>
-          <select 
-            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-            name="name" 
-            value={formData.name} 
-            onChange={e => handleInputChange('name', e.target.value)} 
-            required
-            disabled={managementLoading}
-          >
-            <option value="">בחר שם פריט</option>
-            {itemNames.map(itemName => (
-              <option key={itemName.id} value={itemName.name}>{itemName.name}</option>
-            ))}
-          </select>
-          {errors.name && <div className="form-error">{errors.name}</div>}
-        </div>
+      <div className="item-form-container">
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">שם פריט</label>
+            <select 
+              className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+              name="name" 
+              value={formData.name} 
+              onChange={e => handleInputChange('name', e.target.value)} 
+              required
+              disabled={managementLoading}
+            >
+              <option value="">בחר שם פריט</option>
+              {itemNames.map(itemName => (
+                <option key={itemName.id} value={itemName.name}>{itemName.name}</option>
+              ))}
+            </select>
+            {errors.name && <div className="form-error">{errors.name}</div>}
+          </div>
 
         <div className="form-group">
-          <label className="form-label">מקור</label>
-          <select 
-            className="form-control"
-            name="origin" 
-            value={formData.origin} 
-            onChange={e => handleInputChange('origin', e.target.value)} 
-            required
-            disabled={managementLoading}
-          >
-            <option value="">בחר מקור</option>
-            {origins.map(origin => (
-              <option key={origin.id} value={origin.name}>{origin.name}</option>
-            ))}
-          </select>
+          <div className="custom-checkbox-wrapper">
+            <label className="custom-checkbox">
+              <input
+                type="checkbox"
+                className="custom-checkbox-input"
+                checked={formData.isNeedReport}
+                onChange={e => setFormData(prev => ({ ...prev, isNeedReport: e.target.checked }))}
+              />
+              <span className="custom-checkbox-checkmark">
+                <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path 
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span className="custom-checkbox-label">
+                <strong>צופן?</strong>
+                <small className="checkbox-description">סמן אם הפריט דורש דיווח מיוחד</small>
+              </span>
+            </label>
+          </div>
         </div>
 
-        {/* Quantity selector - only for new מרת"ק items */}
-        {!item && formData.origin === 'מרת"ק' && (
+        {/* Quantity selector - only for new items when NOT צופן */}
+        {!item && !formData.isNeedReport && (
           <div className="form-group">
             <label className="form-label">כמות ליצירה</label>
             <div className="d-flex align-items-center gap-3">
@@ -222,14 +243,16 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           </div>
         )}
         
-        {formData.origin === 'כ"ס' && (
-          <div className="form-group">
+        {/* ID Number field - only when isNeedReport is true */}
+        {formData.isNeedReport && (
+          <div className="form-group conditional-field">
             <label className="form-label">מספר צ'</label>
             <input 
               className={`form-control ${errors.idNumber ? 'is-invalid' : ''}`}
               name="idNumber" 
               value={formData.idNumber} 
               onChange={e => handleInputChange('idNumber', e.target.value)} 
+              placeholder="הזן מספר צ'"
               required
             />
             {errors.idNumber && <div className="form-error">{errors.idNumber}</div>}
@@ -248,19 +271,20 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           {errors.note && <div className="form-error">{errors.note}</div>}
         </div>
         
-        <div className="btn-group btn-group-end">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            ביטול
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'שומר...' : (
-              item ? 'עדכן' : (
-                formData.origin === 'מרת"ק' && quantity > 1 ? `צור ${quantity} פריטים` : 'צור פריט'
-              )
-            )}
-          </button>
-        </div>
-      </form>
+          <div className="btn-group btn-group-end">
+            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+              ביטול
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+              {isSubmitting ? 'שומר...' : (
+                item ? 'עדכן' : (
+                  quantity > 1 ? `צור ${quantity} פריטים` : 'צור פריט'
+                )
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
 
       <ConflictErrorModal
         isOpen={conflictError.isOpen}

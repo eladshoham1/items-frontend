@@ -62,8 +62,7 @@ const ItemsTab: React.FC = () => {
   // Filter and sort items based on search term and sort config
   const filteredAndSortedItems = (() => {
     let filtered = items.filter(item => 
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.itemName?.name && item.itemName.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -75,12 +74,12 @@ const ItemsTab: React.FC = () => {
 
         switch (sortConfig.key) {
           case 'name':
-            aValue = a.name;
-            bValue = b.name;
+            aValue = a.itemName?.name || '';
+            bValue = b.itemName?.name || '';
             break;
-          case 'origin':
-            aValue = a.origin;
-            bValue = b.origin;
+          case 'isNeedReport':
+            aValue = a.isNeedReport;
+            bValue = b.isNeedReport;
             break;
           case 'idNumber':
             aValue = a.idNumber || '';
@@ -160,7 +159,7 @@ const ItemsTab: React.FC = () => {
     if (selectedItemIds.length === 0) return;
 
     const selectedItems = items.filter(item => selectedItemIds.includes(item.id));
-    const itemNames = selectedItems.map(item => item.name).join(', ');
+    const itemNames = selectedItems.map(item => item.itemName?.name || 'אין שם').join(', ');
     
     if (!window.confirm(`האם אתה בטוח שברצונך למחוק את הפריטים הבאים?\n\n${itemNames}\n\n(${selectedItemIds.length} פריטים)`)) return;
 
@@ -248,7 +247,7 @@ const ItemsTab: React.FC = () => {
               <input
                 type="text"
                 className="form-control"
-                placeholder="חפש פריטים לפי שם, מקור, מספר צ' או הערה..."
+                placeholder="חפש פריטים לפי שם, מספר צ' או הערה..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 style={{ direction: 'rtl' }}
@@ -300,14 +299,14 @@ const ItemsTab: React.FC = () => {
                 </th>
                 <th 
                   className="sortable-header"
-                  onClick={() => handleSort('origin')}
-                  title="לחץ למיון לפי מקור"
-                  data-sorted={sortConfig?.key === 'origin' ? 'true' : 'false'}
+                  onClick={() => handleSort('isNeedReport')}
+                  title="לחץ למיון לפי צופן"
+                  data-sorted={sortConfig?.key === 'isNeedReport' ? 'true' : 'false'}
                 >
                   <div className="d-flex align-items-center justify-content-between">
-                    <span>מקור</span>
+                    <span>צופן</span>
                     <div className="sort-indicator">
-                      {getSortIcon('origin')}
+                      {getSortIcon('isNeedReport')}
                     </div>
                   </div>
                 </th>
@@ -352,20 +351,18 @@ const ItemsTab: React.FC = () => {
                       onChange={() => handleToggleItemSelection(item.id)}
                     />
                   </td>
-                  <td>{item.name}</td>
-                  <td>{item.origin}</td>
+                  <td>{item.itemName?.name || 'אין תערכה'}</td>
+                  <td>{item.isNeedReport ? 'כן' : 'לא'}</td>
                   <td>{item.idNumber || 'לא זמין'}</td>
                   <td>{item.note || 'אין הערה'}</td>
                   <td>{item.isAvailable ? 'זמין' : 'לא זמין'}</td>
                   <td>
-                    <div className="btn-group">
-                      <button 
-                        className="btn btn-sm btn-outline" 
-                        onClick={() => handleItemClick(item)}
-                      >
-                        עדכן
-                      </button>
-                    </div>
+                    <button 
+                      className="btn btn-sm btn-outline" 
+                      onClick={() => handleItemClick(item)}
+                    >
+                      עדכן
+                    </button>
                   </td>
                 </tr>
               ))}

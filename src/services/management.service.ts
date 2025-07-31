@@ -2,18 +2,12 @@ import { apiService } from './api.service';
 import {
   UnitEntity,
   LocationEntity,
-  RankEntity,
-  OriginEntity,
   ItemNameEntity,
   CreateUnitRequest,
   CreateLocationRequest,
-  CreateRankRequest,
-  CreateOriginRequest,
   CreateItemNameRequest,
   UpdateUnitRequest,
   UpdateLocationRequest,
-  UpdateRankRequest,
-  UpdateOriginRequest,
   UpdateItemNameRequest,
   BulkDeleteRequest,
   ManagementResponse,
@@ -146,136 +140,6 @@ class ManagementService {
       return {
         success: false,
         error: error.response?.data?.message || error.message || 'שגיאה במחיקת מיקומים',
-      };
-    }
-  }
-
-  // Rank methods
-  async getAllRanks(): Promise<ManagementResponse<RankEntity[]>> {
-    try {
-      const response = await apiService.get<RankEntity[]>('/management/ranks');
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה בטעינת דרגות',
-      };
-    }
-  }
-
-  async createRank(data: CreateRankRequest): Promise<ManagementResponse<RankEntity>> {
-    try {
-      const response = await apiService.post<RankEntity>('/management/ranks', data);
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      const isConflict = error.response?.status === 409;
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה ביצירת דרגה',
-        isConflict,
-      };
-    }
-  }
-
-  async updateRank(id: string, data: UpdateRankRequest): Promise<ManagementResponse<RankEntity>> {
-    try {
-      const response = await apiService.patch<RankEntity>(`/management/ranks/${id}`, data);
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      const isConflict = error.response?.status === 409;
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה בעדכון דרגה',
-        isConflict,
-      };
-    }
-  }
-
-  async deleteRanks(data: BulkDeleteRequest): Promise<ManagementResponse<{ deleted: number; errors: string[] }>> {
-    try {
-      const response = await apiService.delete<{ deleted: number; errors: string[] }>('/management/ranks', { data });
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה במחיקת דרגות',
-      };
-    }
-  }
-
-  // Origin methods
-  async getAllOrigins(): Promise<ManagementResponse<OriginEntity[]>> {
-    try {
-      const response = await apiService.get<OriginEntity[]>('/management/origins');
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה בטעינת מקורות',
-      };
-    }
-  }
-
-  async createOrigin(data: CreateOriginRequest): Promise<ManagementResponse<OriginEntity>> {
-    try {
-      const response = await apiService.post<OriginEntity>('/management/origins', data);
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      const isConflict = error.response?.status === 409;
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה ביצירת מקור',
-        isConflict,
-      };
-    }
-  }
-
-  async updateOrigin(id: string, data: UpdateOriginRequest): Promise<ManagementResponse<OriginEntity>> {
-    try {
-      const response = await apiService.patch<OriginEntity>(`/management/origins/${id}`, data);
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      const isConflict = error.response?.status === 409;
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה בעדכון מקור',
-        isConflict,
-      };
-    }
-  }
-
-  async deleteOrigins(data: BulkDeleteRequest): Promise<ManagementResponse<{ deleted: number; errors: string[] }>> {
-    try {
-      const response = await apiService.delete<{ deleted: number; errors: string[] }>('/management/origins', { data });
-      return {
-        success: true,
-        data: response,
-      };
-    } catch (error: any) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה במחיקת מקורות',
       };
     }
   }

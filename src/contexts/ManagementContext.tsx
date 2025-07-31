@@ -3,18 +3,12 @@ import { managementService } from '../services';
 import {
   UnitEntity,
   LocationEntity,
-  RankEntity,
-  OriginEntity,
   ItemNameEntity,
   CreateUnitRequest,
   CreateLocationRequest,
-  CreateRankRequest,
-  CreateOriginRequest,
   CreateItemNameRequest,
   UpdateUnitRequest,
   UpdateLocationRequest,
-  UpdateRankRequest,
-  UpdateOriginRequest,
   UpdateItemNameRequest,
   BulkDeleteRequest,
   ManagementResponse,
@@ -24,8 +18,6 @@ interface ManagementContextType {
   // Data
   units: UnitEntity[];
   locations: LocationEntity[];
-  ranks: RankEntity[];
-  origins: OriginEntity[];
   itemNames: ItemNameEntity[];
   loading: boolean;
   error: string | null;
@@ -39,14 +31,6 @@ interface ManagementContextType {
   createLocation: (data: CreateLocationRequest) => Promise<ManagementResponse<LocationEntity>>;
   updateLocation: (id: string, data: UpdateLocationRequest) => Promise<ManagementResponse<LocationEntity>>;
   deleteLocations: (data: BulkDeleteRequest) => Promise<ManagementResponse<{ deleted: number; errors: string[] }>>;
-  // Rank operations
-  createRank: (data: CreateRankRequest) => Promise<ManagementResponse<RankEntity>>;
-  updateRank: (id: string, data: UpdateRankRequest) => Promise<ManagementResponse<RankEntity>>;
-  deleteRanks: (data: BulkDeleteRequest) => Promise<ManagementResponse<{ deleted: number; errors: string[] }>>;
-  // Origin operations
-  createOrigin: (data: CreateOriginRequest) => Promise<ManagementResponse<OriginEntity>>;
-  updateOrigin: (id: string, data: UpdateOriginRequest) => Promise<ManagementResponse<OriginEntity>>;
-  deleteOrigins: (data: BulkDeleteRequest) => Promise<ManagementResponse<{ deleted: number; errors: string[] }>>;
   // Item Name operations
   createItemName: (data: CreateItemNameRequest) => Promise<ManagementResponse<ItemNameEntity>>;
   updateItemName: (id: string, data: UpdateItemNameRequest) => Promise<ManagementResponse<ItemNameEntity>>;
@@ -62,8 +46,6 @@ interface ManagementProviderProps {
 export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children }) => {
   const [units, setUnits] = useState<UnitEntity[]>([]);
   const [locations, setLocations] = useState<LocationEntity[]>([]);
-  const [ranks, setRanks] = useState<RankEntity[]>([]);
-  const [origins, setOrigins] = useState<OriginEntity[]>([]);
   const [itemNames, setItemNames] = useState<ItemNameEntity[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,18 +55,14 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
     setLoading(true);
     setError(null);
     try {
-      const [unitsRes, locationsRes, ranksRes, originsRes, itemNamesRes] = await Promise.all([
+      const [unitsRes, locationsRes, itemNamesRes] = await Promise.all([
         managementService.getAllUnits(),
         managementService.getAllLocations(),
-        managementService.getAllRanks(),
-        managementService.getAllOrigins(),
         managementService.getAllItemNames(),
       ]);
 
       if (unitsRes.success && unitsRes.data) setUnits(unitsRes.data);
       if (locationsRes.success && locationsRes.data) setLocations(locationsRes.data);
-      if (ranksRes.success && ranksRes.data) setRanks(ranksRes.data);
-      if (originsRes.success && originsRes.data) setOrigins(originsRes.data);
       if (itemNamesRes.success && itemNamesRes.data) setItemNames(itemNamesRes.data);
     } catch (err: any) {
       setError(err.message || 'שגיאה בטעינת נתונים');
@@ -143,56 +121,6 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
     return result;
   }, []);
 
-  // Rank operations
-  const createRank = useCallback(async (data: CreateRankRequest): Promise<ManagementResponse<RankEntity>> => {
-    const result = await managementService.createRank(data);
-    if (result.success && result.data) {
-      setRanks(prev => [...prev, result.data!]);
-    }
-    return result;
-  }, []);
-
-  const updateRank = useCallback(async (id: string, data: UpdateRankRequest): Promise<ManagementResponse<RankEntity>> => {
-    const result = await managementService.updateRank(id, data);
-    if (result.success && result.data) {
-      setRanks(prev => prev.map(rank => rank.id === id ? result.data! : rank));
-    }
-    return result;
-  }, []);
-
-  const deleteRanks = useCallback(async (data: BulkDeleteRequest): Promise<ManagementResponse<{ deleted: number; errors: string[] }>> => {
-    const result = await managementService.deleteRanks(data);
-    if (result.success) {
-      setRanks(prev => prev.filter(rank => !data.ids.includes(rank.id)));
-    }
-    return result;
-  }, []);
-
-  // Origin operations
-  const createOrigin = useCallback(async (data: CreateOriginRequest): Promise<ManagementResponse<OriginEntity>> => {
-    const result = await managementService.createOrigin(data);
-    if (result.success && result.data) {
-      setOrigins(prev => [...prev, result.data!]);
-    }
-    return result;
-  }, []);
-
-  const updateOrigin = useCallback(async (id: string, data: UpdateOriginRequest): Promise<ManagementResponse<OriginEntity>> => {
-    const result = await managementService.updateOrigin(id, data);
-    if (result.success && result.data) {
-      setOrigins(prev => prev.map(origin => origin.id === id ? result.data! : origin));
-    }
-    return result;
-  }, []);
-
-  const deleteOrigins = useCallback(async (data: BulkDeleteRequest): Promise<ManagementResponse<{ deleted: number; errors: string[] }>> => {
-    const result = await managementService.deleteOrigins(data);
-    if (result.success) {
-      setOrigins(prev => prev.filter(origin => !data.ids.includes(origin.id)));
-    }
-    return result;
-  }, []);
-
   // Item Name operations
   const createItemName = useCallback(async (data: CreateItemNameRequest): Promise<ManagementResponse<ItemNameEntity>> => {
     const result = await managementService.createItemName(data);
@@ -227,8 +155,6 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
     // Data
     units,
     locations,
-    ranks,
-    origins,
     itemNames,
     loading,
     error,
@@ -242,14 +168,6 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
     createLocation,
     updateLocation,
     deleteLocations,
-    // Rank operations
-    createRank,
-    updateRank,
-    deleteRanks,
-    // Origin operations
-    createOrigin,
-    updateOrigin,
-    deleteOrigins,
     // Item Name operations
     createItemName,
     updateItemName,

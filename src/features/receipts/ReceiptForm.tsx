@@ -24,7 +24,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
       <div className="item-info">
         <div className="item-name">
           {item.name}
-          {item.origin === 'מרת"ק' && item.quantity && item.quantity > 1 && (
+          {item.quantity && item.quantity > 1 && (
             <span className="item-badge item-badge-quantity ms-2">
               כמות: {item.quantity}
             </span>
@@ -37,7 +37,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
             </span>
           )}
           <span className="item-badge item-badge-origin">
-            מקור: {item.origin}
+            צופן: {item.isNeedReport ? 'כן' : 'לא'}
           </span>
         </div>
       </div>
@@ -80,8 +80,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
       // Convert BackendReceiptItem to ReceiptItem format
       const convertedItems: ReceiptItem[] = receipt.receiptItems?.map(item => ({
         id: item.itemId, // Use itemId as the main id
-        origin: item.item?.origin || 'מרת"ק',
-        name: item.item?.name || 'פריט לא ידוע',
+        name: item.item?.itemName?.name || 'פריט לא ידוע',
+        isNeedReport: false, // Default to false since this info is not available
         quantity: 1, // Default quantity since BackendReceiptItem doesn't have quantity
         note: item.item?.note
       })) || [];
@@ -103,8 +103,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
     
     const query = itemSearchQuery.toLowerCase().trim();
     return availableItems.filter(item => 
-      item.name.toLowerCase().includes(query) ||
-      item.origin.toLowerCase().includes(query) ||
+      (item.itemName?.name && item.itemName.name.toLowerCase().includes(query)) ||
       (item.idNumber && item.idNumber.toLowerCase().includes(query))
     );
   }, [availableItems, itemSearchQuery]);
@@ -114,20 +113,18 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
     return filteredAvailableItems.find(item => item.id === selectedItemId);
   }, [filteredAvailableItems, selectedItemId]);
 
-  // Calculate max available quantity for מרת"ק items
+  // Calculate max available quantity for items
   const maxAvailableQuantity = useMemo(() => {
-    if (!selectedItem || selectedItem.origin !== 'מרת"ק') {
+    if (!selectedItem) {
       return 1;
     }
     
     // Count how many items with the same name are available
-    const sameNameItems = availableItems.filter(item => 
-      item.name === selectedItem.name && item.origin === 'מרת"ק'
-    );
-    
-    // Subtract quantities already taken for the same item name
+    const sameNameItems = availableItems.filter(item =>
+      item.itemName?.name === selectedItem.itemName?.name
+    );    // Subtract quantities already taken for the same item name
     const alreadyTaken = receiptItems
-      .filter(receiptItem => receiptItem.name === selectedItem.name && receiptItem.origin === 'מרת"ק')
+      .filter(receiptItem => receiptItem.name === selectedItem.itemName?.name)
       .reduce((sum, receiptItem) => sum + (receiptItem.quantity || 1), 0);
     
     return Math.max(1, sameNameItems.length - alreadyTaken);
@@ -135,7 +132,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
 
   // Update quantity when item changes
   React.useEffect(() => {
-    if (selectedItem && selectedItem.origin === 'מרת"ק') {
+    if (selectedItem) {
       setSelectedQuantity(Math.min(selectedQuantity, maxAvailableQuantity));
     } else {
       setSelectedQuantity(1);
@@ -149,51 +146,32 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
     const item = filteredAvailableItems.find(i => i.id === selectedItemId);
     if (!item) return;
 
-    if (item.origin === 'מרת"ק') {
-      // For מרת"ק items, we need to find multiple items with the same name
-      const sameNameItems = availableItems.filter(availableItem => 
-        availableItem.name === item.name && 
-        availableItem.origin === 'מרת"ק' &&
-        !receiptItems.some(receiptItem => receiptItem.id === availableItem.id)
-      );
-      
-      // Add the selected quantity as individual items
-      const newReceiptItems: ReceiptItem[] = [];
-      for (let i = 0; i < selectedQuantity && i < sameNameItems.length; i++) {
-        const itemToAdd = sameNameItems[i];
-        newReceiptItems.push({
-          id: itemToAdd.id,
-          name: itemToAdd.name,
-          origin: itemToAdd.origin,
-          idNumber: itemToAdd.idNumber || '',
-          quantity: 1 // Each item has quantity 1, but we track it for display
-        });
-      }
-      
-      setReceiptItems([...receiptItems, ...newReceiptItems]);
-    } else {
-      // For other items, add single item
-      const newReceiptItem: ReceiptItem = {
-        id: item.id,
-        name: item.name,
-        origin: item.origin,
-        idNumber: item.idNumber || ''
-      };
-      
-      setReceiptItems([...receiptItems, newReceiptItem]);
+    // Find multiple items with the same name for quantity handling
+    const sameNameItems = availableItems.filter(availableItem => 
+      availableItem.itemName?.name === item.itemName?.name && 
+      !receiptItems.some(receiptItem => receiptItem.id === availableItem.id)
+    );
+    
+    // Add the selected quantity as individual items
+    const newReceiptItems: ReceiptItem[] = [];
+    for (let i = 0; i < selectedQuantity && i < sameNameItems.length; i++) {
+      const itemToAdd = sameNameItems[i];
+      newReceiptItems.push({
+        id: itemToAdd.id,
+        name: itemToAdd.itemName?.name || '',
+        idNumber: itemToAdd.idNumber || '',
+        isNeedReport: itemToAdd.isNeedReport,
+        quantity: 1 // Each item has quantity 1, but we track it for display
+      });
     }
+    
+    setReceiptItems([...receiptItems, ...newReceiptItems]);
     
     setSelectedItemId('');
     setSelectedQuantity(1);
     setItemSearchQuery(''); // Clear search when item is added
     
     // Refresh available items to ensure real-time updates
-    refetchAvailableItems();
-  };
-
-  const removeItem = (id: string) => {
-    setReceiptItems(items => items.filter(item => item.id !== id));
-    // Refresh available items when removing an item
     refetchAvailableItems();
   };
 
@@ -345,7 +323,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
                     <option value="">בחר משתמש...</option>
                     {users.map(user => (
                       <option key={user.id} value={user.id}>
-                        {user.name} - {user.rank} - {user.location}
+                        {user.name} - {user.unit} - {user.location}
                       </option>
                     ))}
                   </select>
@@ -421,14 +399,14 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
                       )}
                       {filteredAvailableItems.map(item => (
                         <option key={item.id} value={item.id}>
-                          {item.name} ({item.origin}) {item.idNumber && `- ${item.idNumber}`}
+                          {item.itemName?.name || 'ללא שם'} {item.isNeedReport ? '(צופן)' : ''} {item.idNumber && `- ${item.idNumber}`}
                         </option>
                       ))}
                     </select>
                   </div>
                   
-                  {/* Quantity selector for מרת"ק items */}
-                  {selectedItem && selectedItem.origin === 'מרת"ק' && (
+                  {/* Quantity selector for items */}
+                  {selectedItem && maxAvailableQuantity > 1 && (
                     <div className="quantity-select-row mt-3">
                       <label htmlFor="quantity-select" className="form-label">
                         <i className="fas fa-sort-numeric-up me-2"></i>
@@ -461,10 +439,10 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
                       type="button" 
                       className="btn btn-success add-item-btn"
                       onClick={addItem}
-                      disabled={!selectedItemId || itemsLoading || (selectedItem?.origin === 'מרת"ק' && maxAvailableQuantity === 0)}
+                      disabled={!selectedItemId || itemsLoading || maxAvailableQuantity === 0}
                     >
                       <i className="fas fa-plus me-1"></i>
-                      {selectedItem && selectedItem.origin === 'מרת"ק' && selectedQuantity > 1 
+                      {selectedItem && selectedQuantity > 1 
                         ? `הוסף ${selectedQuantity} פריטים`
                         : 'הוסף פריט'}
                     </button>
@@ -496,41 +474,33 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
                   <div className="items-list">
                     {receiptItems
                       .reduce((grouped: { item: ReceiptItem, count: number }[], item) => {
-                        if (item.origin === 'מרת"ק') {
-                          const existing = grouped.find(g => g.item.name === item.name && g.item.origin === 'מרת"ק');
-                          if (existing) {
-                            existing.count++;
-                          } else {
-                            grouped.push({ item: { ...item, quantity: 1 }, count: 1 });
-                          }
+                        // Group all items by name for quantity handling
+                        const existing = grouped.find(g => g.item.name === item.name);
+                        if (existing) {
+                          existing.count++;
                         } else {
-                          grouped.push({ item, count: 1 });
+                          grouped.push({ item: { ...item, quantity: 1 }, count: 1 });
                         }
                         return grouped;
                       }, [])
                       .map((groupedItem, index) => (
                         <ItemCard
-                          key={`${groupedItem.item.name}-${groupedItem.item.origin}-${index}`}
+                          key={`${groupedItem.item.name}-${index}`}
                           item={{
                             ...groupedItem.item,
-                            quantity: groupedItem.item.origin === 'מרת"ק' ? groupedItem.count : undefined
+                            quantity: groupedItem.count
                           }}
                           onRemove={(id) => {
-                            if (groupedItem.item.origin === 'מרת"ק') {
-                              // Remove all items with the same name for מרת"ק
-                              const itemsToRemove = receiptItems
-                                .filter(receiptItem => 
-                                  receiptItem.name === groupedItem.item.name && 
-                                  receiptItem.origin === 'מרת"ק'
-                                )
-                                .map(item => item.id);
-                              
-                              setReceiptItems(items => 
-                                items.filter(item => !itemsToRemove.includes(item.id))
-                              );
-                            } else {
-                              removeItem(id);
-                            }
+                            // Remove all items with the same name
+                            const itemsToRemove = receiptItems
+                              .filter(receiptItem => 
+                                receiptItem.name === groupedItem.item.name
+                              )
+                              .map(item => item.id);
+                            
+                            setReceiptItems(items => 
+                              items.filter(item => !itemsToRemove.includes(item.id))
+                            );
                             refetchAvailableItems();
                           }}
                         />

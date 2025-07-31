@@ -2,14 +2,25 @@ import { ID } from './common.types';
 
 export interface Item {
   id: ID;
-  origin: string;
+  nameId: string;
+  itemName: {
+    name: string;
+  };
+  idNumber?: string;
+  note?: string;
+  isNeedReport: boolean;
+  isAvailable: boolean;
+  lastReported?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateItemRequest = {
   name: string;
   idNumber?: string;
   note?: string;
+  isNeedReport: boolean;
   isAvailable: boolean;
-}
-
-export type CreateItemRequest = Omit<Item, 'id'> & {
   quantity?: number;
 };
-export type UpdateItemRequest = Partial<CreateItemRequest> & { id: ID };
+export type UpdateItemRequest = Partial<Omit<CreateItemRequest, 'quantity'>> & { id: ID };
