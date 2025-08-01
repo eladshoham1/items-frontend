@@ -278,15 +278,15 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   };
 
   // Change quantity of existing item (for non-cipher items only)
-  const changeItemQuantity = (itemId: string, newQuantity: number) => {
-    setReceiptItems(prev => 
-      prev.map(item => 
-        item.id === itemId && !item.isNeedReport 
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
-  };
+  // const changeItemQuantity = (itemId: string, newQuantity: number) => {
+  //   setReceiptItems(prev => 
+  //     prev.map(item => 
+  //       item.id === itemId && !item.isNeedReport 
+  //         ? { ...item, quantity: newQuantity }
+  //         : item
+  //     )
+  //   );
+  // };
 
   // Calculate max available quantity for existing items
   const getMaxAvailableForItem = (itemName: string): number => {

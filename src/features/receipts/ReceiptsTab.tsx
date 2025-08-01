@@ -76,11 +76,11 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         setIsUpdateModalOpen(true);
     };
 
-    const handleReturnClick = (receipt: Receipt) => {
-        setSelectedReceipt(receipt);
-        setModalType('return');
-        setIsModalOpen(true);
-    };
+    // const handleReturnClick = (receipt: Receipt) => {
+    //     setSelectedReceipt(receipt);
+    //     setModalType('return');
+    //     setIsModalOpen(true);
+    // };
 
     const handleDeleteClick = (receipt: Receipt) => {
         setSelectedReceipt(receipt);

@@ -30,9 +30,24 @@ src/
 
 Create a `.env` file in the root directory:
 
+```bash
+# Development
+REACT_APP_API_URL=http://localhost:3001
+NODE_ENV=development
+```
+
+For production deployment (like Vercel), set:
+```bash
+# Production
+REACT_APP_API_URL=https://items-service-production.up.railway.app
+# OR without protocol (https will be added automatically)
+REACT_APP_API_URL=items-service-production.up.railway.app
+NODE_ENV=production
+```
+
 ### Changing Server URL
 
-To change the server URL, update the `API_URL` environment variable in:
+To change the server URL, update the `REACT_APP_API_URL` environment variable in:
 - `.env.local` for local development
 - Your deployment environment variables for production
 

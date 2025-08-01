@@ -1,9 +1,34 @@
 // API Configuration
 const API_PREFIX = 'api';
 
+// Helper function to construct the base URL properly
+const constructBaseURL = () => {
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+  
+  // If the URL already includes protocol, use it as is
+  if (apiUrl.startsWith('http://') || apiUrl.startsWith('https://')) {
+    return `${apiUrl}/${API_PREFIX}`;
+  }
+  
+  // If no protocol is specified, add https for production domains
+  // and http for localhost
+  const protocol = apiUrl.includes('localhost') ? 'http://' : 'https://';
+  const finalUrl = `${protocol}${apiUrl}/${API_PREFIX}`;
+  
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 API Configuration Debug:');
+    console.log('  Raw REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+    console.log('  Processed apiUrl:', apiUrl);
+    console.log('  Final BASE_URL:', finalUrl);
+  }
+  
+  return finalUrl;
+};
+
 export const API_CONFIG = {
   API_PREFIX,
-  BASE_URL: (process.env.REACT_APP_API_URL || 'http://localhost:3001') + '/' + API_PREFIX,
+  BASE_URL: constructBaseURL(),
   TIMEOUT: 10000,
   HEADERS: {
     'Content-Type': 'application/json',

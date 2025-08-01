@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, CreateUserRequest, UpdateUserRequest, ranks } from '../../types';
+import { User, UpdateUserRequest, ranks } from '../../types';
 import { useManagement } from '../../contexts';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
 
