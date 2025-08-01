@@ -32,9 +32,9 @@ const ItemCard: React.FC<ItemCardProps> = ({
         />
       </div>
       <div className="item-info">
-        <div className="item-name">{item.item.itemName?.name || 'פריט לא ידוע'}</div>
+        <div className="item-name">{item.item?.itemName?.name || 'פריט לא ידוע'}</div>
         <div className="item-details">
-          {item.item.idNumber && (
+          {item.item?.idNumber && (
             <span className="item-badge item-badge-id">
               מספר צ': {item.item.idNumber}
             </span>
@@ -42,7 +42,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
           <span className="item-badge item-badge-origin">
             צופן: לא
           </span>
-          {item.item.note && (
+          {item.item?.note && (
             <span className="item-badge item-badge-note">
               הערה: {item.item.note}
             </span>
@@ -95,7 +95,7 @@ const ReturnItemsModal: React.FC<ReturnItemsModalProps> = ({ receipt, onSuccess,
   };
 
   const selectAll = () => {
-    setSelectedItems(new Set(receipt.receiptItems.map(item => item.id)));
+    setSelectedItems(new Set(receipt.receiptItems?.map(item => item.id) || []));
     if (error) setError('');
   };
 
@@ -157,7 +157,7 @@ const ReturnItemsModal: React.FC<ReturnItemsModalProps> = ({ receipt, onSuccess,
             <div className="receipt-details">
               <div className="detail-item">
                 <span className="detail-label">משתמש:</span>
-                <span className="detail-value">{receipt.user.name} - {receipt.user.phoneNumber}</span>
+                <span className="detail-value">{receipt.signedBy?.name || 'משתמש לא ידוע'} - {receipt.signedById}</span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">תאריך:</span>
@@ -173,7 +173,7 @@ const ReturnItemsModal: React.FC<ReturnItemsModalProps> = ({ receipt, onSuccess,
               </div>
               <div className="detail-item">
                 <span className="detail-label">סה"כ פריטים:</span>
-                <span className="detail-value">{receipt.receiptItems.length}</span>
+                <span className="detail-value">{receipt.receiptItems?.length || 0}</span>
               </div>
             </div>
           </div>
@@ -183,7 +183,7 @@ const ReturnItemsModal: React.FC<ReturnItemsModalProps> = ({ receipt, onSuccess,
             <div className="section-header">
               <h5 className="section-title">
                 <i className="fas fa-boxes me-2"></i>
-                בחר פריטים להחזרה ({selectedItems.size} מתוך {receipt.receiptItems.length})
+                בחר פריטים להחזרה ({selectedItems.size} מתוך {receipt.receiptItems?.length || 0})
               </h5>
               <div className="selection-actions">
                 <button 
@@ -208,14 +208,14 @@ const ReturnItemsModal: React.FC<ReturnItemsModalProps> = ({ receipt, onSuccess,
             </div>
             
             <div className="items-list">
-              {receipt.receiptItems.map(item => (
+              {receipt.receiptItems?.map(item => (
                 <ItemCard
                   key={item.id}
                   item={item}
                   isSelected={selectedItems.has(item.id)}
                   onToggle={toggleItem}
                 />
-              ))}
+              )) || <div>אין פריטים זמינים</div>}
             </div>
           </div>
 

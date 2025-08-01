@@ -1,10 +1,16 @@
-import { ID, Timestamp } from './common.types';
+import { ID } from './common.types';
 
+// Backend Receipt structure (matches the server)
 export interface Receipt {
-  id: ID;
-  receiptItems: BackendReceiptItem[];
-  userId: ID;
-  user: {
+  id: string;
+  createdById: string;
+  signedById: string;
+  signature: string | null;
+  isSigned: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  // These will be populated by the service layer or separate API calls
+  createdBy?: {
     id: string;
     name: string;
     personalNumber: number;
@@ -17,21 +23,63 @@ export interface Receipt {
       };
     };
   };
-  signature: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
-
+  signedBy?: {
+    id: string;
+    name: string;
+    personalNumber: number;
+    phoneNumber: string;
+    rank: string;
+    location?: {
+      name: string;
+      unit?: {
+        name: string;
+      };  
+    };
+  };
+  receiptItems?: {
+    id: string;
+    receiptId: string;
+    itemId: string;
+    createdAt: Date;
+    item: {
+      id: string;
+      idNumber?: string | null;
+      note?: string;
+      isNeedReport?: boolean;
+      itemName: {
+        name: string;
+      };
+    };
+  }[];
+  // Legacy support for old structure
+  items?: ReceiptItemWithDetails[];
+}// Backend Receipt Item structure (matches the server)
 export interface BackendReceiptItem {
   id: string;
   receiptId: string;
   itemId: string;
-  createdAt: Timestamp;
-  item: {
+  createdAt: Date;
+  item?: {
+    id: string;
+    itemName?: {
+      name: string;
+    };
+    idNumber?: string | null;
+    note?: string | null;
+  };
+}
+
+// Receipt Item with details (for display purposes)
+export interface ReceiptItemWithDetails {
+  id: string;
+  receiptId: string;
+  itemId: string;
+  createdAt: Date;
+  item?: {
     id: string;
     idNumber?: string | null;
-    note?: string;
-    itemName: {
+    note?: string | null;
+    itemName?: {
       name: string;
     };
   };
@@ -45,9 +93,19 @@ export interface ReceiptItem {
   quantity?: number;
 }
 
+// Backend DTOs (matching the server)
 export interface CreateReceiptRequest {
-  items: ReceiptItem[];
-  userId: ID;
+  createdById: string;
+  signedById: string;
+  items: string[]; // Array of item IDs
+}
+
+export interface UpdateReceiptRequest {
+  signedById?: string;
+  items?: string[]; // Array of item IDs
+}
+
+export interface SignReceiptRequest {
   signature: string;
 }
 
@@ -61,26 +119,8 @@ export interface ReturnItemsRequest {
   receiptItemIds: string[];
 }
 
-export interface PendingReceipt {
-  id: ID;
-  receiptItems: BackendReceiptItem[];
-  userId: ID;
-  user: {
-    id: string;
-    name: string;
-    personalNumber: number;
-    phoneNumber: string;
-    rank: string;
-    location?: {
-      name: string;
-      unit?: {
-        name: string;
-      };
-    };
-  };
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-}
+// For legacy compatibility, we'll remove PendingReceipt since the backend doesn't seem to have it
+// Instead, we'll use Receipt with isSigned: false
 
 export interface CreatePendingReceiptRequest {
   userId: ID;

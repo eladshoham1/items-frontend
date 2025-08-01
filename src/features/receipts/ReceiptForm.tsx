@@ -76,13 +76,13 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
   // Initialize form with existing receipt data when editing
   useEffect(() => {
     if (receipt) {
-      setSelectedUser(receipt.user.id);
-      // Convert BackendReceiptItem to ReceiptItem format
-      const convertedItems: ReceiptItem[] = receipt.receiptItems?.map(item => ({
-        id: item.itemId, // Use itemId as the main id
+      setSelectedUser(receipt.signedById);
+      // Convert Receipt items to ReceiptItem format
+      const convertedItems: ReceiptItem[] = receipt.items?.map(item => ({
+        id: item.id,
         name: item.item?.itemName?.name || 'פריט לא ידוע',
         isNeedReport: false, // Default to false since this info is not available
-        quantity: 1, // Default quantity since BackendReceiptItem doesn't have quantity
+        quantity: 1, // Default quantity since Receipt items don't have quantity
         note: item.item?.note
       })) || [];
       setReceiptItems(convertedItems);
@@ -198,8 +198,9 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
 
     try {
       const receiptData = {
-        userId: selectedUser,
-        items: receiptItems,
+        createdById: '', // Will be set by backend based on current user
+        signedById: selectedUser,
+        items: receiptItems.map(item => item.id), // Convert to array of item IDs
         signature: signature,
         date: new Date().toISOString()
       };

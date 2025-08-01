@@ -89,9 +89,13 @@ const Dashboard: React.FC = () => {
           aValue = getItemSignedTotal(a);
           bValue = getItemSignedTotal(b);
           break;
+        case 'waiting':
+          aValue = getItemWaitingTotal(a);
+          bValue = getItemWaitingTotal(b);
+          break;
         case 'available':
-          aValue = (stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0) - getItemSignedTotal(a);
-          bValue = (stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0) - getItemSignedTotal(b);
+          aValue = (stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0) - getItemSignedTotal(a) - getItemWaitingTotal(a);
+          bValue = (stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0) - getItemSignedTotal(b) - getItemWaitingTotal(b);
           break;
         case 'total':
           aValue = stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0;
@@ -134,17 +138,18 @@ const Dashboard: React.FC = () => {
   const getCellData = (itemName: string, unit: string) => {
     try {
       if (!stats || !stats[itemName] || !stats[itemName].units || !stats[itemName].units[unit]) {
-        return { signedQuantity: 0, totalQuantity: 0, users: [] };
+        return { signedQuantity: 0, waitingQuantity: 0, totalQuantity: 0, users: [] };
       }
       
       const unitData = stats[itemName].units[unit];
       if (!unitData || !unitData.locations || typeof unitData.locations !== 'object') {
-        return { signedQuantity: 0, totalQuantity: 0, users: [] };
+        return { signedQuantity: 0, waitingQuantity: 0, totalQuantity: 0, users: [] };
       }
       
       // Aggregate all users from all locations within this unit
       const allUsers: SignUser[] = [];
       let totalSignedQuantity = 0;
+      let totalWaitingQuantity = 0;
       
       Object.keys(unitData.locations).forEach(locationName => {
         const locationData = unitData.locations[locationName];
@@ -152,7 +157,14 @@ const Dashboard: React.FC = () => {
           locationData.signUsers.forEach((user: any) => {
             if (user && typeof user.quantity === 'number') {
               allUsers.push({ ...user, location: locationName });
-              totalSignedQuantity += user.quantity;
+              
+              // Only count as signed if isSigned is true
+              if (user.isSigned === true) {
+                totalSignedQuantity += user.quantity;
+              } else {
+                // Count as waiting if isSigned is false or undefined
+                totalWaitingQuantity += user.quantity;
+              }
             }
           });
         }
@@ -160,10 +172,10 @@ const Dashboard: React.FC = () => {
       
       const totalQuantity = stats[itemName] && typeof stats[itemName].quantity === 'number' ? stats[itemName].quantity : 0;
       
-      return { signedQuantity: totalSignedQuantity, totalQuantity, users: allUsers };
+      return { signedQuantity: totalSignedQuantity, waitingQuantity: totalWaitingQuantity, totalQuantity, users: allUsers };
     } catch (error) {
       console.error('Error getting cell data:', error, { itemName, unit });
-      return { signedQuantity: 0, totalQuantity: 0, users: [] };
+      return { signedQuantity: 0, waitingQuantity: 0, totalQuantity: 0, users: [] };
     }
   };
 
@@ -181,6 +193,24 @@ const Dashboard: React.FC = () => {
       }, 0);
     } catch (error) {
       console.error('Error calculating item signed total:', error, { itemName });
+      return 0;
+    }
+  };
+
+  // Calculate total waiting quantities per item (across all units)
+  const getItemWaitingTotal = (itemName: string) => {
+    try {
+      if (!units || !Array.isArray(units) || !stats || !stats[itemName]) {
+        return 0;
+      }
+      
+      return units.reduce((total: number, unit: string) => {
+        if (!unit || typeof unit !== 'string') return total;
+        const { waitingQuantity } = getCellData(itemName, unit);
+        return total + (typeof waitingQuantity === 'number' ? waitingQuantity : 0);
+      }, 0);
+    } catch (error) {
+      console.error('Error calculating item waiting total:', error, { itemName });
       return 0;
     }
   };
@@ -316,6 +346,23 @@ const Dashboard: React.FC = () => {
                     className="text-center" 
                     style={{ 
                       minWidth: '120px', 
+                      background: 'linear-gradient(135deg, #f39c12 0%, #e67e22 100%)',
+                      color: 'white',
+                      padding: '16px 8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      borderBottom: '3px solid #f39c12',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('waiting')}
+                  >
+                    ממתינים לחתימה
+                    {getSortIcon('waiting')}
+                  </th>
+                  <th 
+                    className="text-center" 
+                    style={{ 
+                      minWidth: '120px', 
                       background: 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)',
                       color: 'white',
                       padding: '16px 8px',
@@ -387,8 +434,10 @@ const Dashboard: React.FC = () => {
                     {units && Array.isArray(units) ? units.map(unit => {
                       if (!unit || typeof unit !== 'string') return null;
                       
-                      const { signedQuantity, users } = getCellData(item, unit);
+                      const { signedQuantity, waitingQuantity, users } = getCellData(item, unit);
                       const hasUsers = users && Array.isArray(users) && users.length > 0;
+                      const hasSignedUsers = signedQuantity > 0;
+                      const hasWaitingUsers = waitingQuantity > 0;
                       
                       return (
                         <td 
@@ -418,21 +467,44 @@ const Dashboard: React.FC = () => {
                           }}
                         >
                           {hasUsers ? (
-                            <span 
-                              className="badge" 
-                              style={{ 
-                                backgroundColor: '#27ae60',
-                                color: 'white',
-                                fontSize: '13px',
-                                padding: '8px 12px',
-                                borderRadius: '20px',
-                                fontWeight: '600',
-                                boxShadow: '0 2px 4px rgba(39, 174, 96, 0.3)',
-                                border: '2px solid #2ecc71'
-                              }}
-                            >
-                              {signedQuantity}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                              {hasSignedUsers && (
+                                <span 
+                                  className="badge" 
+                                  style={{ 
+                                    backgroundColor: '#27ae60',
+                                    color: 'white',
+                                    fontSize: '11px',
+                                    padding: '4px 8px',
+                                    borderRadius: '12px',
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 3px rgba(39, 174, 96, 0.3)',
+                                    border: '1px solid #2ecc71'
+                                  }}
+                                  title={`חתומים: ${signedQuantity}`}
+                                >
+                                  ✓ {signedQuantity}
+                                </span>
+                              )}
+                              {hasWaitingUsers && (
+                                <span 
+                                  className="badge" 
+                                  style={{ 
+                                    backgroundColor: '#f39c12',
+                                    color: 'white',
+                                    fontSize: '11px',
+                                    padding: '4px 8px',
+                                    borderRadius: '12px',
+                                    fontWeight: '600',
+                                    boxShadow: '0 1px 3px rgba(243, 156, 18, 0.3)',
+                                    border: '1px solid #f5b041'
+                                  }}
+                                  title={`ממתינים: ${waitingQuantity}`}
+                                >
+                                  ⏳ {waitingQuantity}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span 
                               className="badge" 
@@ -480,6 +552,30 @@ const Dashboard: React.FC = () => {
                       className="text-center" 
                       style={{ 
                         padding: '16px 8px',
+                        backgroundColor: '#fef4e3',
+                        borderLeft: '3px solid #f39c12'
+                      }}
+                    >
+                      <span 
+                        className="badge" 
+                        style={{ 
+                          backgroundColor: '#f39c12',
+                          color: 'white',
+                          fontSize: '13px',
+                          padding: '8px 12px',
+                          borderRadius: '20px',
+                          fontWeight: '600',
+                          boxShadow: '0 2px 4px rgba(243, 156, 18, 0.3)',
+                          border: '2px solid #f5b041'
+                        }}
+                      >
+                        {getItemWaitingTotal(item)}
+                      </span>
+                    </td>
+                    <td 
+                      className="text-center" 
+                      style={{ 
+                        padding: '16px 8px',
                         backgroundColor: '#f3e5f5',
                         borderLeft: '3px solid #9b59b6'
                       }}
@@ -497,7 +593,7 @@ const Dashboard: React.FC = () => {
                           border: '2px solid #af7ac5'
                         }}
                       >
-                        {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - getItemSignedTotal(item)}
+                        {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - getItemSignedTotal(item) - getItemWaitingTotal(item)}
                       </span>
                     </td>
                     <td 
@@ -643,6 +739,18 @@ const Dashboard: React.FC = () => {
                       מיקום
                     </th>
                     <th style={{ 
+                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                      color: 'white',
+                      padding: '16px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #3498db',
+                      textAlign: 'center'
+                    }}>
+                      האם חתום
+                    </th>
+                    <th style={{ 
                       background: 'linear-gradient(135deg, #16a085 0%, #1abc9c 100%)', 
                       color: 'white',
                       padding: '16px 20px',
@@ -708,6 +816,30 @@ const Dashboard: React.FC = () => {
                         fontWeight: '500'
                       }}>
                         {(user as any).location || 'N/A'}
+                      </td>
+                      <td style={{ 
+                        padding: '16px 20px', 
+                        textAlign: 'center'
+                      }}>
+                        <span 
+                          className="badge" 
+                          style={{ 
+                            backgroundColor: user.isSigned ? '#27ae60' : '#e74c3c',
+                            color: 'white',
+                            fontSize: '12px',
+                            padding: '6px 12px',
+                            borderRadius: '15px',
+                            fontWeight: '600',
+                            boxShadow: user.isSigned 
+                              ? '0 2px 4px rgba(39, 174, 96, 0.3)' 
+                              : '0 2px 4px rgba(231, 76, 60, 0.3)',
+                            border: user.isSigned 
+                              ? '2px solid #2ecc71' 
+                              : '2px solid #ec7063'
+                          }}
+                        >
+                          {user.isSigned ? 'כן' : 'לא'}
+                        </span>
                       </td>
                       <td style={{ 
                         padding: '16px 20px', 

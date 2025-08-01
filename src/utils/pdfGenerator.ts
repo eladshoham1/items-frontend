@@ -25,11 +25,13 @@ const createReceiptHTML = (receipt: Receipt): string => {
     quantity: number;
   }> = [];
 
-  receipt.receiptItems?.forEach((receiptItem) => {
-    const itemName = receiptItem.item.itemName?.name || '';
-    const itemIsNeedReport = false; // This info is not available in the new structure
-    const itemIdNumber = receiptItem.item.idNumber || '';
-    const itemNote = receiptItem.item.note || '';
+  // Process each receipt item
+  for (const receiptItem of receipt.receiptItems || []) {
+    const itemName = receiptItem.item?.itemName?.name || '';
+    const itemIdNumber = receiptItem.item?.idNumber || '';
+    const itemNote = receiptItem.item?.note || '';
+    // Use the isNeedReport value directly from the receipt item data
+    const itemIsNeedReport = receiptItem.item?.isNeedReport || false;
 
     // Check if we already have an item with the same name for quantity grouping
     const existingItem = processedItems.find(
@@ -57,7 +59,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
         quantity: 1
       });
     }
-  });
+  }
 
   const itemsRows = processedItems.map((item, index) => `
     <tr>
@@ -133,6 +135,28 @@ const createReceiptHTML = (receipt: Receipt): string => {
           margin-bottom: 20px;
         }
         
+        .dual-info-section {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+          margin-bottom: 15px;
+        }
+        
+        .issuer-section,
+        .recipient-section {
+          background: #f8f9fa;
+          border: 1px solid #dee2e6;
+          border-radius: 6px;
+          padding: 12px;
+        }
+        
+        .person-info {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: repeat(3, auto);
+          gap: 6px;
+        }
+        
         .section-title {
           font-size: 14px;
           font-weight: 600;
@@ -143,19 +167,12 @@ const createReceiptHTML = (receipt: Receipt): string => {
           text-align: center;
         }
         
-        .info-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          gap: 8px;
-          text-align: right;
-        }
-        
         .info-item {
-          padding: 6px 8px;
+          padding: 4px 6px;
           background: white;
           border-radius: 4px;
           border: 1px solid #e3e6ea;
-          font-size: 11px;
+          font-size: 10px;
         }
         
         .info-label {
@@ -295,32 +312,64 @@ const createReceiptHTML = (receipt: Receipt): string => {
           <div class="subtitle">מסמך זה מהווה מסמך רשמי על החתמת ציוד טופס 1008</div>
         </div>
         
-        <div class="info-section">
-          <div class="section-title hebrew-text">פרטי הקבלה</div>
-          <div class="info-grid">
-            <div class="info-item hebrew-text">
-              <span class="info-label">שם המקבל:</span>
-              <span class="info-value">${receipt.user.name}</span>
+        <div class="dual-info-section">
+          <div class="issuer-section">
+            <div class="section-title hebrew-text">פרטי המנפיק</div>
+            <div class="person-info">
+              <div class="info-item hebrew-text">
+                <span class="info-label">שם:</span>
+                <span class="info-value">${receipt.createdBy?.name || 'משתמש לא ידוע'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">דרגה:</span>
+                <span class="info-value">${receipt.createdBy?.rank || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">מספר אישי:</span>
+                <span class="info-value">${receipt.createdBy?.personalNumber || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">מסגרת:</span>
+                <span class="info-value">${receipt.createdBy?.location?.unit?.name || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">מיקום:</span>
+                <span class="info-value">${receipt.createdBy?.location?.name || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">טלפון:</span>
+                <span class="info-value">${receipt.createdBy?.phoneNumber || 'לא צוין'}</span>
+              </div>
             </div>
-            <div class="info-item hebrew-text">
-              <span class="info-label">דרגה:</span>
-              <span class="info-value">${receipt.user.rank}</span>
-            </div>
-            <div class="info-item hebrew-text">
-              <span class="info-label">מספר אישי:</span>
-              <span class="info-value">${receipt.user.personalNumber}</span>
-            </div>
-            <div class="info-item hebrew-text">
-              <span class="info-label">מסגרת:</span>
-              <span class="info-value">${receipt.user.location?.unit?.name || 'לא צוין'}</span>
-            </div>
-            <div class="info-item hebrew-text">
-              <span class="info-label">מיקום:</span>
-              <span class="info-value">${receipt.user.location?.name || 'לא צוין'}</span>
-            </div>
-            <div class="info-item hebrew-text">
-              <span class="info-label">טלפון:</span>
-              <span class="info-value">${receipt.user.phoneNumber}</span>
+          </div>
+          
+          <div class="recipient-section">
+            <div class="section-title hebrew-text">פרטי המקבל</div>
+            <div class="person-info">
+              <div class="info-item hebrew-text">
+                <span class="info-label">שם:</span>
+                <span class="info-value">${receipt.signedBy?.name || 'משתמש לא ידוע'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">דרגה:</span>
+                <span class="info-value">${receipt.signedBy?.rank || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">מספר אישי:</span>
+                <span class="info-value">${receipt.signedBy?.personalNumber || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">מסגרת:</span>
+                <span class="info-value">${receipt.signedBy?.location?.unit?.name || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">מיקום:</span>
+                <span class="info-value">${receipt.signedBy?.location?.name || 'לא צוין'}</span>
+              </div>
+              <div class="info-item hebrew-text">
+                <span class="info-label">טלפון:</span>
+                <span class="info-value">${receipt.signedBy?.phoneNumber || 'לא צוין'}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -342,7 +391,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
             </tbody>
           </table>
           <div style="text-align: left; margin-top: 10px; font-size: 11px; color: #666;">
-            <strong>תאריך מלא:</strong> ${formatDate(receipt.createdAt)}
+            <strong>תאריך מלא:</strong> ${formatDate(receipt.createdAt.toString())}
           </div>
         </div>
         
@@ -419,7 +468,7 @@ export const generateReceiptPDF = async (receipt: Receipt): Promise<void> => {
 
     // Download the PDF
     const currentDate = new Date().toLocaleDateString('he-IL').replace(/\//g, '-');
-    const fileName = `קבלה-${receipt.user.name}-${currentDate}.pdf`;
+    const fileName = `קבלה-${receipt.signedBy?.name || 'משתמש-לא-ידוע'}-${currentDate}.pdf`;
     pdf.save(fileName);
     
   } catch (error) {
@@ -437,20 +486,21 @@ export const generateReceiptPDF = async (receipt: Receipt): Promise<void> => {
     doc.text('Receipt - PDF Generation Error', 20, 20);
     doc.setFontSize(12);
     doc.text(`Receipt ID: ${receipt.id}`, 20, 40);
-    doc.text(`User: ${receipt.user.name}`, 20, 50);
-    doc.text(`Date: ${formatDate(receipt.createdAt)}`, 20, 60);
+    doc.text(`Issuer: ${receipt.createdBy?.name || 'Unknown Issuer'}`, 20, 50);
+    doc.text(`User: ${receipt.signedBy?.name || 'Unknown User'}`, 20, 60);
+    doc.text(`Date: ${formatDate(receipt.createdAt.toString())}`, 20, 70);
     
     // Add items
-    let y = 80;
+    let y = 90;
     doc.text('Items:', 20, y);
     y += 10;
     receipt.receiptItems?.forEach((item, index) => {
-      doc.text(`${index + 1}. ${item.item.itemName?.name || 'Unknown Item'}`, 20, y);
+      doc.text(`${index + 1}. ${item.item?.itemName?.name || 'Unknown Item'}`, 20, y);
       y += 8;
     });
     
     const currentDate = new Date().toLocaleDateString('he-IL').replace(/\//g, '-');
-    const fileName = `receipt-${receipt.user.name}-${currentDate}.pdf`;
+    const fileName = `receipt-${receipt.signedBy?.name || 'unknown-user'}-${currentDate}.pdf`;
     doc.save(fileName);
   }
 };

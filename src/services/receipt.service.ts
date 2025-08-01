@@ -1,5 +1,5 @@
 import { apiService } from './api.service';
-import { Receipt, CreateReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest, PendingReceipt, CreatePendingReceiptRequest, SignPendingReceiptRequest } from '../types';
+import { Receipt, CreateReceiptRequest, UpdateReceiptRequest, SignReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest, SignPendingReceiptRequest } from '../types';
 
 export const receiptService = {
   // Get all receipts
@@ -7,17 +7,22 @@ export const receiptService = {
     return apiService.get<Receipt[]>('/receipts');
   },
 
-  // Create a new receipt
+  // Get receipt by ID
+  async getById(receiptId: string): Promise<Receipt> {
+    return apiService.get<Receipt>(`/receipts/${receiptId}`);
+  },
+
+  // Create a new receipt (Admin only)
   async create(receiptData: CreateReceiptRequest): Promise<Receipt> {
-    return apiService.post<Receipt>('/receipts/sign', receiptData, {
+    return apiService.post<Receipt>('/receipts', receiptData, {
       headers: {
         'Content-Type': 'application/json',
       },
     });
   },
 
-  // Update an existing receipt
-  async update(id: string, receiptData: CreateReceiptRequest): Promise<Receipt> {
+  // Update an existing receipt (Admin only)
+  async update(id: string, receiptData: UpdateReceiptRequest): Promise<Receipt> {
     return apiService.patch<Receipt>(`/receipts/${id}`, receiptData, {
       headers: {
         'Content-Type': 'application/json',
@@ -25,65 +30,54 @@ export const receiptService = {
     });
   },
 
-  // Delete a receipt
+  // Delete a receipt (Admin only)
   async delete(id: string): Promise<void> {
     return apiService.delete<void>(`/receipts/${id}`);
   },
 
-  // Return items from receipt
-  async returnItems(returnData: ReturnReceiptRequest): Promise<void> {
-    return apiService.patch<void>('/receipts/return', returnData, {
+  // Sign a receipt (User can only sign receipts assigned to them)
+  async signReceipt(receiptId: string, signatureData: SignReceiptRequest): Promise<Receipt> {
+    return apiService.post<Receipt>(`/receipts/${receiptId}/sign`, signatureData, {
       headers: {
         'Content-Type': 'application/json',
       },
     });
   },
 
-  // Return specific items from receipt
-  async returnSelectedItems(returnData: ReturnItemsRequest): Promise<void> {
-    const { receiptId, receiptItemIds } = returnData;
-    return apiService.patch<void>(`/receipts/return/${receiptId}`, { receiptItemIds }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  },
-
-  // Get receipt by ID
-  async getById(receiptId: string): Promise<Receipt> {
-    return apiService.get<Receipt>(`/receipts/${receiptId}`);
-  },
-
-  // Get pending receipts
-  async getPendingReceipts(): Promise<PendingReceipt[]> {
-    return apiService.get<PendingReceipt[]>('/receipts/pending');
+  // Get pending receipts (unsigned receipts)
+  async getPendingReceipts(): Promise<Receipt[]> {
+    const allReceipts = await this.getAll();
+    return allReceipts.filter(receipt => !receipt.isSigned);
   },
 
   // Get current user's pending receipts
-  async getMyPendingReceipts(): Promise<PendingReceipt[]> {
-    return apiService.get<PendingReceipt[]>('/receipts/my-pending');
+  async getMyPendingReceipts(): Promise<Receipt[]> {
+    const allReceipts = await this.getAll();
+    // This will need to be filtered on the backend based on current user
+    return allReceipts.filter(receipt => !receipt.isSigned);
   },
 
   // Get available items for new receipts (admin only)
+  // Note: This endpoint might not exist in your backend, you may need to add it
   async getAvailableItems(): Promise<any[]> {
-    return apiService.get<any[]>('/receipts/available-items');
+    return apiService.get<any[]>('/items/available');
   },
 
-  // Create pending receipt (admin only)
-  async createPendingReceipt(data: CreatePendingReceiptRequest): Promise<PendingReceipt> {
-    return apiService.post<PendingReceipt>('/receipts/create-pending', data, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  },
-
-  // Sign pending receipt
+  // Sign pending receipt - This is the same as signReceipt
   async signPendingReceipt(receiptId: string, data: SignPendingReceiptRequest): Promise<Receipt> {
-    return apiService.post<Receipt>(`/receipts/sign/${receiptId}`, data, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    return this.signReceipt(receiptId, { signature: data.signature });
+  },
+
+  // Legacy methods for backward compatibility
+  async returnItems(returnData: ReturnReceiptRequest): Promise<void> {
+    // This functionality might need to be implemented differently
+    // depending on your backend requirements
+    throw new Error('Return items functionality needs to be implemented based on backend requirements');
+  },
+
+  async returnSelectedItems(returnData: ReturnItemsRequest): Promise<void> {
+    // This functionality might need to be implemented differently
+    // depending on your backend requirements
+    throw new Error('Return selected items functionality needs to be implemented based on backend requirements');
   },
 };

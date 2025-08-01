@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { Receipt, ReceiptItem } from '../../types';
 import { useReceipts } from '../../hooks';
 import { paginate } from '../../utils';
+import { generateReceiptPDF } from '../../utils/pdfGenerator';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
 import ReceiptForm from '../../features/receipts/ReceiptForm';
@@ -36,87 +37,12 @@ const ReceiptsTab: React.FC = () => {
         setIsModalOpen(false);
     };
 
-    const generateHtml = (receipt: Receipt) => {
-        const tableRows = receipt.receiptItems?.map((receiptItem) => `
-      <tr>
-        <td>${receiptItem.item.itemName?.name || 'פריט לא ידוע'}</td>
-        <td>לא</td>
-        <td>${receiptItem.item.idNumber || ''}</td>
-        <td>${receiptItem.item.note || ''}</td>
-      </tr>
-    `).join('') || '';
-
-        const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="he" dir="rtl">
-      <head>
-        <meta charset="UTF-8">
-        <title>קבלה - ${receipt.user.name}</title>
-        <style>
-          body {
-            font-family: Arial, sans-serif;
-            direction: rtl;
-            padding: 20px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-          }
-          th, td {
-            border: 1px solid #333;
-            padding: 8px 12px;
-            text-align: right;
-          }
-          th {
-            background-color: #2980b9;
-            color: white;
-          }
-          .signature {
-            margin-top: 40px;
-            text-align: center;
-          }
-          .signature img {
-            max-width: 300px;
-            border: 1px solid #333;
-          }
-        </style>
-      </head>
-      <body>
-        <h2>קבלה עבור ${receipt.user.name} - ${timestampToDate(receipt.updatedAt || '00')}</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>שם</th>
-              <th>צופן</th>
-              <th>מספר צ'</th>
-              <th>הערה</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-  
-        <div class="signature">
-          <h3>חתימה</h3>
-          ${receipt.signature ? `<img src="${receipt.signature}" alt="חתימה">` : '<p>אין חתימה</p>'}
-        </div>
-      </body>
-      </html>
-    `;
-
-        return htmlContent;
-    };
-
-    const downloadReceiptHtml = (receipt: any) => {
-        const html = generateHtml(receipt);
-        const blob = new Blob([html], { type: 'text/html' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `receipt-${receipt.user.name}-${timestampToDate(receipt.updatedAt)}.html`;
-        link.click();
-        URL.revokeObjectURL(link.href);
+    const handleDownloadPDF = (receipt: Receipt) => {
+        try {
+            generateReceiptPDF(receipt);
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+        }
     };
 
     return (
@@ -138,12 +64,12 @@ const ReceiptsTab: React.FC = () => {
                 <tbody>
                     {paginatedReceipts.map(receipt =>
                         <tr key={receipt.id}>
-                            <td>{receipt.user.name}</td>
-                            <td>{receipt.user.phoneNumber}</td>
-                            <td>{timestampToDate(receipt.createdAt)}</td>
+                            <td>{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
+                            <td>{receipt.signedById}</td>
+                            <td>{timestampToDate(receipt.createdAt.toString())}</td>
                             <td>
                                 <button className="button" onClick={() => handleSelectReceipt(receipt)}>החזרה</button>
-                                <button className="button" onClick={() => downloadReceiptHtml(receipt)}>הורדה</button>
+                                <button className="button" onClick={() => handleDownloadPDF(receipt)}>הורדה</button>
                             </td>
                         </tr>
                     )}

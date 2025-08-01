@@ -8,8 +8,6 @@ export const ranks = [
 
 export type Rank = typeof ranks[number];
 
-export type UserRole = 'admin' | 'user';
-
 export interface User {
   id: ID;
   name: string;
@@ -38,7 +36,6 @@ export interface UpdateUserRequest {
   personalNumber?: number;
   phoneNumber?: string;
   rank?: string;
-  role?: UserRole;
   isAdmin?: boolean;
   firebaseUid?: string;
   locationId?: string;

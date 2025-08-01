@@ -72,9 +72,9 @@ const ReturnForm: React.FC<ReturnFormProps> = ({ receipt, onSuccess, onCancel })
         <tbody>
           {receipt.receiptItems?.map((receiptItem: any) => (
             <tr key={receiptItem.id}>
-              <td>{receiptItem.item.name}</td>
-              <td>{receiptItem.item.isNeedReport ? 'כן' : 'לא'}</td>
-              <td>{receiptItem.item.idNumber || ''}</td>
+              <td>{receiptItem.item?.itemName?.name || 'פריט לא ידוע'}</td>
+              <td>{receiptItem.item?.isNeedReport ? 'כן' : 'לא'}</td>
+              <td>{receiptItem.item?.idNumber || ''}</td>
               <td>
                 <input
                   type="checkbox"

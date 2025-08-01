@@ -31,6 +31,7 @@ export interface SignUser {
   phoneNumber: string;
   personalNumber: number;
   quantity: number;
+  isSigned: boolean;
   location?: string; // Added for location information in user details
 }
 

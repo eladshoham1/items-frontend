@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Receipt, CreateReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest, PendingReceipt, CreatePendingReceiptRequest, SignPendingReceiptRequest } from '../types';
+import { Receipt, CreateReceiptRequest, UpdateReceiptRequest, ReturnReceiptRequest, ReturnItemsRequest, SignPendingReceiptRequest } from '../types';
 import { receiptService } from '../services';
 
 export const useReceipts = () => {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [pendingReceipts, setPendingReceipts] = useState<PendingReceipt[]>([]);
+  const [pendingReceipts, setPendingReceipts] = useState<Receipt[]>([]); // Changed from PendingReceipt[] to Receipt[]
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,18 +16,26 @@ export const useReceipts = () => {
       console.log('Fetched receipts:', data);
       // Ensure data is an array to prevent "map is not a function" errors
       if (Array.isArray(data)) {
-        setReceipts(data);
+        // Separate signed and unsigned receipts
+        const signedReceipts = data.filter(receipt => receipt.isSigned);
+        const unsignedReceipts = data.filter(receipt => !receipt.isSigned);
+        
+        setReceipts(signedReceipts);
+        setPendingReceipts(unsignedReceipts);
       } else if (data === null || data === undefined) {
         console.warn('getAll returned null/undefined data');
         setReceipts([]);
+        setPendingReceipts([]);
       } else {
         console.warn('getAll returned non-array data:', data);
         setReceipts([]);
+        setPendingReceipts([]);
       }
     } catch (err) {
       console.error('Error fetching receipts:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch receipts');
       setReceipts([]); // Ensure empty array on error
+      setPendingReceipts([]);
     } finally {
       setLoading(false);
     }
@@ -54,8 +62,7 @@ export const useReceipts = () => {
 
   const updateReceipt = useCallback(async (
     id: string,
-    receiptData: CreateReceiptRequest,
-    file?: File
+    receiptData: UpdateReceiptRequest
   ): Promise<boolean> => {
     setLoading(true);
     setError(null);
@@ -169,23 +176,6 @@ export const useReceipts = () => {
     }
   }, []);
 
-  const createPendingReceipt = useCallback(async (
-    data: CreatePendingReceiptRequest
-  ): Promise<boolean> => {
-    setLoading(true);
-    setError(null);
-    try {
-      const newPendingReceipt = await receiptService.createPendingReceipt(data);
-      setPendingReceipts(prev => [newPendingReceipt, ...prev]);
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create pending receipt');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   const signPendingReceipt = useCallback(async (
     receiptId: string,
     data: SignPendingReceiptRequest
@@ -220,7 +210,6 @@ export const useReceipts = () => {
     fetchPendingReceipts,
     fetchMyPendingReceipts,
     createReceipt,
-    createPendingReceipt,
     signPendingReceipt,
     updateReceipt,
     deleteReceipt,
