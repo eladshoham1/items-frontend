@@ -71,7 +71,9 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
       user.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.rank.toLowerCase().includes(searchTerm.toLowerCase())
+      user.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.isAdmin && 'מנהל'.includes(searchTerm)) ||
+      (!user.isAdmin && 'משתמש'.includes(searchTerm))
     );
 
     if (sortConfig) {
@@ -103,6 +105,10 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
           case 'rank':
             aValue = a.rank;
             bValue = b.rank;
+            break;
+          case 'isAdmin':
+            aValue = a.isAdmin ? 1 : 0; // Admin users first when ascending
+            bValue = b.isAdmin ? 1 : 0;
             break;
           default:
             return 0;
@@ -258,7 +264,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
               <input
                 type="text"
                 className="form-control"
-                placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה, מיקום או מסגרת..."
+                placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה, מיקום, מסגרת או סוג משתמש..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 style={{ direction: 'rtl' }}
@@ -373,6 +379,19 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                     </div>
                   </div>
                 </th>
+                <th 
+                  className="sortable-header" 
+                  onClick={() => handleSort('isAdmin')}
+                  title="לחץ למיון לפי סוג משתמש"
+                  data-sorted={sortConfig?.key === 'isAdmin' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>סוג משתמש</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('isAdmin')}
+                    </div>
+                  </div>
+                </th>
                 <th>פעולות</th>
               </tr>
             </thead>
@@ -393,6 +412,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   <td>{user.rank}</td>
                   <td>{user.unit}</td>
                   <td>{user.location}</td>
+                  <td>{user.isAdmin ? 'מנהל' : 'משתמש'}</td>
                   <td>
                     <button 
                       className="btn btn-sm btn-outline" 
