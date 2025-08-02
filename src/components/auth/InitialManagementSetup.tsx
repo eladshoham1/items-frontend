@@ -100,8 +100,27 @@ const InitialManagementSetup: React.FC<InitialManagementSetupProps> = ({
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div className="card shadow-lg" style={{ maxWidth: '600px', width: '100%' }}>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#f8f9fa',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: 0,
+      padding: '20px',
+      zIndex: 1000,
+      direction: 'rtl'
+    }}>
+      <div className="card shadow-lg" style={{ 
+        maxWidth: '600px', 
+        width: '100%', 
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      }}>
         <div className="card-header text-center bg-success text-white">
           <h2 className="mb-0">ברוך הבא למערכת!</h2>
           <p className="mb-0 mt-2">כמנהל ראשון, צור את הנתונים הראשוניים</p>

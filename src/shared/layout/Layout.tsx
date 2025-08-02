@@ -10,7 +10,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="layout">
       <header className="layout-header">
         <div className="header-container">
-          <h1 className="app-title">ניהול ציוד</h1>
+          <h1 className="app-title">אחל"ן</h1>
+          <h2 className="app-subtitle">אמצעי חתימות ללא ניירת</h2>
         </div>
       </header>
       <main className="layout-main">
@@ -18,6 +19,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </div>
       </main>
+      <footer className="layout-footer">
+        <div className="footer-container">
+          <p className="footer-text">פותח ע"י סק"ש</p>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -208,6 +208,37 @@ class ManagementService {
       };
     }
   }
+
+  // Settings methods
+  async getSettings(): Promise<ManagementResponse<{emailNotificationsEnabled: boolean}>> {
+    try {
+      const response = await apiService.get<{emailNotificationsEnabled: boolean}>('/management/settings');
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בטעינת הגדרות',
+      };
+    }
+  }
+
+  async updateSettings(data: {emailNotificationsEnabled: boolean}): Promise<ManagementResponse<{emailNotificationsEnabled: boolean}>> {
+    try {
+      const response = await apiService.patch<{emailNotificationsEnabled: boolean}>('/management/settings', data);
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בעדכון הגדרות',
+      };
+    }
+  }
 }
 
 export const managementService = new ManagementService();

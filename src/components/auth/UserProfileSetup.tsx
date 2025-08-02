@@ -99,8 +99,27 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
   };
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-      <div className="card shadow-lg" style={{ maxWidth: '500px', width: '100%' }}>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: '#f8f9fa',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: 0,
+      padding: '20px',
+      zIndex: 1000,
+      direction: 'rtl'
+    }}>
+      <div className="card shadow-lg" style={{ 
+        maxWidth: '500px', 
+        width: '100%', 
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      }}>
         <div className="card-header text-center bg-primary text-white">
           <h2 className="mb-0">השלמת פרטים אישיים</h2>
           <p className="mb-0 mt-2">שלום {userEmail}</p>

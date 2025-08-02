@@ -17,17 +17,29 @@
 .header-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 20px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
+  min-height: 100px;
 }
 
 .app-title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.app-subtitle {
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
   margin: 0;
+  opacity: 0.9;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -42,18 +54,53 @@
   padding: 24px 20px;
 }
 
+.layout-footer {
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  padding: 16px 0;
+  margin-top: auto;
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.footer-text {
+  font-family: 'Bebas Neue', 'Arial Black', sans-serif;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin: 0;
+  font-weight: 400;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .header-container {
-    height: 56px;
-    padding: 0 16px;
+    min-height: 80px;
+    padding: 16px;
   }
   
   .app-title {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+  }
+  
+  .app-subtitle {
+    font-size: 0.9rem;
   }
   
   .main-container {
     padding: 16px;
+  }
+  
+  .footer-container {
+    padding: 0 16px;
+  }
+  
+  .footer-text {
+    font-size: 0.8rem;
   }
 }
