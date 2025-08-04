@@ -6,6 +6,7 @@ import { paginate } from '../../utils';
 import { generateReceiptPDF } from '../../utils/pdfGenerator';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
+import { SmartPagination } from '../../shared/components';
 import WithdrawForm from '../../components/receipts/ReturnForm';
 import CreateReceiptForm from './CreatePendingReceiptForm';
 import PendingReceiptsList from './PendingReceiptsList';
@@ -223,17 +224,11 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                 </table>
 
                                 {totalPages > 1 && (
-                                    <div className="pagination">
-                                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                            <button 
-                                                key={page} 
-                                                onClick={() => setCurrentPage(page)} 
-                                                className={`pagination-btn${currentPage === page ? ' active' : ''}`}
-                                            >
-                                                {page}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <SmartPagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        onPageChange={setCurrentPage}
+                                    />
                                 )}
                             </>
                         )}

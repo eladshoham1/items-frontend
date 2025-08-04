@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import ItemForm from './ItemForm';
 import { useItems } from '../../hooks';
@@ -371,17 +371,11 @@ const ItemsTab: React.FC = () => {
         </div>
 
         {totalPages > 1 && (
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`btn btn-sm ${currentPage === page ? 'btn-primary' : 'btn-outline'}`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
+          <SmartPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
 

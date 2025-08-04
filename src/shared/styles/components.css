@@ -1023,3 +1023,58 @@
     font-size: 12px;
   }
 }
+
+/* Pagination styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  margin: var(--spacing-lg) 0;
+  padding: var(--spacing-md) 0;
+  flex-wrap: wrap;
+}
+
+.pagination .btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.pagination .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-ellipsis {
+  padding: 0 8px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  height: 36px;
+}
+
+/* Responsive pagination */
+@media (max-width: 576px) {
+  .pagination {
+    gap: 2px;
+  }
+  
+  .pagination .btn {
+    min-width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+  
+  .pagination-ellipsis {
+    padding: 0 4px;
+    height: 32px;
+  }
+}

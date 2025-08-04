@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Receipt } from '../../types';
 import { useReceipts } from '../../hooks/useReceipts';
 import { SignaturePad } from './SignaturePad';
-import { Modal, BulkDeleteErrorModal } from '../../shared/components';
+import { Modal, BulkDeleteErrorModal, SmartPagination } from '../../shared/components';
 import CreateReceiptForm from './CreatePendingReceiptForm';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
@@ -239,17 +239,11 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
         </div>
 
         {totalPages > 1 && (
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`btn btn-sm ${currentPage === page ? 'btn-primary' : 'btn-outline'}`}
-              >
-                {page}
-              </button>
-            ))}
-          </div>
+          <SmartPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         )}
       </div>
 

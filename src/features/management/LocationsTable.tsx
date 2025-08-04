@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, ConflictErrorModal } from '../../shared/components';
+import { Modal, ConflictErrorModal, SmartPagination } from '../../shared/components';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import { LocationEntity, UnitEntity } from '../../types';
@@ -365,23 +365,11 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
 
           {totalPages > 1 && (
             <div className="pagination-container">
-              <button
-                className="btn btn-ghost"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-              >
-                הקודם
-              </button>
-              <span className="pagination-info">
-                עמוד {currentPage} מתוך {totalPages}
-              </span>
-              <button
-                className="btn btn-ghost"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-              >
-                הבא
-              </button>
+              <SmartPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </>
