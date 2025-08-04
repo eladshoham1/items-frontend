@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ServerError } from '../../shared/components';
+import { ServerError, SmartPagination } from '../../shared/components';
 import { useReports } from '../../hooks';
-import { getCurrentDate } from '../../utils';
+import { getCurrentDate, paginate } from '../../utils';
 import { ReportStatusUpdate, User } from '../../types';
+import { UI_CONFIG } from '../../config/app.config';
 
 interface DailyReportProps {
   userProfile: User | null;
@@ -11,6 +12,7 @@ interface DailyReportProps {
 
 const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const { reportItems, loading, error, updateReportStatus, toggleReportStatus } = useReports();
+  const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
@@ -88,6 +90,9 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     });
   })();
 
+  // Get paginated items for display
+  const { paginatedItems, totalPages } = paginate(sortedReportItems, currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
+
   const handleCheckboxChange = (id: string) => {
     toggleReportStatus(id);
   };
@@ -109,13 +114,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
 
   // Calculate reporting percentage for all users (admin sees all, users see only their items)
   const getReportingStats = () => {
-    // Use the same filtered items logic as the table
-    let filteredItems = reportItems;
-    if (!isAdmin && userProfile) {
-      filteredItems = reportItems.filter(item => 
-        item.userName === userProfile.name
-      );
-    }
+    // Use sortedReportItems which already has the correct filtering applied
+    const filteredItems = sortedReportItems;
     
     if (filteredItems.length === 0) return { percentage: 0, reported: 0, total: 0 };
     
@@ -323,7 +323,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
               </tr>
             </thead>
             <tbody>
-              {sortedReportItems.map(item => (
+              {paginatedItems.map(item => (
                 <tr key={item.id}>
                   <td>{item.name}</td>
                   <td>{item.idNumber}</td>
@@ -342,6 +342,15 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
             </tbody>
           </table>
         </div>
+        
+        {totalPages > 1 && (
+          <SmartPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
+        
         {sortedReportItems.length > 0 && (
           <div className="d-flex justify-content-end mt-4">
             <button className="btn btn-primary" onClick={handleSubmitReport}>

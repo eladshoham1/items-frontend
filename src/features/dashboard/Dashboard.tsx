@@ -1,10 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboardStats } from '../../hooks';
 import ServerError from '../../shared/components/ServerError';
+import { SmartPagination } from '../../shared/components';
 import { SignUser } from '../../types';
+import { paginate } from '../../utils';
+import { UI_CONFIG } from '../../config/app.config';
 
 const Dashboard: React.FC = () => {
   const { stats, loading, error } = useDashboardStats();
+  const [currentPage, setCurrentPage] = useState(1);
   const [tooltipData, setTooltipData] = useState<{
     show: boolean;
     users: SignUser[];
@@ -125,6 +129,10 @@ const Dashboard: React.FC = () => {
       }
     });
   };
+
+  // Get paginated items for display
+  const sortedItems = getSortedItems();
+  const { paginatedItems, totalPages } = paginate(sortedItems || [], currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
 
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
@@ -396,7 +404,7 @@ const Dashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {getSortedItems() && Array.isArray(getSortedItems()) ? getSortedItems().map((item, itemIndex) => {
+                {paginatedItems && Array.isArray(paginatedItems) ? paginatedItems.map((item, itemIndex) => {
                   if (!item || typeof item !== 'string') return null;
                   
                   return (
@@ -626,6 +634,14 @@ const Dashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
+          
+          {totalPages > 1 && (
+            <SmartPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </div>
       </div>
 
