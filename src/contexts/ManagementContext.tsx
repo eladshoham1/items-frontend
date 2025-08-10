@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { managementService } from '../services';
 import {
   UnitEntity,
@@ -23,6 +23,9 @@ interface ManagementContextType {
   error: string | null;
   // Methods
   loadAllData: () => Promise<void>;
+  loadUnits: () => Promise<void>;
+  loadLocations: () => Promise<void>;
+  loadItemNames: () => Promise<void>;
   // Unit operations
   createUnit: (data: CreateUnitRequest) => Promise<ManagementResponse<UnitEntity>>;
   updateUnit: (id: string, data: UpdateUnitRequest) => Promise<ManagementResponse<UnitEntity>>;
@@ -50,7 +53,44 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load all data
+  // Lazy loaders per collection
+  const loadUnits = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await managementService.getAllUnits();
+      if (res.success && res.data) setUnits(res.data);
+      else if (!res.success) setError(res.error || 'שגיאה בטעינת יחידות');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadLocations = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await managementService.getAllLocations();
+      if (res.success && res.data) setLocations(res.data);
+      else if (!res.success) setError(res.error || 'שגיאה בטעינת מיקומים');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadItemNames = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await managementService.getAllItemNames();
+      if (res.success && res.data) setItemNames(res.data);
+      else if (!res.success) setError(res.error || 'שגיאה בטעינת שמות פריטים');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Keep an aggregate loader for scenarios that need all data (e.g., export/import screens)
   const loadAllData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -64,12 +104,21 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
       if (unitsRes.success && unitsRes.data) setUnits(unitsRes.data);
       if (locationsRes.success && locationsRes.data) setLocations(locationsRes.data);
       if (itemNamesRes.success && itemNamesRes.data) setItemNames(itemNamesRes.data);
+
+      if (!unitsRes.success) setError(unitsRes.error || null);
+      if (!locationsRes.success) setError(prev => prev || locationsRes.error || null);
+      if (!itemNamesRes.success) setError(prev => prev || itemNamesRes.error || null);
     } catch (err: any) {
       setError(err.message || 'שגיאה בטעינת נתונים');
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // IMPORTANT: Do NOT auto-load on app start anymore. Fetch only when tabs mount.
+  // useEffect(() => {
+  //   loadAllData();
+  // }, [loadAllData]);
 
   // Unit operations
   const createUnit = useCallback(async (data: CreateUnitRequest): Promise<ManagementResponse<UnitEntity>> => {
@@ -146,11 +195,6 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
     return result;
   }, []);
 
-  // Load data once when provider mounts
-  useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
-
   const value: ManagementContextType = {
     // Data
     units,
@@ -160,6 +204,9 @@ export const ManagementProvider: React.FC<ManagementProviderProps> = ({ children
     error,
     // Methods
     loadAllData,
+    loadUnits,
+    loadLocations,
+    loadItemNames,
     // Unit operations
     createUnit,
     updateUnit,

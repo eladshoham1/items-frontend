@@ -243,7 +243,7 @@ class ManagementService {
   // --- Admin only: Import / Export entire database ---
   async exportDatabase(): Promise<ManagementResponse<any>> {
     try {
-      const response = await apiService.get<any>('/management/export');
+      const response = await apiService.get<any>('/backup/export');
       return {
         success: true,
         data: response,
@@ -256,18 +256,100 @@ class ManagementService {
     }
   }
 
-  async importDatabase(payload: any): Promise<ManagementResponse<any>> {
+  // New async export starter: returns process id immediately
+  async startExport(): Promise<ManagementResponse<{ id: string }>> {
     try {
-      const response = await apiService.post<any>('/management/import', payload);
-      return {
-        success: true,
-        data: response,
-      };
+      // Server starts export on GET /backup/export and returns an OperationStatus with id
+      const response = await apiService.get<{ id?: string; operationId?: string; processId?: string; [k: string]: any }>(
+        '/backup/export'
+      );
+      const id =
+        (response as any)?.operationId ||
+        (response as any)?.id ||
+        (response as any)?.processId ||
+        (response as any)?.data?.operationId ||
+        (response as any)?.data?.id ||
+        (response as any)?.data?.processId;
+      if (id) return { success: true, data: { id } };
+      return { success: false, error: 'שגיאה בתחילת ייצוא: מזהה תהליך לא התקבל' };
     } catch (error: any) {
-      return {
-        success: false,
-        error: error.response?.data?.message || error.message || 'שגיאה בייבוא נתונים',
-      };
+      return { success: false, error: error.response?.data?.message || error.message || 'שגיאה בתחילת ייצוא' };
+    }
+  }
+
+  async getExportStatus(id: string): Promise<ManagementResponse<{ progress: number; downloadUrl?: string; done?: boolean; result?: any; tables?: any[]; totalStatistics?: any; message?: string; status?: string }>> {
+    try {
+      const raw = await apiService.get<any>(`/backup/export/status/${id}`);
+      const nested = raw?.result?.currentProgress || {};
+      const progress =
+        typeof raw?.progress === 'number'
+          ? raw.progress
+          : typeof nested?.overallProgress === 'number'
+          ? nested.overallProgress
+          : 0;
+      const status = raw?.status || nested?.status;
+      const done = status === 'completed' || raw?.done === true;
+      const downloadUrl = raw?.result?.downloadUrl || raw?.downloadUrl;
+      const result = raw?.result;
+      const tables = raw?.tables ?? nested?.tables ?? [];
+      const totalStatistics = raw?.totalStatistics ?? nested?.totalStatistics;
+      const message = raw?.message || raw?.result?.message;
+      return { success: true, data: { progress, downloadUrl, done, result, tables, totalStatistics, message, status } };
+    } catch (error: any) {
+      return { success: false, error: error.response?.data?.message || error.message || 'שגיאה בשליפת סטטוס ייצוא' };
+    }
+  }
+
+  async importDatabase(payload: any, override: boolean = false): Promise<ManagementResponse<any>> {
+    // Delegate to async starter per new server contract
+    const started = await this.startImport(payload, override);
+    if (!started.success) return started as any;
+    return started as any;
+  }
+
+  // New async import starter: returns process id immediately
+  async startImport(payload: any, override: boolean = false): Promise<ManagementResponse<{ id: string }>> {
+    try {
+      // Server starts import on POST /backup/import and returns an OperationStatus with id
+      const requestBody = { override, ...payload };
+      const response = await apiService.post<{ id?: string; processId?: string; operationId?: string; data?: any }>(
+        `/backup/import`,
+        requestBody,
+        { timeout: 0 }
+      );
+      const id =
+        (response as any)?.operationId ||
+        (response as any)?.id ||
+        (response as any)?.processId ||
+        (response as any)?.data?.operationId ||
+        (response as any)?.data?.id ||
+        (response as any)?.data?.processId;
+      if (id) return { success: true, data: { id } };
+      return { success: false, error: 'שגיאה בתחילת ייבוא: מזהה תהליך לא התקבל' };
+    } catch (error: any) {
+      return { success: false, error: error.response?.data?.message || error.message || 'שגיאה בתחילת ייבוא' };
+    }
+  }
+
+  async getImportStatus(id: string): Promise<ManagementResponse<{ progress: number; done?: boolean; tables?: any[]; totalStatistics?: any; message?: string; status?: string; result?: any }>> {
+    try {
+      const raw = await apiService.get<any>(`/backup/import/status/${id}`);
+      const nested = raw?.result?.currentProgress || {};
+      const progress =
+        typeof raw?.progress === 'number'
+          ? raw.progress
+          : typeof nested?.overallProgress === 'number'
+          ? nested.overallProgress
+          : 0;
+      const status = raw?.status || nested?.status;
+      const done = status === 'completed' || raw?.done === true;
+      const tables = raw?.tables ?? nested?.tables ?? [];
+      const totalStatistics = raw?.totalStatistics ?? nested?.totalStatistics;
+      const message = raw?.message || raw?.result?.message;
+      const result = raw?.result;
+      return { success: true, data: { progress, done, tables, totalStatistics, message, status, result } };
+    } catch (error: any) {
+      return { success: false, error: error.response?.data?.message || error.message || 'שגיאה בשליפת סטטוס ייבוא' };
     }
   }
 }

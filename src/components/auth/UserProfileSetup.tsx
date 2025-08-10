@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CreateUserRequest, ranks } from '../../types';
 import { useManagement } from '../../contexts';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
@@ -28,7 +28,8 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
 }) => {
   const { 
     locations, 
-    loading: managementLoading
+    loading: managementLoading,
+    loadLocations,
   } = useManagement();
   
   const [formData, setFormData] = useState<Omit<CreateUserRequest, 'firebaseUid'>>({
@@ -39,6 +40,14 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
     rank: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Lazy load locations for the dropdown when this screen mounts
+  useEffect(() => {
+    if (!locations || locations.length === 0) {
+      loadLocations();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};

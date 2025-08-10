@@ -95,6 +95,10 @@ const ItemsTab: React.FC = () => {
             aValue = a.isOperational;
             bValue = b.isOperational;
             break;
+          case 'isAvailable':
+            aValue = a.isAvailable;
+            bValue = b.isAvailable;
+            break;
           default:
             return 0;
         }
@@ -355,7 +359,19 @@ const ItemsTab: React.FC = () => {
                     </div>
                   </div>
                 </th>
-                <th>זמין</th>
+                <th 
+                  className="sortable-header"
+                  onClick={() => handleSort('isAvailable')}
+                  title="לחץ למיון לפי זמינות"
+                  data-sorted={sortConfig?.key === 'isAvailable' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>זמין</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('isAvailable')}
+                    </div>
+                  </div>
+                </th>
                 <th>פעולות</th>
               </tr>
             </thead>
@@ -376,14 +392,14 @@ const ItemsTab: React.FC = () => {
                   <td>{item.note || 'אין הערה'}</td>
                   <td>
                     <span 
-                      className={`badge ${item.isOperational ? 'bg-success' : 'bg-danger'}`}
+                      className={`badge status-badge ${item.isOperational ? 'bg-success' : 'bg-danger'}`}
                     >
                       {item.isOperational ? 'כן' : 'לא'}
                     </span>
                   </td>
                   <td>
                     <span 
-                      className={`badge ${item.isAvailable ? 'bg-success' : 'bg-danger'}`}
+                      className={`badge status-badge ${item.isAvailable ? 'bg-success' : 'bg-danger'}`}
                     >
                       {item.isAvailable ? 'זמין' : 'לא זמין'}
                     </span>

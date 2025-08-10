@@ -49,6 +49,8 @@ const ManagementSettingsTab: React.FC = () => {
       if (result.success && result.data) {
         setSettings(result.data);
         setSuccessMessage('הגדרות נשמרו בהצלחה');
+        // Immediately refetch to ensure view mirrors server state
+        await loadSettings();
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {

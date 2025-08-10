@@ -10,11 +10,11 @@ interface BulkDeleteErrorModalProps {
   deletedCount: number;
   totalCount: number;
   errors: string[];
-  type: 'user' | 'item';
+  type: 'user' | 'item' | 'unit' | 'location' | 'itemName';
 }
 
 // Translate common backend error messages to Hebrew
-const translateErrorMessage = (msg: string, type: 'user' | 'item') => {
+const translateErrorMessage = (msg: string, type: 'user' | 'item' | 'unit' | 'location' | 'itemName') => {
   if (!msg) return '';
   const m = msg.toLowerCase();
 
@@ -24,14 +24,17 @@ const translateErrorMessage = (msg: string, type: 'user' | 'item') => {
     { test: s => s.includes('cannot delete users with active receipts'), he: 'לא ניתן למחוק משתמשים עם קבלות פעילות' },
     { test: s => s.includes('is referenced in receipts') || s.includes('referenced by receipts'), he: 'לא ניתן למחוק: הפריט מקושר לקבלות' },
     { test: s => s.includes('assigned to users') || s.includes('allocated to users'), he: 'לא ניתן למחוק: הפריט מוקצה למשתמשים' },
+    // Locations: FK from users to locations
+    { test: s => s.includes('users_locationid_fkey') || (s.includes('location') && s.includes('users') && s.includes('foreign key')), he: 'לא ניתן למחוק מיקום המשויך למשתמשים. יש להסיר את שיוך המשתמשים לפני המחיקה.' },
     { test: s => s.includes('foreign key') || s.includes('dependency'), he: 'לא ניתן למחוק עקב תלות ברשומות אחרות' },
-    { test: s => s.includes('cannot delete') && s.includes('signed'), he: 'לא ניתן למחוק פריטים שנחתמו עבורם' },
+    // Management: units with locations having users
+    { test: s => s.includes('cannot delete unit') && s.includes('locations') && s.includes('assigned users'), he: 'לא ניתן למחוק יחידה שיש לה מיקומים עם משתמשים משויכים. יש להסיר/להעביר את המשתמשים תחילה.' },
   ];
 
   const found = translations.find(t => t.test(m));
   if (found) return found.he;
 
-  // Default: return original message; optionally wrap in Hebrew context
+  // Default: return original message
   return msg;
 };
 
@@ -45,7 +48,13 @@ const BulkDeleteErrorModal: React.FC<BulkDeleteErrorModalProps> = ({
   errors,
   type
 }) => {
-  const entityName = type === 'user' ? 'משתמשים' : 'פריטים';
+  const entityName = (
+    type === 'user' ? 'משתמשים' :
+    type === 'item' ? 'פריטים' :
+    type === 'unit' ? 'יחידות' :
+    type === 'location' ? 'מיקומים' :
+    'שמות פריטים'
+  );
   const failedCount = totalCount - deletedCount;
   const displayMessage = translateErrorMessage(message, type);
 
@@ -105,6 +114,12 @@ const BulkDeleteErrorModal: React.FC<BulkDeleteErrorModalProps> = ({
                 <li>החזר את כל הפריטים המוקצים למשתמשים אלה</li>
                 <li>בטל את הקצאת הפריטים דרך מסך הקבלות</li>
                 <li>מחק תחילה את הקבלות הפעילות של המשתמשים</li>
+              </ul>
+            ) : type === 'unit' ? (
+              <ul className="mb-0">
+                <li>אתר מיקומים ביחידה שבהם משויכים משתמשים</li>
+                <li>העבר את המשתמשים ליחידה אחרת או הסר את שיוכם</li>
+                <li>לאחר שאין שיוכים, נסה למחוק שוב את היחידה</li>
               </ul>
             ) : (
               <ul className="mb-0">
