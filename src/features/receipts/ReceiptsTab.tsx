@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Receipt, User } from '../../types';
 import { useReceipts } from '../../hooks';
@@ -24,7 +24,7 @@ interface ReceiptsTabProps {
 }
 
 const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
-    const { receipts, pendingReceipts, fetchPendingReceipts, fetchMyPendingReceipts, deleteReceipt } = useReceipts();
+    const { receipts, pendingReceipts, fetchPendingReceipts, fetchMyPendingReceipts, deleteReceipt, fetchReceipts } = useReceipts();
     
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
@@ -35,11 +35,93 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     const [modalType, setModalType] = useState<'create' | 'return' | 'update'>('create');
     const [activeTab, setActiveTab] = useState<'signed' | 'pending'>('signed');
 
+    // New: search/sort for signed receipts
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [detailsReceipt, setDetailsReceipt] = useState<Receipt | null>(null);
+
     // Filter receipts based on user role
     const userReceipts = isAdmin ? receipts : receipts.filter(receipt => receipt.signedById === userProfile.id);
     const userPendingReceipts = isAdmin ? pendingReceipts : pendingReceipts.filter(receipt => receipt.signedById === userProfile.id);
 
-    const { paginatedItems: paginatedReceipts, totalPages } = paginate(userReceipts, currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
+    // Helper: get unit name (prefer receiver, fallback to issuer)
+    const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
+
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+        setSortConfig({ key, direction });
+    };
+
+    const getSortIcon = (key: string) => {
+        if (!sortConfig || sortConfig.key !== key) {
+            return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }} />;
+        }
+        return sortConfig.direction === 'asc' ? (
+            <i className="fas fa-sort-up ms-1" />
+        ) : (
+            <i className="fas fa-sort-down ms-1" />
+        );
+    };
+
+    // Apply search + sort
+    const filteredAndSortedReceipts = useMemo(() => {
+        const term = searchTerm.toLowerCase();
+        let filtered = userReceipts.filter((r) => {
+            const issuer = r.createdBy?.name?.toLowerCase() || '';
+            const receiver = r.signedBy?.name?.toLowerCase() || '';
+            const unit = getUnit(r).toLowerCase();
+            const count = (r.receiptItems?.length || 0).toString();
+            const dateStr = timestampToDate(r.updatedAt.toString()).toLowerCase();
+            return issuer.includes(term) || receiver.includes(term) || unit.includes(term) || count.includes(term) || dateStr.includes(term);
+        });
+
+        if (sortConfig) {
+            const { key, direction } = sortConfig;
+            filtered = [...filtered].sort((a, b) => {
+                let aVal: any, bVal: any;
+                switch (key) {
+                    case 'createdBy':
+                        aVal = a.createdBy?.name || '';
+                        bVal = b.createdBy?.name || '';
+                        break;
+                    case 'signedBy':
+                        aVal = a.signedBy?.name || '';
+                        bVal = b.signedBy?.name || '';
+                        break;
+                    case 'unit':
+                        aVal = getUnit(a) || '';
+                        bVal = getUnit(b) || '';
+                        break;
+                    case 'itemCount':
+                        aVal = a.receiptItems?.length || 0;
+                        bVal = b.receiptItems?.length || 0;
+                        break;
+                    case 'updatedAt':
+                        aVal = new Date(a.updatedAt).getTime();
+                        bVal = new Date(b.updatedAt).getTime();
+                        break;
+                    default:
+                        return 0;
+                }
+                if (typeof aVal === 'string' && typeof bVal === 'string') {
+                    const cmp = aVal.localeCompare(bVal, 'he');
+                    return direction === 'asc' ? cmp : -cmp;
+                }
+                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        return filtered;
+    }, [userReceipts, searchTerm, sortConfig]);
+
+    const { paginatedItems: paginatedReceipts, totalPages } = paginate(filteredAndSortedReceipts, currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
 
     // Load pending receipts when tab changes
     useEffect(() => {
@@ -57,12 +139,9 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         setCurrentPage(1);
     };
 
-    const handlePendingReceiptsRefresh = () => {
-        if (isAdmin) {
-            fetchPendingReceipts();
-        } else {
-            fetchMyPendingReceipts();
-        }
+    const handlePendingReceiptsRefresh = async () => {
+        // Refresh both signed and pending lists so UI updates immediately after actions
+        await fetchReceipts();
     };
 
     const handleCreateNewClick = () => {
@@ -99,7 +178,6 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 // No need to refresh since deleteReceipt already updates the state
             }
         } catch (error) {
-            console.error('Error deleting receipt:', error);
             // Error is handled by the hook
         } finally {
             setIsDeleting(false);
@@ -119,11 +197,16 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         handlePendingReceiptsRefresh();
     };
 
+    const handleCreateSuccess = () => {
+        handleCloseModal();
+        // After creating a receipt (pending), refresh lists so it appears immediately
+        handlePendingReceiptsRefresh();
+    };
+
     const handleDownloadPDF = (receipt: Receipt) => {
         try {
             generateReceiptPDF(receipt);
         } catch (error) {
-            console.error('Error generating PDF:', error);
             // You could add a toast notification here
         }
     };
@@ -163,6 +246,31 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                             )}
                         </div>
 
+                        {/* Full-width search bar */}
+                        <div className="search-bar" style={{ direction: 'rtl', margin: '12px 0 16px 0' }}>
+                            <div className="input-group" style={{ width: '100%' }}>
+                                <span className="input-group-text"><i className="fas fa-search" /></span>
+                                <input
+                                    type="text"
+                                    className="form-control"
+                                    placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+                                    value={searchTerm}
+                                    onChange={handleSearchChange}
+                                    style={{ direction: 'rtl' }}
+                                />
+                                {searchTerm && (
+                                    <button
+                                        className="btn btn-outline-secondary"
+                                        type="button"
+                                        onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                                        title="נקה חיפוש"
+                                    >
+                                        <i className="fas fa-times" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
                         {paginatedReceipts.length === 0 ? (
                             <div className="empty-state">
                                 <i className="fas fa-receipt"></i>
@@ -174,20 +282,49 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                 <table className="receipts-table">
                                     <thead>
                                         <tr>
-                                            <th>שם המנפיק</th>
-                                            <th>כמות פריטים</th>
-                                            <th>תאריך חתימה</th>
+                                            <th className="sortable-header" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span>מנפיק</span>
+                                                    <div className="sort-indicator">{getSortIcon('createdBy')}</div>
+                                                </div>
+                                            </th>
+                                            <th className="sortable-header" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span>מקבל</span>
+                                                    <div className="sort-indicator">{getSortIcon('signedBy')}</div>
+                                                </div>
+                                            </th>
+                                            <th className="sortable-header" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span>יחידה</span>
+                                                    <div className="sort-indicator">{getSortIcon('unit')}</div>
+                                                </div>
+                                            </th>
+                                            <th className="sortable-header" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span>כמות פריטים</span>
+                                                    <div className="sort-indicator">{getSortIcon('itemCount')}</div>
+                                                </div>
+                                            </th>
+                                            <th className="sortable-header" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
+                                                <div className="d-flex align-items-center justify-content-between">
+                                                    <span>תאריך חתימה</span>
+                                                    <div className="sort-indicator">{getSortIcon('updatedAt')}</div>
+                                                </div>
+                                            </th>
                                             <th>פעולות</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {paginatedReceipts.map(receipt => (
-                                            <tr key={receipt.id}>
+                                            <tr key={receipt.id} onClick={() => setDetailsReceipt(receipt)} style={{ cursor: 'pointer' }}>
                                                 <td>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
+                                                <td>{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
+                                                <td>{getUnit(receipt)}</td>
                                                 <td>{receipt.receiptItems?.length || 0}</td>
                                                 <td>{timestampToDate(receipt.updatedAt.toString())}</td>
                                                 <td>
-                                                    <div className="action-buttons">
+                                                    <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
                                                         {isAdmin && (
                                                             <>
                                                                 <button 
@@ -258,6 +395,133 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 {renderTabContent()}
             </div>
 
+            {/* Details Modal for signed receipts */}
+            {detailsReceipt && (
+                <Modal
+                    isOpen={!!detailsReceipt}
+                    onClose={() => setDetailsReceipt(null)}
+                    title={`פרטי קבלה #${detailsReceipt.id}`}
+                    size="lg"
+                >
+                    <div style={{ direction: 'rtl', padding: '16px' }}>
+                        {/* Summary */}
+                        <div
+                            style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(4, 1fr)',
+                                gap: '12px',
+                                marginBottom: '16px',
+                                background: '#ffffff',
+                                border: '1px solid #e9ecef',
+                                borderRadius: '8px',
+                                padding: '12px'
+                            }}
+                        >
+                            <div>
+                                <div style={{ color: '#6c757d', fontSize: 12 }}>מנפיק</div>
+                                <div style={{ fontWeight: 700 }}>{detailsReceipt.createdBy?.name || '—'}</div>
+                            </div>
+                            <div>
+                                <div style={{ color: '#6c757d', fontSize: 12 }}>מקבל</div>
+                                <div style={{ fontWeight: 700 }}>{detailsReceipt.signedBy?.name || '—'}</div>
+                            </div>
+                            <div>
+                                <div style={{ color: '#6c757d', fontSize: 12 }}>יחידה</div>
+                                <div style={{ fontWeight: 700 }}>{getUnit(detailsReceipt)}</div>
+                            </div>
+                            <div>
+                                <div style={{ color: '#6c757d', fontSize: 12 }}>תאריך חתימה</div>
+                                <div style={{ fontWeight: 700 }}>{timestampToDate(detailsReceipt.updatedAt.toString())}</div>
+                            </div>
+                        </div>
+
+                        {/* Items Table */}
+                        <div
+                            style={{
+                                background: '#ffffff',
+                                border: '1px solid #e9ecef',
+                                borderRadius: '8px',
+                                overflow: 'hidden'
+                            }}
+                        >
+                            <div style={{
+                                padding: '10px 12px',
+                                borderBottom: '1px solid #e9ecef',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between'
+                            }}>
+                                <div style={{ fontWeight: 700 }}>פריטים</div>
+                                <span style={{
+                                    backgroundColor: '#28a745',
+                                    color: 'white',
+                                    padding: '2px 10px',
+                                    borderRadius: '12px',
+                                    fontSize: 12,
+                                    fontWeight: 700
+                                }}>
+                                    {detailsReceipt.receiptItems?.length || 0}
+                                </span>
+                            </div>
+
+                            <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ background: '#f8f9fa' }}>
+                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 60 }}>#</th>
+                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>פריט</th>
+                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 180 }}>מספר צ'</th>
+                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 120 }}>צופן</th>
+                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>הערה</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(detailsReceipt.receiptItems || []).map((ri, idx) => {
+                                            const itemName = ri.item?.itemName?.name || '—';
+                                            const idNumber = ri.item?.idNumber || '';
+                                            const isNeedReport = ri.item?.isNeedReport || false;
+                                            const note = ri.item?.note || '';
+                                            return (
+                                                <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
+                                                    <td style={{ padding: '10px 12px', color: '#6c757d' }}>{idx + 1}</td>
+                                                    <td style={{ padding: '10px 12px', fontWeight: 600, color: '#333' }}>{itemName}</td>
+                                                    <td style={{ padding: '10px 12px', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', direction: 'ltr', textAlign: 'right' }}>
+                                                        {idNumber ? idNumber : '—'}
+                                                    </td>
+                                                    <td style={{ padding: '10px 12px' }}>
+                                                        <span
+                                                            style={{
+                                                                backgroundColor: isNeedReport ? '#dc3545' : '#28a745',
+                                                                color: 'white',
+                                                                padding: '2px 8px',
+                                                                borderRadius: '12px',
+                                                                fontSize: 12,
+                                                                fontWeight: 700
+                                                            }}
+                                                        >
+                                                            {isNeedReport ? 'כן' : 'לא'}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: '10px 12px', color: '#495057' }}>{note || '—'}</td>
+                                                </tr>
+                                            );
+                                        })}
+
+                                        {(!detailsReceipt.receiptItems || detailsReceipt.receiptItems.length === 0) && (
+                                            <tr>
+                                                <td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#6c757d' }}>
+                                                    לא נמצאו פריטים עבור קבלה זו
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
             {/* Create/Return Modal */}
             {isModalOpen && (
                 <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
@@ -269,7 +533,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                         />
                     ) : modalType === 'create' ? (
                         <CreateReceiptForm
-                            onSuccess={handleCloseModal}
+                            onSuccess={handleCreateSuccess}
                             onCancel={handleCloseModal}
                         />
                     ) : null}

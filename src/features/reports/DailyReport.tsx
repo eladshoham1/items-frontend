@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ServerError, SmartPagination } from '../../shared/components';
 import { useReports } from '../../hooks';
 import { getCurrentDate, paginate } from '../../utils';
@@ -11,12 +11,13 @@ interface DailyReportProps {
 }
 
 const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
-  const { reportItems, loading, error, updateReportStatus, toggleReportStatus } = useReports();
+  const { reportItems, loading, error, updateReportStatus, toggleReportStatus, setReportStatusBulk } = useReports();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
   } | null>(null);
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -97,6 +98,21 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     toggleReportStatus(id);
   };
 
+  // Header checkbox (tri-state) to set all across ALL pages (filtered set)
+  const handleHeaderCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const allIds = sortedReportItems.map(i => i.id);
+    setReportStatusBulk(allIds, e.target.checked);
+  };
+
+  // Keep header checkbox state in sync (checked/indeterminate) across ALL pages
+  useEffect(() => {
+    if (!headerCheckboxRef.current) return;
+    const total = sortedReportItems.length;
+    const checkedCount = sortedReportItems.filter(i => i.isReported).length;
+    headerCheckboxRef.current.indeterminate = checkedCount > 0 && checkedCount < total;
+    headerCheckboxRef.current.checked = total > 0 && checkedCount === total;
+  }, [sortedReportItems]);
+
   const handleSubmitReport = async () => {
     const reportUpdates: ReportStatusUpdate[] = reportItems.map(item => ({
       id: item.id,
@@ -107,6 +123,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     
     if (success) {
       alert('דיווח נשלח בהצלחה');
+      // Clear selection after submit
     } else {
       alert('שגיאה בשליחת הדיווח');
     }
@@ -153,7 +170,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
 
   return (
     <div className="card">
-      <div className="card-header">
+      <div className="card-header d-flex justify-content-between align-items-center">
         <h2 className="mb-0">דוח יומי - {getCurrentDate()}</h2>
       </div>
       <div className="card-body">
@@ -255,6 +272,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           <table className="table table-striped">
             <thead>
               <tr>
+                {/* Removed separate selection column */}
                 <th 
                   className="sortable-header"
                   onClick={() => handleSort('name')}
@@ -315,8 +333,16 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 >
                   <div className="d-flex align-items-center justify-content-between">
                     <span>האם דיווח</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('isReported')}
+                    <div className="d-flex align-items-center gap-2">
+                      <input
+                        type="checkbox"
+                        ref={headerCheckboxRef}
+                        onChange={handleHeaderCheckboxChange}
+                        title="סמן/נקה הכל בכל הדפים"
+                        className="form-check-input"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="sort-indicator">{getSortIcon('isReported')}</div>
                     </div>
                   </div>
                 </th>

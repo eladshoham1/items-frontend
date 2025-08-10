@@ -49,7 +49,6 @@ const ReturnForm: React.FC<ReturnFormProps> = ({ receipt, onSuccess, onCancel })
         setError('שגיאה בהחזרת הפריטים');
       }
     } catch (error) {
-      console.error('Return submission failed:', error);
       setError('שגיאה בהחזרת הפריטים');
     } finally {
       setIsSubmitting(false);

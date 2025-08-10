@@ -9,8 +9,9 @@ import { ManagementTab } from './features/management';
 import { SettingsTab } from './features/settings';
 import { GoogleAuth } from './features/auth';
 import { ManagementProvider } from './contexts';
-import { useAuth, useUserProfile } from './hooks';
+import { useAuth, useUserProfile, useColdStartLoader } from './hooks';
 import { UserProfileSetup } from './components/auth';
+import { ColdStartLoader, ServerWarmupIndicator } from './shared/components';
 import { User } from 'firebase/auth';
 import './shared/styles';
 
@@ -28,20 +29,9 @@ const App: React.FC = () => {
     isAdmin,
     createUserProfile
   } = useUserProfile();
-
-  // Debug logging
-  console.log('App render - Current state:', {
-    firebaseUser: firebaseUser?.email,
-    userProfile: userProfile,
-    profileLoading,
-    needsProfile,
-    profileError,
-    isAdmin,
-    authLoading
-  });
+  const { showColdStartMessage, serverState } = useColdStartLoader();
 
   const handleAuthSuccess = (user: User) => {
-    console.log('Authentication successful:', user.email, user.displayName);
     setAuthError(null);
   };
 
@@ -53,20 +43,15 @@ const App: React.FC = () => {
     try {
       await logout();
     } catch (error) {
-      console.error('Logout error:', error);
+      // Swallow logout errors silently
     }
   };
 
   const handleProfileComplete = async (profileData: Parameters<typeof createUserProfile>[0]) => {
     try {
-      const success = await createUserProfile(profileData);
-      if (success) {
-        // Profile created successfully, the useUserProfile hook has already updated the state
-        console.log('Profile created successfully');
-        // No need to refetch as createUserProfile already updates the state
-      }
+      await createUserProfile(profileData);
     } catch (error) {
-      console.error('Error creating profile:', error);
+      // Swallow profile creation errors (UI already shows errors)
     }
   };
 
@@ -124,9 +109,6 @@ const App: React.FC = () => {
 
   // Show profile setup if user needs to complete their profile
   if (needsProfile) {
-    console.log('App: Showing profile setup because needsProfile =', needsProfile);
-    console.log('App: Current userProfile =', userProfile);
-    console.log('App: Current profileLoading =', profileLoading);
     return (
       <ManagementProvider>
         <UserProfileSetup
@@ -201,22 +183,31 @@ const App: React.FC = () => {
   };
 
   return (
-    <ManagementProvider>
-      <Layout>
-        <Navigation 
-          activeTab={activeTab}
-          availableTabs={availableTabs}
-          onTabChange={(tab) => setActiveTab(tab as Tab)}
-          user={firebaseUser}
-          userProfile={userProfile}
-          isAdmin={isAdmin}
-          onLogout={handleLogout}
-        />
-        <div className="content-container">
-          {renderTabContent()}
-        </div>
-      </Layout>
-    </ManagementProvider>
+    <>
+      <ManagementProvider>
+        <Layout>
+          <Navigation 
+            activeTab={activeTab}
+            availableTabs={availableTabs}
+            onTabChange={(tab) => setActiveTab(tab as Tab)}
+            user={firebaseUser}
+            userProfile={userProfile}
+            isAdmin={isAdmin}
+            onLogout={handleLogout}
+          />
+          <div className="content-container">
+            {renderTabContent()}
+          </div>
+        </Layout>
+      </ManagementProvider>
+      
+      {/* Server State Indicators */}
+      <ServerWarmupIndicator serverState={serverState} />
+      <ColdStartLoader 
+        isVisible={showColdStartMessage} 
+        serverState={serverState}
+      />
+    </>
   );
 };
 

@@ -15,21 +15,13 @@ const constructBaseURL = () => {
   const protocol = apiUrl.includes('localhost') ? 'http://' : 'https://';
   const finalUrl = `${protocol}${apiUrl}/${API_PREFIX}`;
   
-  // Debug logging in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 API Configuration Debug:');
-    console.log('  Raw REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
-    console.log('  Processed apiUrl:', apiUrl);
-    console.log('  Final BASE_URL:', finalUrl);
-  }
-  
   return finalUrl;
 };
 
 export const API_CONFIG = {
   API_PREFIX,
   BASE_URL: constructBaseURL(),
-  TIMEOUT: 10000,
+  TIMEOUT: 30000, // Increased timeout to 30 seconds for serverless cold starts
   HEADERS: {
     'Content-Type': 'application/json',
   },
@@ -40,6 +32,7 @@ export const UI_CONFIG = {
   TABLE_PAGE_SIZE: 20,
   DATE_LOCALE: 'he-IL',
   TIME_ZONE: 'Asia/Jerusalem',
+  COLD_START_THRESHOLD: 3000, // Show cold start message after 3 seconds
 } as const;
 
 // Feature flags or environment-specific settings

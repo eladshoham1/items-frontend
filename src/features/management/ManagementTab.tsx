@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UnitsTab, LocationsTab, ItemNamesTab, ManagementSettingsTab } from './index';
+import { UnitsTab, LocationsTab, ItemNamesTab, ManagementSettingsTab, BackupRestoreTab } from './index';
 
 const ManagementTab: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState('units');
@@ -8,6 +8,7 @@ const ManagementTab: React.FC = () => {
     { key: 'units', label: 'יחידות', icon: '🏢' },
     { key: 'locations', label: 'מיקומים', icon: '📍' },
     { key: 'itemNames', label: 'שמות פריטים', icon: '📝' },
+    { key: 'backup', label: 'גיבוי ושחזור', icon: '💾' },
     { key: 'settings', label: 'הגדרות', icon: '⚙️' },
   ];
 
@@ -19,6 +20,8 @@ const ManagementTab: React.FC = () => {
         return <LocationsTab />;
       case 'itemNames':
         return <ItemNamesTab />;
+      case 'backup':
+        return <BackupRestoreTab />;
       case 'settings':
         return <ManagementSettingsTab />;
       default:

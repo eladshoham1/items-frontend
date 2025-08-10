@@ -40,7 +40,6 @@ export const itemService = {
 
   // Delete an item
   async delete(itemId: string): Promise<void> {
-    console.log('delete item id:', itemId);
     return apiService.delete<void>(`/items/${itemId}`);
   },
 

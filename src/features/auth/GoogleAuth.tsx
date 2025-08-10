@@ -15,27 +15,13 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
     setIsLoading(true);
     
     try {
-      console.log('Attempting Google sign-in...');
-      
       // Sign in with Google popup
       const result = await signInWithPopup(auth, googleProvider);
-      
-      console.log('✅ Google authentication successful!');
-      console.log('User signed in:', result.user);
-      console.log('User email:', result.user.email);
-      console.log('User name:', result.user.displayName);
-      console.log('User photo:', result.user.photoURL);
-      
-      console.log('✅ User signed in successfully:', result.user.email);
       
       // User signed in successfully
       onAuthSuccess(result.user);
       
     } catch (error: any) {
-      console.error('❌ Error during Google sign-in:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      
       let errorMessage = 'נכשל בהתחברות עם Google. ';
       
       switch (error.code) {
@@ -64,13 +50,12 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
           errorMessage += 'החשבון שלכם הושבת. אנא פנו לתמיכה.';
           break;
         case 'auth/unauthorized-domain':
-          errorMessage += 'הדומיין הזה אינו מורשה לאימות. אנא פנו למנהל המערכת להוספת הדומיין לרשימת הדומיינים המורשים ב-Firebase.';
+          errorMessage += 'הדומיין הזה אינו מורשה. אנא פנו למנהל המערכת להוספת הדומיין לרשימת הדומיינים המורשים ב-Firebase.';
           break;
         default:
           errorMessage += error.message || 'אנא נסו שוב או פנו לתמיכה.';
       }
       
-      console.log('User-facing error message:', errorMessage);
       onAuthError(errorMessage);
       
     } finally {
@@ -116,7 +101,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ onAuthSuccess, onAuthError }) =
 
           <div className="google-auth-info">
             <p>
-              על ידי התחברות, אתם מסכימים לתנאי השירות ולמדיניות הפרטיות שלנו.
+              על ידי ההתחברות, אתם מסכימים לתנאי השירות ולמדיניות הפרטיות שלנו.
             </p>
           </div>
         </div>

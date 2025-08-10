@@ -217,11 +217,6 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
         onSuccess();
       }
     } catch (error: any) {
-      console.error('Error with receipt:', error);
-      console.error('Error response:', error?.response);
-      console.error('Error status:', error?.response?.status || error?.status);
-      console.error('Error data:', error?.response?.data);
-      
       // Handle 409 conflict error specifically
       if (error?.response?.status === 409 || error?.status === 409) {
         const conflictMessage = error?.response?.data?.message || error?.message || '';

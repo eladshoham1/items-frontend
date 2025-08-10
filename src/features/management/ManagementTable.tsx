@@ -175,7 +175,6 @@ export function ManagementTable<T extends BaseEntity>({
         alert(result.error || `שגיאה במחיקת ${title}`);
       }
     } catch (error) {
-      console.error('Delete error:', error);
       alert(`שגיאה במחיקת ${title}`);
     }
   };

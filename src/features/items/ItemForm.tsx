@@ -31,6 +31,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     note: '',
     isNeedReport: false,
     isAvailable: true,
+    isOperational: true,
   });
   const [quantity, setQuantity] = useState<number>(1);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -53,6 +54,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
         note: item.note || '',
         isNeedReport: item.isNeedReport || false,
         isAvailable: item.isAvailable,
+        isOperational: item.isOperational ?? true,
       });
       // Reset quantity to 1 when editing existing item
       setQuantity(1);
@@ -123,9 +125,10 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
         if (result.success) {
           onSuccess();
         } else if (result.isConflict) {
+          // Show translated error (403/409) in modal
           setConflictError({
             isOpen: true,
-            message: result.error || 'פריט עם מספר צ\' זה כבר קיים במערכת',
+            message: result.error || 'לא ניתן לעדכן פריט הקשור לקבלה חתומה',
             itemName: formData.name
           });
         } else {
@@ -161,7 +164,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
         }
       }
     } catch (error) {
-      console.error('Error submitting item:', error);
+      // Removed console.error to avoid noisy logs
       alert('שגיאה בשמירת הפריט');
     } finally {
       setIsSubmitting(false);
@@ -210,6 +213,31 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
               <span className="custom-checkbox-label">
                 <strong>צופן?</strong>
                 <small className="checkbox-description">סמן אם הפריט דורש דיווח מיוחד</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <div className="custom-checkbox-wrapper">
+            <label className="custom-checkbox">
+              <input
+                type="checkbox"
+                className="custom-checkbox-input"
+                checked={formData.isOperational}
+                onChange={e => setFormData(prev => ({ ...prev, isOperational: e.target.checked }))}
+              />
+              <span className="custom-checkbox-checkmark">
+                <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path 
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span className="custom-checkbox-label">
+                <strong>תקין?</strong>
+                <small className="checkbox-description">האם הפריט תקין?</small>
               </span>
             </label>
           </div>

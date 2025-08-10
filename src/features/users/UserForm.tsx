@@ -152,7 +152,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         alert('שגיאה בשמירת המשתמש');
       }
     } catch (error) {
-      console.error('Error submitting user:', error);
+      // Removed console.error to avoid noisy logs
       alert('שגיאה בשמירת המשתמש');
     } finally {
       setIsSubmitting(false);
@@ -260,29 +260,27 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
                 checked={formData.isAdmin || false}
                 onChange={e => handleInputChange('isAdmin', e.target.checked)} 
               />
-              <span className="checkbox-label">הרשאות מנהל מערכת</span>
+              <span className="ms-2">מנהל מערכת</span>
             </label>
-            {errors.isAdmin && <div className="form-error">{errors.isAdmin}</div>}
           </div>
         )}
-        
-        
-        <div className="btn-group btn-group-end">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            ביטול
-          </button>
+
+        <div className="form-actions">
           <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'שומר...' : (user ? 'עדכן' : 'צור')}
+            {isSubmitting ? 'שומר...' : 'שמור'}
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={onCancel}>
+            ביטול
           </button>
         </div>
       </form>
 
-      <ConflictErrorModal
-        isOpen={showConflictModal}
+      <ConflictErrorModal 
+        isOpen={showConflictModal} 
         onClose={() => setShowConflictModal(false)}
-        title="משתמש כבר קיים"
-        message={`משתמש עם מספר אישי ${formData.personalNumber} כבר קיים במערכת.`}
-        resolutionMessage="אנא בדוק את המספר האישי ונסה שוב עם מספר אחר."
+        title="התנגשות נתונים"
+        message="משתמש עם מספר אישי זה כבר קיים במערכת או שאין לך הרשאה לעדכון."
+        resolutionMessage={`בדוק אם המשתמש כבר קיים במערכת עם אותו מספר אישי.\nבמידת הצורך, פנה למנהל המערכת כדי לקבל הרשאות מתאימות.`}
         type="user"
       />
     </>

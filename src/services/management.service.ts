@@ -239,6 +239,37 @@ class ManagementService {
       };
     }
   }
+
+  // --- Admin only: Import / Export entire database ---
+  async exportDatabase(): Promise<ManagementResponse<any>> {
+    try {
+      const response = await apiService.get<any>('/management/export');
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בייצוא נתונים',
+      };
+    }
+  }
+
+  async importDatabase(payload: any): Promise<ManagementResponse<any>> {
+    try {
+      const response = await apiService.post<any>('/management/import', payload);
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בייבוא נתונים',
+      };
+    }
+  }
 }
 
 export const managementService = new ManagementService();

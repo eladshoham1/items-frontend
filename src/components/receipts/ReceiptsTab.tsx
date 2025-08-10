@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../../style/theme.css';
 import { format } from 'date-fns';
-import { Receipt, ReceiptItem } from '../../types';
+import { Receipt } from '../../types';
 import { useReceipts } from '../../hooks';
 import { paginate } from '../../utils';
 import { generateReceiptPDF } from '../../utils/pdfGenerator';
@@ -41,7 +41,7 @@ const ReceiptsTab: React.FC = () => {
         try {
             generateReceiptPDF(receipt);
         } catch (error) {
-            console.error('Error generating PDF:', error);
+            // Removed console.error to avoid noisy logs
         }
     };
 

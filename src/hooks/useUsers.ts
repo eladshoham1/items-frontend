@@ -17,7 +17,7 @@ export const useUsers = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
       setUsers([]); // Ensure empty array on error
-      console.error('Failed to fetch users:', err);
+      // Removed console.error
     } finally {
       setLoading(false);
     }
@@ -32,7 +32,7 @@ export const useUsers = () => {
     } catch (err) {
       const apiError = extractApiError(err);
       setError(apiError.message);
-      console.error('Failed to create user:', err);
+      // Removed console.error
       
       // Return detailed error information for conflict handling
       if (apiError.status === 409) {
@@ -58,7 +58,7 @@ export const useUsers = () => {
     } catch (err) {
       const apiError = extractApiError(err);
       setError(apiError.message);
-      console.error('Failed to update user:', err);
+      // Removed console.error
       
       // Return detailed error information for conflict handling
       if (apiError.status === 409) {
@@ -124,7 +124,7 @@ export const useUsers = () => {
         setError(apiError.message);
       }
       
-      console.error('Failed to delete users:', err);
+      // Removed console.error
       return { 
         success: false, 
         error: apiError.message,

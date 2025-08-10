@@ -472,7 +472,7 @@ export const generateReceiptPDF = async (receipt: Receipt): Promise<void> => {
     pdf.save(fileName);
     
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    // Removed console.error to avoid noisy logs
     
     // Fallback: create a simple text-based PDF if HTML rendering fails
     const doc = new jsPDF({

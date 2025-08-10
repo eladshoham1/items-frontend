@@ -127,8 +127,7 @@ const ReturnItemsModal: React.FC<ReturnItemsModalProps> = ({ receipt, onSuccess,
       } else {
         setError('שגיאה בהחזרת הפריטים');
       }
-    } catch (error) {
-      console.error('Error returning items:', error);
+    } catch {
       setError('שגיאה בהחזרת הפריטים');
     } finally {
       setIsSubmitting(false);

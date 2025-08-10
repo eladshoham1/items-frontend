@@ -5,13 +5,16 @@ export const checkApiHealth = async (): Promise<{
   error?: string;
   url: string;
   corsError?: boolean;
+  responseTime?: number;
+  isSlowResponse?: boolean;
 }> => {
   const healthUrl = `${API_CONFIG.BASE_URL}/health`;
+  const startTime = Date.now();
   
   try {
-    // First attempt with fetch
+    // Extended timeout for serverless cold starts
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout for cold starts
     
     const response = await fetch(healthUrl, {
       method: 'GET',
@@ -26,18 +29,19 @@ export const checkApiHealth = async (): Promise<{
     });
     
     clearTimeout(timeoutId);
-    
-    console.log('API Health Check Response:', response.status, response.statusText);
-    console.log('Response Headers:', response.headers);
+    const responseTime = Date.now() - startTime;
+    const isSlowResponse = responseTime > 5000; // Consider 5+ seconds as slow (cold start)
     
     return {
       isHealthy: response.ok,
       error: response.ok ? undefined : `${response.status} ${response.statusText}`,
       url: healthUrl,
-      corsError: false
+      corsError: false,
+      responseTime,
+      isSlowResponse
     };
   } catch (error: any) {
-    console.error('API Health Check Failed:', error);
+    const responseTime = Date.now() - startTime;
     
     // Enhanced error detection
     const isCorsError = error.message?.includes('CORS') || 
@@ -56,7 +60,9 @@ export const checkApiHealth = async (): Promise<{
     
     let errorMessage = 'Network error';
     if (isTimeoutError) {
-      errorMessage = 'Request timeout - server may be down';
+      errorMessage = responseTime > 20000 ? 
+        'Server is taking too long to respond - may be in deep sleep mode' :
+        'Request timeout - server may be down';
     } else if (isConnectionError) {
       errorMessage = 'Connection refused - server is not running';
     } else if (isCorsError) {
@@ -69,7 +75,9 @@ export const checkApiHealth = async (): Promise<{
       isHealthy: false,
       error: errorMessage,
       url: healthUrl,
-      corsError: isCorsError
+      corsError: isCorsError,
+      responseTime,
+      isSlowResponse: responseTime > 5000
     };
   }
 };

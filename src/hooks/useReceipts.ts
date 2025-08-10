@@ -13,7 +13,6 @@ export const useReceipts = () => {
     setError(null);
     try {
       const data = await receiptService.getAll();
-      console.log('Fetched receipts:', data);
       // Ensure data is an array to prevent "map is not a function" errors
       if (Array.isArray(data)) {
         // Separate signed and unsigned receipts
@@ -23,16 +22,13 @@ export const useReceipts = () => {
         setReceipts(signedReceipts);
         setPendingReceipts(unsignedReceipts);
       } else if (data === null || data === undefined) {
-        console.warn('getAll returned null/undefined data');
         setReceipts([]);
         setPendingReceipts([]);
       } else {
-        console.warn('getAll returned non-array data:', data);
         setReceipts([]);
         setPendingReceipts([]);
       }
     } catch (err) {
-      console.error('Error fetching receipts:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch receipts');
       setReceipts([]); // Ensure empty array on error
       setPendingReceipts([]);
@@ -139,15 +135,12 @@ export const useReceipts = () => {
     setError(null);
     try {
       const data = await receiptService.getPendingReceipts();
-      console.log('Fetched pending receipts:', data);
       if (Array.isArray(data)) {
         setPendingReceipts(data);
       } else {
-        console.warn('getPendingReceipts returned non-array data:', data);
         setPendingReceipts([]);
       }
     } catch (err) {
-      console.error('Error fetching pending receipts:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch pending receipts');
       setPendingReceipts([]);
     } finally {
@@ -160,15 +153,12 @@ export const useReceipts = () => {
     setError(null);
     try {
       const data = await receiptService.getMyPendingReceipts();
-      console.log('Fetched my pending receipts:', data);
       if (Array.isArray(data)) {
         setPendingReceipts(data);
       } else {
-        console.warn('getMyPendingReceipts returned non-array data:', data);
         setPendingReceipts([]);
       }
     } catch (err) {
-      console.error('Error fetching my pending receipts:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch pending receipts');
       setPendingReceipts([]);
     } finally {

@@ -16,7 +16,7 @@ export const useAvailableItems = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch available items');
       setAvailableItems([]); // Ensure empty array on error
-      console.error('Failed to fetch available items:', err);
+      // Removed console.error to avoid noisy logs
     } finally {
       setLoading(false);
     }

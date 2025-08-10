@@ -4,3 +4,4 @@ export { LocationsTab } from './LocationsTab';
 export { ItemNamesTab } from './ItemNamesTab';
 export { default as ManagementSettingsTab } from './ManagementSettingsTab';
 export { ManagementTable } from './ManagementTable';
+export { default as BackupRestoreTab } from './BackupRestoreTab';

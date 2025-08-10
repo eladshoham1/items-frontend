@@ -13,6 +13,28 @@ interface BulkDeleteErrorModalProps {
   type: 'user' | 'item';
 }
 
+// Translate common backend error messages to Hebrew
+const translateErrorMessage = (msg: string, type: 'user' | 'item') => {
+  if (!msg) return '';
+  const m = msg.toLowerCase();
+
+  const translations: Array<{ test: (s: string) => boolean; he: string }> = [
+    { test: s => s.includes('cannot delete items that have been signed'), he: 'לא ניתן למחוק פריטים שנחתמו עבורם' },
+    { test: s => s.includes('cannot delete item that has been signed'), he: 'לא ניתן למחוק פריט שנחתם עבורו' },
+    { test: s => s.includes('cannot delete users with active receipts'), he: 'לא ניתן למחוק משתמשים עם קבלות פעילות' },
+    { test: s => s.includes('is referenced in receipts') || s.includes('referenced by receipts'), he: 'לא ניתן למחוק: הפריט מקושר לקבלות' },
+    { test: s => s.includes('assigned to users') || s.includes('allocated to users'), he: 'לא ניתן למחוק: הפריט מוקצה למשתמשים' },
+    { test: s => s.includes('foreign key') || s.includes('dependency'), he: 'לא ניתן למחוק עקב תלות ברשומות אחרות' },
+    { test: s => s.includes('cannot delete') && s.includes('signed'), he: 'לא ניתן למחוק פריטים שנחתמו עבורם' },
+  ];
+
+  const found = translations.find(t => t.test(m));
+  if (found) return found.he;
+
+  // Default: return original message; optionally wrap in Hebrew context
+  return msg;
+};
+
 const BulkDeleteErrorModal: React.FC<BulkDeleteErrorModalProps> = ({
   isOpen,
   onClose,
@@ -25,89 +47,67 @@ const BulkDeleteErrorModal: React.FC<BulkDeleteErrorModalProps> = ({
 }) => {
   const entityName = type === 'user' ? 'משתמשים' : 'פריטים';
   const failedCount = totalCount - deletedCount;
+  const displayMessage = translateErrorMessage(message, type);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title}
-      size="lg"
-    >
-      <div className="bulk-delete-error-modal">
-        {/* Summary */}
-        <div className="alert alert-warning mb-4">
-          <div className="d-flex align-items-center mb-3">
-            <i className="fas fa-exclamation-triangle me-2 text-warning"></i>
-            <strong>סיכום מחיקה</strong>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
+      <div className="bulk-delete-error-modal bdem" dir="rtl">
+        {/* Summary - compact cards */}
+        <div className="bdem-summary">
+          <div className="bdem-card">
+            <div className="bdem-card-label">סה"כ נבחרו</div>
+            <div className="bdem-card-number text-primary">{totalCount}</div>
           </div>
-          <div className="container-fluid">
-            <div className="row g-3 text-center justify-content-center">
-              <div className="col-12 col-sm-4">
-                <div className="stat-box bg-white p-3 rounded border shadow-sm">
-                  <div className="stat-number text-primary h3 mb-1 fw-bold">{totalCount}</div>
-                  <div className="stat-label small text-muted fw-medium">סה"כ נבחרו</div>
-                </div>
-              </div>
-              <div className="col-12 col-sm-4">
-                <div className="stat-box bg-white p-3 rounded border shadow-sm">
-                  <div className="stat-number text-success h3 mb-1 fw-bold">{deletedCount}</div>
-                  <div className="stat-label small text-muted fw-medium">נמחקו בהצלחה</div>
-                </div>
-              </div>
-              <div className="col-12 col-sm-4">
-                <div className="stat-box bg-white p-3 rounded border shadow-sm">
-                  <div className="stat-number text-danger h3 mb-1 fw-bold">{failedCount}</div>
-                  <div className="stat-label small text-muted fw-medium">נכשלו</div>
-                </div>
-              </div>
-            </div>
+          <div className="bdem-card">
+            <div className="bdem-card-label">נמחקו בהצלחה</div>
+            <div className="bdem-card-number text-success">{deletedCount}</div>
+          </div>
+          <div className="bdem-card">
+            <div className="bdem-card-label">נכשלו</div>
+            <div className="bdem-card-number text-danger">{failedCount}</div>
           </div>
         </div>
 
-        {/* Error Message */}
-        <div className="alert alert-danger mb-4">
-          <div className="d-flex align-items-center mb-2">
-            <i className="fas fa-times-circle me-2 text-danger"></i>
-            <strong>סיבת הכשל</strong>
+        {/* Error banner */}
+        <div className="bdem-banner bdem-banner-danger">
+          <i className="fas fa-times-circle"></i>
+          <div>
+            <div className="bdem-banner-title">סיבת הכשל</div>
+            <div className="bdem-banner-text">{displayMessage}</div>
           </div>
-          <p className="mb-0">{message}</p>
         </div>
 
-        {/* Failed Items List */}
+        {/* Failed items */}
         {errors.length > 0 && (
-          <div className="failed-items-section">
-            <h6 className="mb-3">
-              <i className="fas fa-list me-2"></i>
+          <div className="bdem-section">
+            <div className="bdem-section-title">
+              <i className="fas fa-list"></i>
               {entityName} שלא ניתן למחוק ({errors.length}):
-            </h6>
-            <div className="failed-items-list bg-light p-3 rounded" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            </div>
+            <div className="bdem-list">
               {errors.map((errorItem, index) => (
-                <div key={index} className="failed-item mb-2">
-                  <div className="d-flex align-items-center">
-                    <i className="fas fa-times-circle text-danger me-2"></i>
-                    <span className="fw-medium">{errorItem}</span>
-                  </div>
+                <div key={index} className="bdem-list-item">
+                  <i className="fas fa-times-circle text-danger"></i>
+                  <span className="bdem-list-text">{errorItem}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Resolution Tips */}
-        <div className="resolution-section mt-4">
-          <h6 className="mb-3">
-            <i className="fas fa-lightbulb me-2"></i>
-            פתרונות מומלצים:
-          </h6>
-          <div className="alert alert-info">
+        {/* Tips */}
+        <div className="bdem-banner bdem-banner-info" style={{ marginTop: 12 }}>
+          <i className="fas fa-lightbulb"></i>
+          <div>
+            <div className="bdem-banner-title">פתרונות מומלצים</div>
             {type === 'user' ? (
-              <ul className="mb-0 ps-3">
+              <ul className="mb-0">
                 <li>החזר את כל הפריטים המוקצים למשתמשים אלה</li>
                 <li>בטל את הקצאת הפריטים דרך מסך הקבלות</li>
                 <li>מחק תחילה את הקבלות הפעילות של המשתמשים</li>
               </ul>
             ) : (
-              <ul className="mb-0 ps-3">
+              <ul className="mb-0">
                 <li>החזר את הפריטים דרך מסך הקבלות</li>
                 <li>בטל את הקצאת הפריטים למשתמשים</li>
                 <li>מחק את הקבלות המכילות את הפריטים</li>
@@ -116,13 +116,9 @@ const BulkDeleteErrorModal: React.FC<BulkDeleteErrorModalProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="d-flex justify-content-end mt-4">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onClose}
-          >
+        {/* Actions */}
+        <div className="d-flex justify-content-end mt-3">
+          <button type="button" className="btn btn-primary" onClick={onClose}>
             <i className="fas fa-check me-2"></i>
             הבנתי
           </button>

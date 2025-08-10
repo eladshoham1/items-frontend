@@ -26,12 +26,10 @@ export const useUserProfile = () => {
       if (response) {
         if (response.needsRegistration) {
           // User exists in Firebase but needs to complete registration
-          console.log('User needs registration:', response);
           setNeedsProfile(true);
           setUserProfile(null);
         } else {
           // User is fully registered
-          console.log('User profile loaded:', response);
           const serverUser = response;
           
           // Transform the server response to match our User interface
@@ -50,18 +48,13 @@ export const useUserProfile = () => {
             unit: serverUser.location?.unit?.name || serverUser.unit || '',
           };
           
-          console.log('Transformed user data for /users/me:', transformedUser);
-          
           // Check if the user data has all required fields
           const hasRequiredFields = transformedUser.id && transformedUser.personalNumber;
 
           if (hasRequiredFields) {
             setUserProfile(transformedUser);
             setNeedsProfile(false);
-            console.log('✅ User profile set successfully');
           } else {
-            console.warn('❌ Server returned incomplete user data:', transformedUser);
-            console.warn('Missing required fields. User might need to re-register.');
             setNeedsProfile(true);
             setUserProfile(null);
           }
@@ -72,7 +65,6 @@ export const useUserProfile = () => {
         setUserProfile(null);
       }
     } catch (error: any) {
-      console.error('Error fetching user profile:', error);
       // If there's an error, assume user needs registration
       setNeedsProfile(true);
       setUserProfile(null);
@@ -108,8 +100,6 @@ export const useUserProfile = () => {
       const response = await apiService.post('/users/register', userData) as any;
       
       if (response) {
-        console.log('Registration successful, user data:', response);
-        
         // Transform the server response to match our User interface
         const serverUser = response;
         const transformedUser: User = {
@@ -127,22 +117,17 @@ export const useUserProfile = () => {
           unit: serverUser.location?.unit?.name || '',
         };
         
-        console.log('Transformed user data:', transformedUser);
-        
         // Update state in the correct order - profile first, then needsProfile
         setUserProfile(transformedUser);
         setNeedsProfile(false);
         setError(null); // Clear any previous errors
         
-        console.log('✅ User registration completed successfully');
         return true;
       } else {
-        console.log('Registration response but no data:', response);
         setError('Registration failed - no user data returned');
         return false;
       }
     } catch (error: any) {
-      console.error('Error creating user profile:', error);
       setError(error.response?.data?.message || 'Failed to create user profile');
       return false;
     } finally {
@@ -163,8 +148,6 @@ export const useUserProfile = () => {
       const response = await apiService.patch(`/users/${userProfile.id}`, updates) as any;
       
       if (response) {
-        console.log('Update successful, user data:', response);
-        
         // Transform the server response to match our User interface
         const serverUser = response;
         const transformedUser: User = {
@@ -181,20 +164,15 @@ export const useUserProfile = () => {
           location: serverUser.location?.name || serverUser.location || '',
           unit: serverUser.location?.unit?.name || serverUser.unit || '',
         };
-        
-        console.log('Transformed updated user data:', transformedUser);
         setUserProfile(transformedUser);
         
         // Reload the page to ensure fresh data is displayed
         window.location.reload();
-        
-        console.log('✅ User profile updated successfully');
         return true;
       }
       
       return false;
     } catch (error: any) {
-      console.error('Error updating user profile:', error);
       setError(error.response?.data?.message || 'Failed to update user profile');
       return false;
     } finally {

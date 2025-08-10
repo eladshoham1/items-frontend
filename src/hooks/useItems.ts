@@ -18,7 +18,6 @@ export const useItems = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch items');
       setItems([]); // Ensure empty array on error
-      console.error('Failed to fetch items:', err);
     } finally {
       setLoading(false);
     }
@@ -32,7 +31,6 @@ export const useItems = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch available items');
       setAvailableItems([]); // Ensure empty array on error
-      console.error('Failed to fetch available items:', err);
     }
   };
 
@@ -48,7 +46,6 @@ export const useItems = () => {
       if (!apiError.isConflict) {
         setError(apiError.message);
       }
-      console.error('Failed to create item:', err);
       return { 
         success: false, 
         error: apiError.message,
@@ -69,7 +66,6 @@ export const useItems = () => {
       if (!apiError.isConflict) {
         setError(apiError.message);
       }
-      console.error('Failed to update item:', err);
       return { 
         success: false, 
         error: apiError.message,
@@ -86,7 +82,6 @@ export const useItems = () => {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark item as received');
-      console.error('Failed to mark item as received:', err);
       return false;
     }
   };
@@ -99,7 +94,6 @@ export const useItems = () => {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to mark item as returned');
-      console.error('Failed to mark item as returned:', err);
       return false;
     }
   };
@@ -118,7 +112,6 @@ export const useItems = () => {
         setError(apiError.message);
       }
       
-      console.error('Failed to delete item:', err);
       return { 
         success: false, 
         error: apiError.message,
@@ -176,7 +169,6 @@ export const useItems = () => {
         setError(apiError.message);
       }
       
-      console.error('Failed to delete items:', err);
       return { 
         success: false, 
         error: apiError.message,

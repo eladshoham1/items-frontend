@@ -92,7 +92,7 @@ const InitialManagementSetup: React.FC<InitialManagementSetupProps> = ({
       onComplete(unitResult.data!.id, locationResult.data!.id);
 
     } catch (error) {
-      console.error('Error creating initial management data:', error);
+      // Removed console.error to avoid noisy logs
       alert('שגיאה ביצירת נתוני המערכת הראשוניים');
     } finally {
       setIsCreating(false);

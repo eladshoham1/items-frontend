@@ -64,7 +64,9 @@ const ItemsTab: React.FC = () => {
     let filtered = items.filter(item => 
       (item.itemName?.name && item.itemName.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase()))
+      (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.isOperational && 'כן'.includes(searchTerm.toLowerCase())) ||
+      (!item.isOperational && 'לא'.includes(searchTerm.toLowerCase()))
     );
 
     if (sortConfig) {
@@ -88,6 +90,10 @@ const ItemsTab: React.FC = () => {
           case 'note':
             aValue = a.note || '';
             bValue = b.note || '';
+            break;
+          case 'isOperational':
+            aValue = a.isOperational;
+            bValue = b.isOperational;
             break;
           default:
             return 0;
@@ -336,7 +342,20 @@ const ItemsTab: React.FC = () => {
                     </div>
                   </div>
                 </th>
-                <th>סטטוס</th>
+                <th 
+                  className="sortable-header"
+                  onClick={() => handleSort('isOperational')}
+                  title="לחץ למיון לפי האם תקין"
+                  data-sorted={sortConfig?.key === 'isOperational' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>האם תקין?</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('isOperational')}
+                    </div>
+                  </div>
+                </th>
+                <th>זמין</th>
                 <th>פעולות</th>
               </tr>
             </thead>
@@ -355,7 +374,20 @@ const ItemsTab: React.FC = () => {
                   <td>{item.isNeedReport ? 'כן' : 'לא'}</td>
                   <td>{item.idNumber || 'לא זמין'}</td>
                   <td>{item.note || 'אין הערה'}</td>
-                  <td>{item.isAvailable ? 'זמין' : 'לא זמין'}</td>
+                  <td>
+                    <span 
+                      className={`badge ${item.isOperational ? 'bg-success' : 'bg-danger'}`}
+                    >
+                      {item.isOperational ? 'כן' : 'לא'}
+                    </span>
+                  </td>
+                  <td>
+                    <span 
+                      className={`badge ${item.isAvailable ? 'bg-success' : 'bg-danger'}`}
+                    >
+                      {item.isAvailable ? 'זמין' : 'לא זמין'}
+                    </span>
+                  </td>
                   <td>
                     <button 
                       className="btn btn-sm btn-outline" 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Receipt } from '../../types';
 import { useReceipts } from '../../hooks/useReceipts';
 import { SignaturePad } from './SignaturePad';
@@ -35,8 +35,104 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
     deletedCount: number;
   } | null>(null);
 
-  // Pagination
-  const { paginatedItems: paginatedReceipts, totalPages } = paginate(pendingReceipts, currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
+  // New: search and sort state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  // New: details modal state
+  const [detailsReceipt, setDetailsReceipt] = useState<Receipt | null>(null);
+
+  // Helper: safely get unit (prefer receiver unit, fallback to issuer)
+  const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
+
+  // Search and sort logic
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }} />;
+    }
+    return sortConfig.direction === 'asc' ? (
+      <i className="fas fa-sort-up ms-1" />
+    ) : (
+      <i className="fas fa-sort-down ms-1" />
+    );
+  };
+
+  // New: search + sort + paginate
+  const filteredAndSorted = useMemo(() => {
+    const term = searchTerm.toLowerCase();
+
+    let filtered = pendingReceipts.filter((r) => {
+      const issuer = r.createdBy?.name?.toLowerCase() || '';
+      const receiver = r.signedBy?.name?.toLowerCase() || '';
+      const unit = getUnit(r).toLowerCase();
+      const count = (r.receiptItems?.length || 0).toString();
+      const date = new Date(r.createdAt).toLocaleDateString('he-IL');
+      return (
+        issuer.includes(term) ||
+        receiver.includes(term) ||
+        unit.includes(term) ||
+        count.includes(term) ||
+        date.includes(term)
+      );
+    });
+
+    if (sortConfig) {
+      const { key, direction } = sortConfig;
+      filtered = [...filtered].sort((a, b) => {
+        let aVal: any, bVal: any;
+        switch (key) {
+          case 'createdBy':
+            aVal = a.createdBy?.name || '';
+            bVal = b.createdBy?.name || '';
+            break;
+          case 'signedBy':
+            aVal = a.signedBy?.name || '';
+            bVal = b.signedBy?.name || '';
+            break;
+          case 'unit':
+            aVal = getUnit(a) || '';
+            bVal = getUnit(b) || '';
+            break;
+          case 'itemCount':
+            aVal = a.receiptItems?.length || 0;
+            bVal = b.receiptItems?.length || 0;
+            break;
+          case 'createdAt':
+            aVal = new Date(a.createdAt).getTime();
+            bVal = new Date(b.createdAt).getTime();
+            break;
+          default:
+            return 0;
+        }
+
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          const cmp = aVal.localeCompare(bVal, 'he');
+          return direction === 'asc' ? cmp : -cmp;
+        }
+        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [pendingReceipts, searchTerm, sortConfig]);
+
+  // Apply pagination after filtering & sorting
+  const { paginatedItems: paginatedReceipts, totalPages } = paginate(filteredAndSorted, currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+    setSelectedReceiptIds([]);
+  };
 
   // Bulk selection functions
   const handleSelectAllReceipts = () => {
@@ -123,7 +219,6 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
         onRefresh();
       }
     } catch (err) {
-      console.error('Failed to sign pending receipt:', err);
       setError(err instanceof Error ? err.message : 'Failed to sign receipt');
     } finally {
       setIsSubmitting(false);
@@ -151,7 +246,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   return (
     <>
       <div className="pending-receipts-list" style={{ direction: 'rtl' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <h4 style={{ color: '#333' }}>קבלות ממתינות לחתימה</h4>
           {isAdmin && selectedReceiptIds.length > 0 && (
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -169,6 +264,33 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
             </div>
           )}
         </div>
+
+        {/* Full-width search bar */}
+        <div className="search-bar" style={{ direction: 'rtl', margin: '12px 0 16px 0' }}>
+          <div className="input-group" style={{ width: '100%' }}>
+            <span className="input-group-text">
+              <i className="fas fa-search" />
+            </span>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={{ direction: 'rtl' }}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-outline-secondary"
+                type="button"
+                onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                title="נקה חיפוש"
+              >
+                <i className="fas fa-times" />
+              </button>
+            )}
+          </div>
+        </div>
         
         <div className="table-responsive">
           <table className="receipts-table">
@@ -182,35 +304,64 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                       checked={selectedReceiptIds.length === paginatedReceipts.length && paginatedReceipts.length > 0}
                       onChange={handleSelectAllReceipts}
                       title="בחר הכל"
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </th>
                 )}
-                <th>מזהה קבלה</th>
-                <th>שם המקבל</th>
-                <th>כמות פריטים</th>
-                <th>תאריך יצירה</th>
+                <th className="sortable-header" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>מנפיק</span>
+                    <div className="sort-indicator">{getSortIcon('createdBy')}</div>
+                  </div>
+                </th>
+                <th className="sortable-header" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>מקבל</span>
+                    <div className="sort-indicator">{getSortIcon('signedBy')}</div>
+                  </div>
+                </th>
+                <th className="sortable-header" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>יחידה</span>
+                    <div className="sort-indicator">{getSortIcon('unit')}</div>
+                  </div>
+                </th>
+                <th className="sortable-header" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>כמות פריטים</span>
+                    <div className="sort-indicator">{getSortIcon('itemCount')}</div>
+                  </div>
+                </th>
+                <th className="sortable-header" onClick={() => handleSort('createdAt')} data-sorted={sortConfig?.key === 'createdAt'}>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>תאריך יצירה</span>
+                    <div className="sort-indicator">{getSortIcon('createdAt')}</div>
+                  </div>
+                </th>
                 <th>פעולות</th>
               </tr>
             </thead>
             <tbody>
               {paginatedReceipts.map((receipt) => (
-                <tr key={receipt.id}>
+                <tr key={receipt.id} onClick={() => setDetailsReceipt(receipt)} style={{ cursor: 'pointer' }}>
                   {isAdmin && (
-                    <td>
+                    <td onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         className="form-check-input"
                         checked={selectedReceiptIds.includes(receipt.id)}
                         onChange={() => handleToggleReceiptSelection(receipt.id)}
+                        onClick={(e) => e.stopPropagation()}
                       />
                     </td>
                   )}
-                  <td>#{receipt.id}</td>
+                  <td>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
                   <td>{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
+                  <td>{getUnit(receipt)}</td>
                   <td>{receipt.receiptItems?.length || 0}</td>
                   <td>{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
                   <td>
-                    <div className="action-buttons">
+                    <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
                       {isAdmin && (
                         <button 
                           className="btn btn-primary btn-sm" 
@@ -239,13 +390,138 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
         </div>
 
         {totalPages > 1 && (
-          <SmartPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          <SmartPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         )}
       </div>
+
+      {/* Details Modal */}
+      {detailsReceipt && (
+        <Modal
+          isOpen={!!detailsReceipt}
+          onClose={() => setDetailsReceipt(null)}
+          title={`פרטי קבלה #${detailsReceipt.id}`}
+          size="lg"
+        >
+          <div style={{ direction: 'rtl', padding: '16px' }}>
+            {/* Summary */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '12px',
+                marginBottom: '16px',
+                background: '#ffffff',
+                border: '1px solid #e9ecef',
+                borderRadius: '8px',
+                padding: '12px',
+              }}
+            >
+              <div>
+                <div style={{ color: '#6c757d', fontSize: 12 }}>מנפיק</div>
+                <div style={{ fontWeight: 700 }}>{detailsReceipt.createdBy?.name || '—'}</div>
+              </div>
+              <div>
+                <div style={{ color: '#6c757d', fontSize: 12 }}>מקבל</div>
+                <div style={{ fontWeight: 700 }}>{detailsReceipt.signedBy?.name || '—'}</div>
+              </div>
+              <div>
+                <div style={{ color: '#6c757d', fontSize: 12 }}>יחידה</div>
+                <div style={{ fontWeight: 700 }}>{(detailsReceipt.signedBy?.location?.unit?.name || detailsReceipt.createdBy?.location?.unit?.name) ?? '—'}</div>
+              </div>
+              <div>
+                <div style={{ color: '#6c757d', fontSize: 12 }}>תאריך יצירה</div>
+                <div style={{ fontWeight: 700 }}>{new Date(detailsReceipt.createdAt).toLocaleString('he-IL')}</div>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e9ecef',
+                borderRadius: '8px',
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  padding: '10px 12px',
+                  borderBottom: '1px solid #e9ecef',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ fontWeight: 700 }}>פריטים</div>
+                <span
+                  style={{
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    padding: '2px 10px',
+                    borderRadius: '12px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {detailsReceipt.receiptItems?.length || 0}
+                </span>
+              </div>
+
+              <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#f8f9fa' }}>
+                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 60 }}>#</th>
+                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>פריט</th>
+                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 180 }}>מספר צ'</th>
+                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 120 }}>צופן</th>
+                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>הערה</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(detailsReceipt.receiptItems || []).map((ri, idx) => {
+                      const itemName = ri.item?.itemName?.name || '—';
+                      const idNumber = ri.item?.idNumber || '';
+                      const isNeedReport = ri.item?.isNeedReport || false;
+                      const note = ri.item?.note || '';
+                      return (
+                        <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
+                          <td style={{ padding: '10px 12px', color: '#6c757d' }}>{idx + 1}</td>
+                          <td style={{ padding: '10px 12px', fontWeight: 600, color: '#333' }}>{itemName}</td>
+                          <td style={{ padding: '10px 12px', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', direction: 'ltr', textAlign: 'right' }}>{idNumber || '—'}</td>
+                          <td style={{ padding: '10px 12px' }}>
+                            <span
+                              style={{
+                                backgroundColor: isNeedReport ? '#dc3545' : '#28a745',
+                                color: 'white',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                fontSize: 12,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {isNeedReport ? 'כן' : 'לא'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '10px 12px', color: '#495057' }}>{note || '—'}</td>
+                        </tr>
+                      );
+                    })}
+
+                    {(!detailsReceipt.receiptItems || detailsReceipt.receiptItems.length === 0) && (
+                      <tr>
+                        <td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#6c757d' }}>
+                          לא נמצאו פריטים עבור קבלה זו
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Sign Modal */}
       <Modal

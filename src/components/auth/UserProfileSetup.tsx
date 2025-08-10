@@ -170,6 +170,7 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
                 min="1000000"
                 max="9999999"
                 required 
+                style={{ textAlign: 'right', direction: 'rtl' }}
               />
               {errors.personalNumber && <div className="form-error">{errors.personalNumber}</div>}
             </div>

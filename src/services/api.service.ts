@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { getAuth } from 'firebase/auth';
 import { API_CONFIG, FEATURES } from '../config/app.config';
+import { apiLoadingHelpers } from '../hooks/useColdStartLoader';
 
 class ApiService {
   private api: AxiosInstance;
@@ -19,27 +20,31 @@ class ApiService {
     // Request interceptor
     this.api.interceptors.request.use(
       async (config) => {
+        // Start cold start loading detection
+        apiLoadingHelpers.startLoading();
+        
         try {
           const auth = getAuth();
           const user = auth.currentUser;
           if (user) {
             const token = await user.getIdToken();
-            config.headers.Authorization = `Bearer ${token}`;
+            (config.headers as any).Authorization = `Bearer ${token}`;
           }
-        } catch (error) {
-          if (FEATURES.ENABLE_LOGGING) {
-            console.warn('⚠️ Failed to get auth token:', error);
-          }
+        } catch {
+          // ignore token retrieval errors
         }
 
         if (FEATURES.ENABLE_LOGGING) {
-          console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+          // console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
         }
         return config;
       },
       (error) => {
+        // Stop loading on request error
+        apiLoadingHelpers.stopLoading();
+        
         if (FEATURES.ENABLE_LOGGING) {
-          console.error('❌ Request Error:', error);
+          // console.error('❌ Request Error:', error);
         }
         return Promise.reject(error);
       }
@@ -48,23 +53,37 @@ class ApiService {
     // Response interceptor
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
+        // Stop loading on successful response
+        apiLoadingHelpers.stopLoading();
+        
         if (FEATURES.ENABLE_LOGGING) {
-          console.log(`✅ API Response: ${response.status} ${response.config.url}`);
+          // console.log(`✅ API Response: ${response.status} ${response.config.url}`);
         }
         return response;
       },
       (error) => {
+        // Stop loading on response error
+        apiLoadingHelpers.stopLoading();
+        
+        // Detect if server might be sleeping based on error type
+        const isTimeoutError = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
+        const isConnectionError = error.code === 'ECONNREFUSED' || 
+                                 error.message?.includes('ECONNREFUSED') ||
+                                 error.message?.includes('Network Error');
+        
+        if (isTimeoutError || isConnectionError) {
+          apiLoadingHelpers.markServerSleeping();
+        }
+        
         if (FEATURES.ENABLE_LOGGING) {
-          console.error('❌ Response Error:', error);
+          // console.error('❌ Response Error:', error);
         }
 
         // Handle authentication errors
         if (error.response?.status === 401) {
-          // Token might be expired or invalid
           const auth = getAuth();
           if (auth.currentUser) {
-            console.warn('🔒 Authentication error - token may be expired');
-            // Optionally, you could force token refresh here or redirect to login
+            // Token may be expired; optional refresh could be added here
           }
         }
 

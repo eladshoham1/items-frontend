@@ -21,12 +21,10 @@ export const useReports = () => {
         }));
         setReportItems(itemsWithReportStatus);
       } else {
-        console.warn('getDailyReport returned invalid data:', data);
         setReportItems([]);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch report items');
-      console.error('Failed to fetch report items:', err);
       setReportItems([]); // Ensure empty array on error
     } finally {
       setLoading(false);
@@ -40,7 +38,6 @@ export const useReports = () => {
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update report status');
-      console.error('Failed to update report status:', err);
       return false;
     }
   };
@@ -51,6 +48,11 @@ export const useReports = () => {
         item.id === itemId ? { ...item, isReported: !item.isReported } : item
       )
     );
+  };
+
+  // New: bulk set status for multiple items
+  const setReportStatusBulk = (ids: string[], status: boolean) => {
+    setReportItems(prev => prev.map(item => ids.includes(item.id) ? { ...item, isReported: status } : item));
   };
 
   useEffect(() => {
@@ -64,6 +66,7 @@ export const useReports = () => {
     refetch: fetchReportItems,
     updateReportStatus,
     toggleReportStatus,
+    setReportStatusBulk,
   };
 };
 
@@ -80,7 +83,6 @@ export const useDashboardStats = () => {
       setStats(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch statistics');
-      console.error('Failed to fetch statistics:', err);
     } finally {
       setLoading(false);
     }

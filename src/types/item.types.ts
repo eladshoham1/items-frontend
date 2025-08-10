@@ -10,6 +10,7 @@ export interface Item {
   note?: string;
   isNeedReport: boolean;
   isAvailable: boolean;
+  isOperational: boolean;
   lastReported?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -21,6 +22,7 @@ export type CreateItemRequest = {
   note?: string;
   isNeedReport: boolean;
   isAvailable: boolean;
+  isOperational: boolean;
   quantity?: number;
 };
 export type UpdateItemRequest = Partial<Omit<CreateItemRequest, 'quantity'>> & { id: ID };

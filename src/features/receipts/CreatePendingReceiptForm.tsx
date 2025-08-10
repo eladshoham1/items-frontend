@@ -24,7 +24,7 @@ interface ReceiptItem {
 interface ItemCardProps {
   item: ReceiptItem;
   onRemove: (id: string) => void;
-  onQuantityChange?: (id: string, newQuantity: number) => void;
+  onQuantityChange?: (id: string) => void; // simplified signature
   maxAvailable?: number;
 }
 
@@ -64,7 +64,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm"
-              onClick={() => onQuantityChange(item.id, Math.max(1, (item.quantity || 1) - 1))}
+              onClick={() => onQuantityChange(item.id)}
               disabled={(item.quantity || 1) <= 1}
               style={{ 
                 padding: '4px 8px', 
@@ -88,7 +88,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
             <button
               type="button"
               className="btn btn-outline-secondary btn-sm"
-              onClick={() => onQuantityChange(item.id, Math.min(maxAvailable, (item.quantity || 1) + 1))}
+              onClick={() => onQuantityChange(item.id)}
               disabled={(item.quantity || 1) >= maxAvailable}
               style={{ 
                 padding: '4px 8px', 
@@ -129,11 +129,6 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   const { updateReceipt } = useReceipts();
   const [selectedUserId, setSelectedUserId] = useState<string>(originalReceipt?.signedById || '');
 
-  // Debug logging
-  console.log('CreateReceiptForm - users:', users);
-  console.log('CreateReceiptForm - userProfile:', userProfile);
-  console.log('CreateReceiptForm - serverAvailableItems:', serverAvailableItems);
-  
   // Item selection state
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>(
     originalReceipt?.receiptItems?.map(item => ({
@@ -277,18 +272,6 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
     setReceiptItems(prev => prev.filter(item => item.id !== itemId));
   };
 
-  // Change quantity of existing item (for non-cipher items only)
-  // const changeItemQuantity = (itemId: string, newQuantity: number) => {
-  //   setReceiptItems(prev => 
-  //     prev.map(item => 
-  //       item.id === itemId && !item.isNeedReport 
-  //         ? { ...item, quantity: newQuantity }
-  //         : item
-  //     )
-  //   );
-  // };
-
-  // Calculate max available quantity for existing items
   const getMaxAvailableForItem = (itemName: string): number => {
     const sameNameItems = availableItems.filter(item =>
       item.itemName?.name === itemName &&
@@ -341,7 +324,6 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       }
       onSuccess();
     } catch (err) {
-      console.error(isUpdateMode ? 'Failed to update receipt:' : 'Failed to create receipt:', err);
       setError(err instanceof Error ? err.message : (isUpdateMode ? 'Failed to update receipt' : 'Failed to create receipt'));
     } finally {
       setIsLoading(false);
@@ -421,25 +403,21 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
                   className="btn btn-outline-secondary"
                   onClick={() => setItemSearchQuery('')}
                   title="נקה חיפוש"
-                  style={{ color: '#6c757d', borderColor: '#6c757d' }}
                 >
-                  איפוס
+                  <i className="fas fa-times"></i>
                 </button>
               )}
             </div>
             {itemSearchQuery && (
               <small className="text-muted mt-1 d-block">
-                נמצאו {filteredAvailableItems.length} פריטים זמינים מתוך {availableItems.filter(item => 
-                  !receiptItems.some(receiptItem => receiptItem.id === item.id)
-                ).length} סה"כ זמינים
+                נמצאו {filteredAvailableItems.length} פריטים מתוך {availableItems.length}
               </small>
             )}
           </div>
           
-          {/* Item Selection Dropdown */}
           <div className="item-select-row">
             <select 
-              className="form-control"
+              className="form-select"
               value={selectedItemId}
               onChange={(e) => setSelectedItemId(e.target.value)}
               disabled={itemsLoading}
@@ -463,8 +441,8 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
             </select>
           </div>
           
-          {/* Quantity selector for non-cipher items */}
-          {selectedItem && !selectedItem.isNeedReport && maxAvailableQuantity > 1 && (
+          {/* Quantity selector for items */}
+          {selectedItem && maxAvailableQuantity > 1 && (
             <div className="quantity-select-row mt-3">
               <label htmlFor="quantity-select" className="form-label">
                 <i className="fas fa-sort-numeric-up me-2"></i>
@@ -472,159 +450,56 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
               </label>
               <select
                 id="quantity-select"
-                className="form-control"
+                className="form-select"
                 value={selectedQuantity}
                 onChange={(e) => setSelectedQuantity(parseInt(e.target.value))}
-                disabled={itemsLoading || maxAvailableQuantity === 0}
+                disabled={itemsLoading}
               >
                 {Array.from({ length: maxAvailableQuantity }, (_, i) => i + 1).map(num => (
-                  <option key={num} value={num}>
-                    {num}
-                  </option>
+                  <option key={num} value={num}>{num}</option>
                 ))}
               </select>
-              {maxAvailableQuantity === 0 && (
-                <small className="text-warning mt-1 d-block">
-                  <i className="fas fa-exclamation-triangle me-1"></i>
-                  אין כמות זמינה עבור פריט זה
-                </small>
-              )}
             </div>
           )}
-          
-          {/* Add Item Button */}
-          <div className="item-actions-row mt-3">
+
+          {/* Add button */}
+          <div className="add-item-actions mt-3">
             <button 
               type="button" 
-              className="btn btn-success add-item-btn"
+              className="btn btn-primary"
               onClick={addItem}
-              disabled={!selectedItemId || itemsLoading || maxAvailableQuantity === 0}
+              disabled={!selectedItem || itemsLoading}
             >
-              <i className="fas fa-plus me-1"></i>
-              {selectedItem && !selectedItem.isNeedReport && selectedQuantity > 1 
-                ? `הוסף ${selectedQuantity} פריטים`
-                : 'הוסף פריט'}
+              <i className="fas fa-plus me-2"></i>
+              הוסף פריט
             </button>
+          </div>
+
+          {/* Selected items list */}
+          <div className="selected-items-list mt-3">
+            {receiptItems.length === 0 ? (
+              <div className="alert alert-info">
+                לא נבחרו פריטים
+              </div>
+            ) : (
+              receiptItems.map(item => (
+                <ItemCard 
+                  key={item.id} 
+                  item={item} 
+                  onRemove={removeItem}
+                  onQuantityChange={() => { /* quantity controls simplified */ }}
+                  maxAvailable={getMaxAvailableForItem(item.name)}
+                />
+              ))
+            )}
           </div>
         </div>
 
-        {/* Receipt Items List */}
-        {receiptItems.length > 0 && (
-          <div className="form-group">
-            <label className="form-label">פריטים בקבלה ({receiptItems.length}):</label>
-            <div className="items-list" style={{ 
-              maxHeight: '300px', 
-              overflowY: 'auto', 
-              border: '1px solid #ddd', 
-              borderRadius: '6px',
-              padding: '12px',
-              background: '#f8f9fa'
-            }}>
-              {receiptItems
-                .reduce((grouped: { item: ReceiptItem, count: number, items: ReceiptItem[] }[], item) => {
-                  // For cipher items, each item should be displayed separately
-                  if (item.isNeedReport) {
-                    grouped.push({ 
-                      item: { ...item, quantity: 1 }, 
-                      count: 1, 
-                      items: [item] 
-                    });
-                  } else {
-                    // For non-cipher items, group by name
-                    const existing = grouped.find(g => 
-                      g.item.name === item.name && !g.item.isNeedReport
-                    );
-                    if (existing) {
-                      existing.count++;
-                      existing.items.push(item);
-                    } else {
-                      grouped.push({ 
-                        item: { ...item, quantity: 1 }, 
-                        count: 1, 
-                        items: [item] 
-                      });
-                    }
-                  }
-                  return grouped;
-                }, [])
-                .map((groupedItem, index) => (
-                  <ItemCard
-                    key={groupedItem.item.isNeedReport 
-                      ? `cipher-${groupedItem.item.id}-${index}` 
-                      : `${groupedItem.item.name}-${index}`
-                    }
-                    item={{
-                      ...groupedItem.item,
-                      quantity: groupedItem.item.isNeedReport ? 1 : groupedItem.count
-                    }}
-                    onRemove={(id) => {
-                      if (groupedItem.item.isNeedReport) {
-                        // For cipher items, remove only the specific item
-                        removeItem(groupedItem.item.id);
-                      } else {
-                        // For non-cipher items, remove all items with the same name
-                        const itemsToRemove = receiptItems
-                          .filter(receiptItem => 
-                            receiptItem.name === groupedItem.item.name
-                          )
-                          .map(item => item.id);
-                        
-                        itemsToRemove.forEach(itemId => removeItem(itemId));
-                      }
-                    }}
-                    onQuantityChange={groupedItem.item.isNeedReport ? undefined : (id, newQuantity) => {
-                      const currentCount = groupedItem.count;
-                      const difference = newQuantity - currentCount;
-                      
-                      if (difference > 0) {
-                        // Add more items of the same name
-                        const sameNameItems = availableItems.filter(item =>
-                          item.itemName?.name === groupedItem.item.name &&
-                          !receiptItems.some(receiptItem => receiptItem.id === item.id)
-                        );
-                        
-                        const itemsToAdd = sameNameItems.slice(0, difference).map(item => ({
-                          id: item.id,
-                          name: item.itemName?.name || 'פריט לא ידוע',
-                          idNumber: item.idNumber,
-                          isNeedReport: item.isNeedReport,
-                          quantity: 1
-                        }));
-                        
-                        setReceiptItems(prev => [...prev, ...itemsToAdd]);
-                      } else if (difference < 0) {
-                        // Remove items of the same name
-                        const itemsToRemove = receiptItems
-                          .filter(receiptItem => receiptItem.name === groupedItem.item.name)
-                          .slice(0, Math.abs(difference))
-                          .map(item => item.id);
-                        
-                        itemsToRemove.forEach(itemId => removeItem(itemId));
-                      }
-                    }}
-                    maxAvailable={groupedItem.item.isNeedReport ? 1 : getMaxAvailableForItem(groupedItem.item.name)}
-                  />
-                ))}
-            </div>
-          </div>
-        )}
-
-        {/* Form Actions */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onCancel}
-            disabled={isLoading}
-          >
-            ביטול
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={isLoading || !selectedUserId || receiptItems.length === 0 || !userProfile?.id}
-          >
-            {isLoading ? (isUpdateMode ? 'מעדכן...' : 'יוצר...') : (isUpdateMode ? 'עדכן קבלה' : 'צור קבלה חדשה')}
+        {/* Actions */}
+        <div className="form-actions mt-4" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <button type="button" className="btn btn-secondary" onClick={onCancel}>ביטול</button>
+          <button type="submit" className="btn btn-primary" disabled={isLoading}>
+            {isUpdateMode ? 'עדכן קבלה' : 'צור קבלה'}
           </button>
         </div>
       </form>

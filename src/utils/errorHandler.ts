@@ -32,6 +32,9 @@ export const extractApiError = (error: unknown): ApiError => {
       case 400:
         message = getValidationMessage(axiosError);
         break;
+      case 403:
+        message = getForbiddenMessage(axiosError);
+        break;
       case 404:
         message = 'הפריט לא נמצא';
         break;
@@ -46,7 +49,7 @@ export const extractApiError = (error: unknown): ApiError => {
     return {
       status,
       message,
-      isConflict: status === 409,
+      isConflict: status === 409 || status === 403,
       isValidation: status === 400,
     };
   }
@@ -97,6 +100,22 @@ const getConflictMessage = (error: AxiosError): string => {
   
   // Generic conflict message
   return 'הפעולה נכשלה בגלל התנגשות נתונים. ייתכן שהפריט מקושר לנתונים אחרים במערכת.';
+};
+
+// New: translate 403 Forbidden to friendly Hebrew
+const getForbiddenMessage = (error: AxiosError): string => {
+  const responseData = error.response?.data as any;
+  const raw = typeof responseData?.message === 'string' ? responseData.message : '';
+  const m = raw.toLowerCase();
+
+  if (m.includes('cannot update an item that is part of a signed receipt')) {
+    return 'לא ניתן לעדכן פריט שהוא חלק מקבלה חתומה';
+  }
+  if (m.includes('forbidden') || m.includes('not allowed')) {
+    return 'אין הרשאה לבצע פעולה זו';
+  }
+  // Fallback to server message if provided
+  return raw || 'פעולה אסורה';
 };
 
 /**
