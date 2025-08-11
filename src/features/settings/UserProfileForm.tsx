@@ -27,7 +27,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
   isUpdating, 
   showRoleField 
 }) => {
-  const { locations, loading: managementLoading } = useManagement();
+  const { locations, loading: managementLoading, loadLocations } = useManagement();
   const { showColdStartMessage } = useColdStartLoader();
   
   const [formData, setFormData] = useState({
@@ -39,6 +39,11 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Load locations when component mounts
+  useEffect(() => {
+    loadLocations();
+  }, [loadLocations]);
 
   // Find the current location ID when locations are loaded
   useEffect(() => {

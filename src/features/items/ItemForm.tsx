@@ -22,7 +22,8 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   const { createItem, updateItem } = useItems();
   const { 
     itemNames, 
-    loading: managementLoading
+    loading: managementLoading,
+    loadItemNames
   } = useManagement();
   
   const [formData, setFormData] = useState<CreateItemRequest>({
@@ -45,6 +46,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     message: '',
     itemName: ''
   });
+
+  // Load item names when component mounts
+  useEffect(() => {
+    loadItemNames();
+  }, [loadItemNames]);
 
   useEffect(() => {
     if (item) {

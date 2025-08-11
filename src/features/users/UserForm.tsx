@@ -29,7 +29,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
   const { createUser, updateUser } = useUsers();
   const { 
     locations, 
-    loading: managementLoading
+    loading: managementLoading,
+    loadLocations
   } = useManagement();
   
   const [formData, setFormData] = useState<FormData>({
@@ -46,6 +47,11 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
 
   // All locations are available since we don't filter by unit anymore
   const availableLocations = locations;
+
+  // Load locations when component mounts
+  useEffect(() => {
+    loadLocations();
+  }, [loadLocations]);
 
   useEffect(() => {
     if (user) {
