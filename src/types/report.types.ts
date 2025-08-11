@@ -25,6 +25,70 @@ export interface UpdateReportRequest {
   items: ReportStatusUpdate[];
 }
 
+// New Daily Report Types
+export interface DailyReportItem {
+  id: string;
+  name: string;
+  idNumber?: string;
+  isReported: boolean;
+  reportedAt?: string;
+  notes?: string;
+}
+
+export interface DailyReport {
+  id: string;
+  reportDate: string;
+  createdBy: string; // Changed from createdById to match API
+  completedAt?: string;
+  isCompleted: boolean;
+  totalItems: number;
+  reportedItems: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  items: DailyReportItem[]; // Changed from reportItems to items to match API
+}
+
+export interface CreateDailyReportRequest {
+  reportDate?: string;
+  notes?: string;
+}
+
+export interface UpdateDailyReportItemRequest {
+  itemId: string;
+  isReported: boolean;
+  notes?: string;
+}
+
+export interface UpdateDailyReportRequest {
+  reportItems: UpdateDailyReportItemRequest[];
+}
+
+export interface CompleteDailyReportRequest {
+  reportId: string;
+  notes?: string;
+}
+
+export interface DailyReportHistoryItem {
+  id: string;
+  reportDate: string;
+  isCompleted: boolean;
+  totalItems: number;
+  reportedItems: number;
+  completedAt?: string;
+  createdBy: {
+    name: string;
+  };
+}
+
+export interface DailyReportHistoryResponse {
+  reports: DailyReportHistoryItem[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface SignUser {
   id: string;
   name: string;

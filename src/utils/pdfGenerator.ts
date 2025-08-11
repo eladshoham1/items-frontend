@@ -504,3 +504,207 @@ export const generateReceiptPDF = async (receipt: Receipt): Promise<void> => {
     doc.save(fileName);
   }
 };
+
+// Daily Report PDF Generator
+interface DailyReportPDFData {
+  reportDate: string;
+  totalItems: number;
+  reportedItems: number;
+  completedAt?: string;
+  items: Array<{
+    name: string;
+    idNumber: string;
+    isReported: boolean;
+    reportedAt: string;
+    notes: string;
+    unit?: string;
+    location?: string;
+  }>;
+}
+
+export const generateDailyReportPDF = (reportData: DailyReportPDFData): void => {
+  // Format date for display (date only, no time)
+  const reportDate = new Date(reportData.reportDate).toLocaleDateString('he-IL', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  
+  const completionPercentage = reportData.totalItems > 0 
+    ? Math.round((reportData.reportedItems / reportData.totalItems) * 100) 
+    : 0;
+
+  console.log(`Processing ${reportData.items.length} items for PDF generation`);
+
+  // Create a clean, simple HTML document with proper scaling
+  const createCleanHTML = (): string => {
+    const itemsPerPage = 15; // Reduced to ensure larger text
+    const totalPages = Math.ceil(reportData.items.length / itemsPerPage);
+    let allPagesHTML = '';
+
+    for (let pageIndex = 0; pageIndex < Math.max(1, totalPages); pageIndex++) {
+      const startIndex = pageIndex * itemsPerPage;
+      const endIndex = Math.min(startIndex + itemsPerPage, reportData.items.length);
+      const pageItems = reportData.items.slice(startIndex, endIndex);
+      const isFirstPage = pageIndex === 0;
+
+      allPagesHTML += `
+        <div class="page" style="width: 794px; min-height: 1123px; padding: 60px; margin: 0; page-break-after: ${pageIndex < totalPages - 1 ? 'always' : 'auto'}; background: white; font-family: Arial, sans-serif; direction: rtl; position: relative; box-sizing: border-box;">
+          ${isFirstPage ? `
+          <!-- Header Section -->
+          <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #2980b9;">
+            <h1 style="color: #2980b9; font-size: 28px; margin: 0 0 12px 0; font-weight: bold;">דו"ח צ' - ${reportDate}</h1>
+            <h2 style="color: #666; font-size: 16px; margin: 0; font-weight: normal;">אחל"ן - אמצעי חתימות ללא ניירת</h2>
+          </div>
+          
+          <!-- Summary Section -->
+          <div style="background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+            <div style="font-size: 18px; font-weight: bold; color: #2980b9; margin-bottom: 15px; text-align: center;">סיכום הדוח</div>
+            <div style="display: flex; justify-content: space-around; text-align: center; margin-bottom: 15px;">
+              <div style="flex: 1; font-size: 14px;">
+                <span style="font-size: 24px; font-weight: bold; color: #2980b9; display: block;">${reportData.totalItems}</span>
+                <div>סה"כ פריטים</div>
+              </div>
+              <div style="flex: 1; font-size: 14px;">
+                <span style="font-size: 24px; font-weight: bold; color: #2980b9; display: block;">${reportData.reportedItems}</span>
+                <div>פריטים שדווחו</div>
+              </div>
+              <div style="flex: 1; font-size: 14px;">
+                <span style="font-size: 24px; font-weight: bold; color: #2980b9; display: block;">${completionPercentage}%</span>
+                <div>אחוז השלמה</div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 10px;">
+              <span style="display: inline-block; padding: 8px 15px; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; background: ${reportData.completedAt ? '#28a745' : '#ffc107'};">
+                ${reportData.completedAt ? '✅ דוח הושלם' : '⏳ דוח פתוח'}
+              </span>
+              ${reportData.completedAt ? `<div style="margin-top: 8px; color: #666; font-size: 12px;">הושלם ב: ${new Date(reportData.completedAt).toLocaleDateString('he-IL')}</div>` : ''}
+            </div>
+          </div>
+          ` : ''}
+          
+          <!-- Table Section -->
+          <div style="margin-top: ${isFirstPage ? '15px' : '40px'};">
+            <div style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; text-align: center;">
+              ${isFirstPage ? 'פירוט פריטים' : `פירוט פריטים (עמוד ${pageIndex + 1})`}
+            </div>
+            
+            ${pageItems.length > 0 ? `
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 2px solid #000;">
+              <thead>
+                <tr style="background-color: #2980b9; color: white;">
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 30%; font-weight: bold; font-size: 13px;">שם פריט</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 15%; font-weight: bold; font-size: 13px;">מספר צ'</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 12%; font-weight: bold; font-size: 13px;">סטטוס דיווח</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 18%; font-weight: bold; font-size: 13px;">תאריך דיווח</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 25%; font-weight: bold; font-size: 13px;">יחידה ומיקום</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pageItems.map((item, index) => `
+                  <tr style="background-color: ${index % 2 === 0 ? '#f8f9fa' : 'white'};">
+                    <td style="border: 1px solid #000; padding: 8px 10px; text-align: right; word-wrap: break-word; line-height: 1.4;">${item.name || ''}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: center; line-height: 1.4;">${item.idNumber || '-'}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: center; color: ${item.isReported ? '#28a745' : '#dc3545'}; font-weight: bold; line-height: 1.4;">
+                      ${item.isReported ? '✅ דווח' : '❌ לא דווח'}
+                    </td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: center; line-height: 1.4; white-space: nowrap;">${item.reportedAt || '-'}</td>
+                    <td style="border: 1px solid #000; padding: 8px 10px; text-align: right; word-wrap: break-word; line-height: 1.4;">${item.unit && item.location ? `${item.unit} - ${item.location}` : item.unit || item.location || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ` : '<div style="text-align: center; color: #666; margin: 30px 0; font-size: 16px;">אין פריטים להצגה</div>'}
+          </div>
+          
+          <!-- Footer -->
+          <div style="position: absolute; bottom: 40px; left: 60px; right: 60px; text-align: center; color: #666; font-size: 11px; border-top: 1px solid #dee2e6; padding-top: 10px;">
+            דוח נוצר ב: ${new Date().toLocaleDateString('he-IL')} ${new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })} | עמוד ${pageIndex + 1} מתוך ${Math.max(1, totalPages)}
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div style="margin: 0; padding: 0; background: white;">
+        <style>
+          body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif; 
+            direction: rtl;
+          }
+          @media print {
+            body { margin: 0; }
+            .page { page-break-after: always; }
+            .page:last-child { page-break-after: auto; }
+          }
+          table { border-collapse: collapse !important; }
+          th, td { border: 1px solid #000 !important; }
+        </style>
+        ${allPagesHTML}
+      </div>
+    `;
+  };
+
+  // Create temporary element for PDF generation
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = createCleanHTML();
+  tempDiv.style.position = 'absolute';
+  tempDiv.style.left = '-9999px';
+  tempDiv.style.top = '0';
+  tempDiv.style.background = 'white';
+  tempDiv.style.width = '794px'; // Fixed width for consistent rendering
+  document.body.appendChild(tempDiv);
+
+  // Wait for rendering and generate PDF
+  setTimeout(() => {
+    html2canvas(tempDiv, {
+      useCORS: true,
+      allowTaint: true,
+      background: '#ffffff',
+      logging: false,
+      width: 794,
+      height: tempDiv.scrollHeight
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png', 1.0);
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      
+      // Calculate proper scaling to fit A4 width
+      const canvasWidth = 794;
+      const canvasHeight = canvas.height;
+      const scaledHeight = (canvasHeight * pageWidth) / canvasWidth;
+      
+      // Calculate pages needed
+      const totalPages = Math.ceil(scaledHeight / pageHeight);
+      
+      console.log(`Canvas: ${canvasWidth}x${canvasHeight}, Scaled: ${pageWidth}x${scaledHeight}, Pages: ${totalPages}`);
+      
+      // Add pages to PDF
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) {
+          pdf.addPage();
+        }
+        
+        const yOffset = -(pageHeight * i);
+        pdf.addImage(imgData, 'PNG', 0, yOffset, pageWidth, scaledHeight);
+      }
+
+      // Clean up
+      document.body.removeChild(tempDiv);
+      
+      // Save PDF
+      const fileName = `דוח צ - ${reportDate}.pdf`;
+      pdf.save(fileName);
+      
+      console.log(`PDF saved: ${fileName}`);
+    }).catch(error => {
+      console.error('Error generating PDF:', error);
+      document.body.removeChild(tempDiv);
+      alert('שגיאה ביצירת הקובץ PDF');
+    });
+  }, 1500);
+};

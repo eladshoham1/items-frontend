@@ -20,6 +20,10 @@ export const formatDateTime = (date: Date): string => {
   }).format(date);
 };
 
+export const formatDateString = (dateString: string): string => {
+  return formatDate(new Date(dateString));
+};
+
 export const getCurrentDate = (): string => {
   return formatDate(new Date());
 };
