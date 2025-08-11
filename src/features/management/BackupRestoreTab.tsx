@@ -3,7 +3,7 @@ import { managementService } from '../../services/management.service';
 import { Modal } from '../../shared/components';
 import { useManagement } from '../../contexts';
 
-const POLL_INTERVAL_MS = 700; // poll every 0.7s
+const POLL_INTERVAL_MS = 800; // poll every 0.8s
 
 // Map server status to Hebrew and badge style
 const statusToHebrew = (s?: string) => {
@@ -121,24 +121,6 @@ const BackupRestoreTab: React.FC = () => {
               document.body.removeChild(a);
               URL.revokeObjectURL(objectUrl);
               setSuccess('ייצוא הושלם והקובץ הורד בהצלחה');
-            }
-          }
-
-          // Import done -> download full result JSON
-          if (type === 'import' && ((status as any).data?.done || pct === 100)) {
-            const fullResult = (status as any).data?.result;
-            if (fullResult) {
-              const blob = new Blob([
-                JSON.stringify(fullResult, null, 2)
-              ], { type: 'application/json;charset=utf-8' });
-              const objectUrl = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = objectUrl;
-              a.download = `import-result-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(objectUrl);
             }
           }
 
