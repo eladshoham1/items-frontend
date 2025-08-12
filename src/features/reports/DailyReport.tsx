@@ -194,7 +194,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         {/* Sub-navigation */}
         <div className="card">
           <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs" role="tablist">
+            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
               {availableReportTabs.map(tab => (
                 <button
                   key={tab}
@@ -202,6 +202,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   onClick={() => setActiveReportTab(tab)}
                   type="button"
                   role="tab"
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                   {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
@@ -215,13 +216,30 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     );
   }
 
+  // Check if user has a location assigned
+  if (userProfile && !userProfile.location) {
+    return (
+      <div className="card">
+        <div className="card-header">
+          <h2 className="mb-0">דוח יומי</h2>
+        </div>
+        <div className="card-body">
+          <div className="alert alert-warning">
+            <h4>אין לך גישה למערכת</h4>
+            <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div>
         {/* Sub-navigation */}
         <div className="card">
           <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs" role="tablist">
+            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
               {availableReportTabs.map(tab => (
                 <button
                   key={tab}
@@ -229,6 +247,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   onClick={() => setActiveReportTab(tab)}
                   type="button"
                   role="tab"
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                   {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
@@ -259,7 +278,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         {/* Sub-navigation */}
         <div className="card">
           <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs" role="tablist">
+            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
               {availableReportTabs.map(tab => (
                 <button
                   key={tab}
@@ -267,6 +286,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   onClick={() => setActiveReportTab(tab)}
                   type="button"
                   role="tab"
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                   {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
@@ -285,7 +305,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       {/* Sub-navigation */}
       <div className="card">
         <div className="card-header">
-          <nav className="nav nav-tabs card-header-tabs" role="tablist">
+          <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
             {availableReportTabs.map(tab => (
               <button
                 key={tab}
@@ -293,6 +313,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 onClick={() => setActiveReportTab(tab)}
                 type="button"
                 role="tab"
+                style={{ whiteSpace: 'nowrap' }}
               >
                 <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                 {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}

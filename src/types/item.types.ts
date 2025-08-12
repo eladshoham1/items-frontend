@@ -3,26 +3,44 @@ import { ID } from './common.types';
 export interface Item {
   id: ID;
   nameId: string;
-  itemName: {
+  itemName?: {
     name: string;
   };
-  idNumber?: string;
-  note?: string;
+  createdBy?: {
+    id: string;
+    name: string;
+  };
+  idNumber?: string | null;
+  note?: string | null;
   isNeedReport: boolean;
-  isAvailable: boolean;
   isOperational: boolean;
   lastReported?: string | null;
   createdAt: string;
   updatedAt: string;
+  receiptItems?: {
+    id: string;
+    receiptId: string;
+  }[];
+  // Note: isAvailable is computed server-side and may not always be present
+  isAvailable?: boolean;
 }
 
 export type CreateItemRequest = {
-  name: string;
-  idNumber?: string;
-  note?: string;
-  isNeedReport: boolean;
-  isAvailable: boolean;
-  isOperational: boolean;
+  nameId?: string; // Reference to ItemName table
+  name?: string; // Legacy support - will be converted to nameId
+  idNumber?: string | null;
+  note?: string | null;
+  isNeedReport?: boolean;
+  isOperational?: boolean;
   quantity?: number;
 };
-export type UpdateItemRequest = Partial<Omit<CreateItemRequest, 'quantity'>> & { id: ID };
+
+export type UpdateItemRequest = {
+  nameId?: string;
+  name?: string;
+  idNumber?: string | null;
+  note?: string | null;
+  isNeedReport?: boolean;
+  isOperational?: boolean;
+  receiptId?: string | null;
+} & { id: ID };

@@ -3,11 +3,16 @@ import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination 
 import Modal from '../../shared/components/Modal';
 import ItemForm from './ItemForm';
 import { useItems } from '../../hooks';
-import { Item } from '../../types';
+import { Item, User } from '../../types';
 import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
-const ItemsTab: React.FC = () => {
+interface ItemsTabProps {
+  userProfile: User;
+  isAdmin: boolean;
+}
+
+const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
   const { items, loading, error, refetch, deleteManyItems } = useItems();
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -96,8 +101,8 @@ const ItemsTab: React.FC = () => {
             bValue = b.isOperational;
             break;
           case 'isAvailable':
-            aValue = a.isAvailable;
-            bValue = b.isAvailable;
+            aValue = a.isAvailable ?? false;
+            bValue = b.isAvailable ?? false;
             break;
           default:
             return 0;
@@ -197,6 +202,23 @@ const ItemsTab: React.FC = () => {
       alert(`שגיאה במחיקת הפריטים: ${result.error || 'שגיאה לא ידועה'}`);
     }
   };
+
+  // Check if user has a location assigned
+  if (!userProfile.location) {
+    return (
+      <div className="card">
+        <div className="card-header">
+          <h2 className="mb-0">ציוד</h2>
+        </div>
+        <div className="card-body">
+          <div className="alert alert-warning">
+            <h4>אין לך גישה למערכת</h4>
+            <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -399,9 +421,9 @@ const ItemsTab: React.FC = () => {
                   </td>
                   <td>
                     <span 
-                      className={`badge status-badge ${item.isAvailable ? 'bg-success' : 'bg-danger'}`}
+                      className={`badge status-badge ${(item.isAvailable ?? false) ? 'bg-success' : 'bg-danger'}`}
                     >
-                      {item.isAvailable ? 'זמין' : 'לא זמין'}
+                      {(item.isAvailable ?? false) ? 'זמין' : 'לא זמין'}
                     </span>
                   </td>
                   <td>
@@ -436,6 +458,8 @@ const ItemsTab: React.FC = () => {
         <ItemForm
           key={selectedItem?.id || 'new'}
           item={selectedItem}
+          userProfile={userProfile}
+          isAdmin={isAdmin}
           onSuccess={handleCloseModal}
           onCancel={handleCloseModal}
         />

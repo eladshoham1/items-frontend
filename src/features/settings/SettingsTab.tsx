@@ -160,6 +160,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile, isAdmin }) => {
           onCancel={() => setIsEditModalOpen(false)}
           isUpdating={isUpdating}
           showRoleField={false} // Users cannot change their role
+          isAdmin={isAdmin} // Pass admin status to control location editing
         />
       </Modal>
     </div>

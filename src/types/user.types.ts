@@ -28,7 +28,7 @@ export interface CreateUserRequest {
   phoneNumber: string;
   rank: string;
   firebaseUid?: string;
-  locationId: string;
+  locationId?: string; // Made optional since users can't choose location during registration
 }
 
 export interface UpdateUserRequest {

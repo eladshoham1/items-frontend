@@ -40,9 +40,36 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [detailsReceipt, setDetailsReceipt] = useState<Receipt | null>(null);
 
-    // Filter receipts based on user role
-    const userReceipts = isAdmin ? receipts : receipts.filter(receipt => receipt.signedById === userProfile.id);
-    const userPendingReceipts = isAdmin ? pendingReceipts : pendingReceipts.filter(receipt => receipt.signedById === userProfile.id);
+    // Filter receipts based on user role and location
+    const userReceipts = useMemo(() => {
+        if (isAdmin) {
+            return receipts; // Admins see all receipts
+        }
+        // Non-admin users see all receipts from their location (not just their own)
+        return receipts.filter(receipt => {
+            const signedByLocation = receipt.signedBy?.location?.name;
+            const createdByLocation = receipt.createdBy?.location?.name;
+            const userLocation = userProfile.location;
+            
+            // Show receipt if either the signer or creator is from the same location as current user
+            return signedByLocation === userLocation || createdByLocation === userLocation;
+        });
+    }, [receipts, isAdmin, userProfile.location]);
+    
+    const userPendingReceipts = useMemo(() => {
+        if (isAdmin) {
+            return pendingReceipts; // Admins see all pending receipts
+        }
+        // Non-admin users see all pending receipts from their location (not just their own)
+        return pendingReceipts.filter(receipt => {
+            const signedByLocation = receipt.signedBy?.location?.name;
+            const createdByLocation = receipt.createdBy?.location?.name;
+            const userLocation = userProfile.location;
+            
+            // Show receipt if either the signer or creator is from the same location as current user
+            return signedByLocation === userLocation || createdByLocation === userLocation;
+        });
+    }, [pendingReceipts, isAdmin, userProfile.location]);
 
     // Helper: get unit name (prefer receiver, fallback to issuer)
     const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
@@ -218,7 +245,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 onClick={() => handleTabChange('signed')}
             >
                 <i className="fas fa-receipt me-2"></i>
-                {isAdmin ? 'כל הקבלות החתומות' : 'הקבלות שלי'}
+                {isAdmin ? 'כל הקבלות החתומות' : 'קבלות המיקום שלי'}
             </button>
             
             <button
@@ -226,7 +253,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 onClick={() => handleTabChange('pending')}
             >
                 <i className="fas fa-clock me-2"></i>
-                {isAdmin ? 'כל הקבלות הממתינות' : 'קבלות ממתינות שלי'}
+                {isAdmin ? 'כל הקבלות הממתינות' : 'קבלות ממתינות במיקום שלי'}
             </button>
         </div>
     );
@@ -237,7 +264,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 return (
                     <div>
                         <div className="header-actions">
-                            <h3>{isAdmin ? 'כל הקבלות החתומות' : 'הקבלות שלי'}</h3>
+                            <h3>{isAdmin ? 'כל הקבלות החתומות' : 'קבלות המיקום שלי'}</h3>
                             {isAdmin && (
                                 <button className="create-button" onClick={handleCreateNewClick}>
                                     <i className="fas fa-plus"></i>
@@ -275,7 +302,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                             <div className="empty-state">
                                 <i className="fas fa-receipt"></i>
                                 <h4>אין קבלות להצגה</h4>
-                                <p>{isAdmin ? 'לא נמצאו קבלות במערכת' : 'לא נמצאו קבלות עבורך'}</p>
+                                <p>{isAdmin ? 'לא נמצאו קבלות במערכת' : 'לא נמצאו קבלות עבור המיקום שלך'}</p>
                             </div>
                         ) : (
                             <>
@@ -387,6 +414,20 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 return null;
         }
     };
+
+    // Check if user has a location assigned
+    if (!userProfile.location) {
+        return (
+            <div className="surface receipts-tab-container">
+                <div style={{ padding: '20px' }}>
+                    <div className="alert alert-warning">
+                        <h4>אין לך גישה למערכת</h4>
+                        <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="surface receipts-tab-container">

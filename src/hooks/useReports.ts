@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { reportService } from '../services';
 import { 
   ReportItem, 
@@ -86,14 +86,14 @@ export const useDailyReports = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTodaysDailyReport = async () => {
+  const fetchCurrentDailyReport = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await reportService.getTodaysDailyReport();
+      const data = await reportService.getCurrentDailyReport();
       setDailyReport(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch today\'s daily report');
+      setError(err instanceof Error ? err.message : 'Failed to fetch current daily report');
       setDailyReport(null);
     } finally {
       setLoading(false);
@@ -179,14 +179,14 @@ export const useDailyReports = () => {
   };
 
   useEffect(() => {
-    fetchTodaysDailyReport();
+    fetchCurrentDailyReport();
   }, []);
 
   return {
     dailyReport,
     loading,
     error,
-    refetch: fetchTodaysDailyReport,
+    refetch: fetchCurrentDailyReport,
     createDailyReport,
     updateDailyReport,
     completeDailyReport,
@@ -202,7 +202,7 @@ export const useDailyReportHistory = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchHistory = async (page: number = 1, limit: number = 10) => {
+  const fetchHistory = useCallback(async (page: number = 1, limit: number = 10) => {
     try {
       setLoading(true);
       setError(null);
@@ -214,9 +214,9 @@ export const useDailyReportHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty dependency array since this function doesn't depend on any props or state
 
-  const getDailyReportById = async (id: string): Promise<DailyReport | null> => {
+  const getDailyReportById = useCallback(async (id: string): Promise<DailyReport | null> => {
     try {
       setError(null);
       return await reportService.getDailyReportById(id);
@@ -224,7 +224,7 @@ export const useDailyReportHistory = () => {
       setError(err instanceof Error ? err.message : 'Failed to fetch daily report');
       return null;
     }
-  };
+  }, []);
 
   return {
     history,

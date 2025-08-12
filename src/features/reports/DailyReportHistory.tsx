@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ServerError, SmartPagination } from '../../shared/components';
 import { useDailyReportHistory } from '../../hooks';
-import { DailyReportHistoryItem, DailyReport } from '../../types';
+import { DailyReportHistoryItem } from '../../types';
 import { formatDateString } from '../../utils';
 import { generateDailyReportPDF } from '../../utils/pdfGenerator';
 
@@ -23,7 +23,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     if (isAdmin) {
       fetchHistory(currentPage, 10);
     }
-  }, [currentPage, isAdmin]);
+  }, [currentPage, isAdmin, fetchHistory]); // Now safe to include fetchHistory since it's wrapped with useCallback
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';

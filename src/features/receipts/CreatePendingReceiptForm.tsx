@@ -118,6 +118,14 @@ const ItemCard: React.FC<ItemCardProps> = ({
   );
 };
 
+// Define a unified interface for available items used in this form
+interface AvailableItemForForm {
+  id: string;
+  idNumber?: string;
+  itemName?: { name: string };
+  isNeedReport: boolean;
+}
+
 const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   onSuccess,
   onCancel,
@@ -149,39 +157,39 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   const isUpdateMode = !!originalReceipt;
 
   // Calculate available items (include original items for update mode)
-  const availableItems = useMemo(() => {
+  const availableItems = useMemo((): AvailableItemForForm[] => {
     if (!Array.isArray(serverAvailableItems)) {
       return [];
     }
 
     if (isUpdateMode && originalReceipt) {
-      const originalItems = originalReceipt.receiptItems?.map(receiptItem => ({
+      const originalItems: AvailableItemForForm[] = originalReceipt.receiptItems?.map(receiptItem => ({
         id: receiptItem.itemId,
         idNumber: receiptItem.item?.idNumber || undefined,
         itemName: receiptItem.item?.itemName || { name: 'פריט לא ידוע' },
-        isNeedReport: receiptItem.item?.isNeedReport || false
+        isNeedReport: receiptItem.item?.isNeedReport || false,
       })) || [];
       
       // Merge original items with available items, avoiding duplicates
-      const mergedItems = [...originalItems];
-      serverAvailableItems.forEach(item => {
+      const mergedItems: AvailableItemForForm[] = [...originalItems];
+      serverAvailableItems.forEach((item: any) => {
         if (!mergedItems.find(existing => existing.id === item.id)) {
           mergedItems.push({
             id: item.id,
-            idNumber: item.idNumber,
-            itemName: item.itemName,
-            isNeedReport: item.isNeedReport || false
+            idNumber: item.idNumber || undefined,
+            itemName: item.itemName || { name: 'Unknown Item' },
+            isNeedReport: item.isNeedReport || false,
           });
         }
       });
       
       return mergedItems;
     } else {
-      return serverAvailableItems.map(item => ({
+      return serverAvailableItems.map((item: any) => ({
         id: item.id,
-        idNumber: item.idNumber,
-        itemName: item.itemName,
-        isNeedReport: item.isNeedReport || false
+        idNumber: item.idNumber || undefined,
+        itemName: item.itemName || { name: 'Unknown Item' },
+        isNeedReport: item.isNeedReport || false,
       }));
     }
   }, [serverAvailableItems, isUpdateMode, originalReceipt]);
@@ -239,7 +247,7 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       const newItem: ReceiptItem = {
         id: selectedItem.id,
         name: selectedItem.itemName?.name || 'פריט לא ידוע',
-        idNumber: selectedItem.idNumber,
+        idNumber: selectedItem.idNumber || undefined,
         isNeedReport: selectedItem.isNeedReport,
         quantity: 1
       };
@@ -254,7 +262,7 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       const itemsToAdd = sameNameItems.slice(0, quantityToAdd).map(item => ({
         id: item.id,
         name: item.itemName?.name || 'פריט לא ידוע',
-        idNumber: item.idNumber,
+        idNumber: item.idNumber || undefined,
         isNeedReport: item.isNeedReport,
         quantity: 1
       }));

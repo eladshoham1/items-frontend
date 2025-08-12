@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboardStats } from '../../hooks';
+import { useUserProfile } from '../../hooks/useUserProfile';
 import ServerError from '../../shared/components/ServerError';
 import { SmartPagination } from '../../shared/components';
 import { SignUser } from '../../types';
@@ -7,6 +8,7 @@ import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
 const Dashboard: React.FC = () => {
+  const { userProfile } = useUserProfile();
   const { stats, loading, error } = useDashboardStats();
   const [currentPage, setCurrentPage] = useState(1);
   const [tooltipData, setTooltipData] = useState<{
@@ -222,6 +224,23 @@ const Dashboard: React.FC = () => {
       return 0;
     }
   };
+
+  // Check if user has a location assigned
+  if (userProfile && !userProfile.location) {
+    return (
+      <div className="card">
+        <div className="card-header">
+          <h2 className="mb-0">לוח בקרה</h2>
+        </div>
+        <div className="card-body">
+          <div className="alert alert-warning">
+            <h4>אין לך גישה למערכת</h4>
+            <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

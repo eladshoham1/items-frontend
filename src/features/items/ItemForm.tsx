@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Item, CreateItemRequest } from '../../types';
+import { Item, CreateItemRequest, User } from '../../types';
 import { useItems } from '../../hooks';
 import { useManagement } from '../../contexts';
 import { validateRequired, sanitizeInput, getConflictResolutionMessage } from '../../utils';
@@ -8,6 +8,8 @@ import './ItemForm.css';
 
 interface ItemFormProps {
   item: Item | null;
+  userProfile: User;
+  isAdmin: boolean;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -18,7 +20,7 @@ interface FormErrors {
   note?: string;
 }
 
-const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
+const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSuccess, onCancel }) => {
   const { createItem, updateItem } = useItems();
   const { 
     itemNames, 
@@ -31,7 +33,6 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     idNumber: '',
     note: '',
     isNeedReport: false,
-    isAvailable: true,
     isOperational: true,
   });
   const [quantity, setQuantity] = useState<number>(1);
@@ -59,7 +60,6 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
         idNumber: item.idNumber || '',
         note: item.note || '',
         isNeedReport: item.isNeedReport || false,
-        isAvailable: item.isAvailable,
         isOperational: item.isOperational ?? true,
       });
       // Reset quantity to 1 when editing existing item
@@ -83,7 +83,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!validateRequired(formData.name)) {
+    if (!validateRequired(formData.name || '')) {
       newErrors.name = 'שם פריט חובה';
     }
 
@@ -120,8 +120,8 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
 
     try {
       if (item?.id) {
-        // For updates, exclude isAvailable and quantity from the request body
-        const { isAvailable, quantity: _, ...updateData } = formData;
+        // For updates, exclude quantity from the request body
+        const { quantity: _, ...updateData } = formData;
         // Remove idNumber if isNeedReport is false
         if (!formData.isNeedReport) {
           delete updateData.idNumber;
@@ -135,16 +135,22 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           setConflictError({
             isOpen: true,
             message: result.error || 'לא ניתן לעדכן פריט הקשור לקבלה חתומה',
-            itemName: formData.name
+            itemName: formData.name || 'פריט לא ידוע'
           });
         } else {
           alert(result.error || 'שגיאה בעדכון הפריט');
         }
       } else {
-        // For creating new items, exclude isAvailable from the request body
-        const { isAvailable, ...formDataWithoutAvailable } = formData;
+        // Validate admin permissions for creating new items
+        if (!isAdmin) {
+          alert('רק מנהלים יכולים ליצור פריטים חדשים');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // For creating new items, prepare the request data
         const requestData = {
-          ...formDataWithoutAvailable,
+          ...formData,
           ...(quantity > 1 ? { quantity } : {})
         };
         // Remove idNumber if isNeedReport is false
@@ -163,7 +169,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           setConflictError({
             isOpen: true,
             message: result.error || 'פריט עם מספר צ\' זה כבר קיים במערכת',
-            itemName: formData.name
+            itemName: formData.name || 'פריט לא ידוע'
           });
         } else {
           alert(result.error || 'שגיאה בשמירת הפריט');
@@ -180,6 +186,13 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   return (
     <>
       <div className="item-form-container">
+        {!item && !isAdmin && (
+          <div className="alert alert-warning mb-4" style={{ fontSize: '0.9rem' }}>
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            <strong>הערה:</strong> רק מנהלי מערכת יכולים ליצור פריטים חדשים.
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">שם פריט</label>
@@ -284,7 +297,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
             <input 
               className={`form-control ${errors.idNumber ? 'is-invalid' : ''}`}
               name="idNumber" 
-              value={formData.idNumber} 
+              value={formData.idNumber || ''} 
               onChange={e => handleInputChange('idNumber', e.target.value)} 
               placeholder="הזן מספר צ'"
               required
@@ -298,7 +311,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           <textarea 
             className={`form-control ${errors.note ? 'is-invalid' : ''}`}
             name="note" 
-            value={formData.note} 
+            value={formData.note || ''} 
             onChange={e => handleInputChange('note', e.target.value)} 
             rows={3}
           />

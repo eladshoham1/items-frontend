@@ -83,7 +83,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
       newErrors.phoneNumber = 'מספר טלפון לא תקין';
     }
 
-    if (!validateRequired(formData.locationId)) {
+    // Only validate location if admin is creating/editing user
+    if (isAdmin && (!formData.locationId || !validateRequired(formData.locationId))) {
       newErrors.locationId = 'מיקום חובה';
     }
 
@@ -135,9 +136,13 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
           name: formData.name,
           personalNumber: formData.personalNumber,
           phoneNumber: formData.phoneNumber,
-          locationId: formData.locationId,
           rank: formData.rank,
         };
+        
+        // Only include locationId if admin is making the request and locationId is provided
+        if (isAdmin && formData.locationId) {
+          updateData.locationId = formData.locationId;
+        }
         
         // Only allow admin to update isAdmin
         if (isAdmin && formData.isAdmin !== undefined) {
@@ -146,7 +151,19 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         
         result = await updateUser(user.id, updateData);
       } else {
-        result = await createUser(formData);
+        // For creating new users, only include locationId if admin provides it
+        const createData: CreateUserRequest = {
+          name: formData.name,
+          personalNumber: formData.personalNumber,
+          phoneNumber: formData.phoneNumber,
+          rank: formData.rank,
+        };
+        
+        if (isAdmin && formData.locationId) {
+          createData.locationId = formData.locationId;
+        }
+        
+        result = await createUser(createData);
       }
 
       if (result.success) {
@@ -204,6 +221,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
             placeholder="הזן 7 ספרות"
             min="1000000"
             max="9999999"
+            style={{ textAlign: 'right', direction: 'rtl' }}
             required 
           />
           {errors.personalNumber && <div className="form-error">{errors.personalNumber}</div>}
@@ -238,23 +256,46 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
           {errors.rank && <div className="form-error">{errors.rank}</div>}
         </div>
         
-        <div className="form-group">
-          <label className="form-label">מיקום</label>
-          <select 
-            className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
-            name="locationId" 
-            value={formData.locationId} 
-            onChange={e => handleInputChange('locationId', e.target.value)} 
-            required
-            disabled={managementLoading}
-          >
-            <option value="">בחר מיקום</option>
-            {availableLocations.map(location => (
-              <option key={location.id} value={location.id}>{location.name}</option>
-            ))}
-          </select>
-          {errors.locationId && <div className="form-error">{errors.locationId}</div>}
-        </div>
+        {isAdmin && (
+          <div className="form-group">
+            <label className="form-label">מיקום</label>
+            <select 
+              className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
+              name="locationId" 
+              value={formData.locationId} 
+              onChange={e => handleInputChange('locationId', e.target.value)} 
+              disabled={managementLoading}
+            >
+              <option value="">בחר מיקום</option>
+              {availableLocations.map(location => (
+                <option key={location.id} value={location.id}>{location.name}</option>
+              ))}
+            </select>
+            {errors.locationId && <div className="form-error">{errors.locationId}</div>}
+            <small className="form-text text-muted">רק מנהלים יכולים להקצות מיקום למשתמשים</small>
+          </div>
+        )}
+        
+        {!isAdmin && user && user.location && (
+          <div className="form-group">
+            <label className="form-label">מיקום נוכחי</label>
+            <input 
+              type="text"
+              className="form-control"
+              value={user.location}
+              disabled
+              readOnly
+            />
+            <small className="form-text text-muted">פנה למנהל המערכת לשינוי מיקום</small>
+          </div>
+        )}
+        
+        {!isAdmin && user && !user.location && (
+          <div className="alert alert-warning">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            לא הוקצה מיקום עדיין. פנה למנהל המערכת להקצאת מיקום.
+          </div>
+        )}
         
         {isAdmin && user && (
           <div className="form-group">

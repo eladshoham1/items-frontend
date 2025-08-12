@@ -10,6 +10,7 @@ interface UserProfileFormProps {
   onCancel: () => void;
   isUpdating: boolean;
   showRoleField: boolean;
+  isAdmin?: boolean; // Add isAdmin prop to control location editing
 }
 
 interface FormErrors {
@@ -25,7 +26,8 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
   onUpdate, 
   onCancel, 
   isUpdating, 
-  showRoleField 
+  showRoleField,
+  isAdmin = false // Default to false
 }) => {
   const { locations, loading: managementLoading, loadLocations } = useManagement();
   const { showColdStartMessage } = useColdStartLoader();
@@ -73,7 +75,8 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
       newErrors.phoneNumber = 'מספר טלפון לא תקין';
     }
 
-    if (!validateRequired(formData.locationId)) {
+    // Only validate location if user is admin
+    if (isAdmin && !validateRequired(formData.locationId)) {
       newErrors.locationId = 'מיקום חובה';
     }
 
@@ -116,7 +119,8 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
     if (formData.personalNumber !== userProfile.personalNumber) updates.personalNumber = formData.personalNumber;
     if (formData.phoneNumber !== userProfile.phoneNumber) updates.phoneNumber = formData.phoneNumber;
     if (formData.rank !== userProfile.rank) updates.rank = formData.rank;
-    if (formData.locationId) updates.locationId = formData.locationId;
+    // Only include locationId if user is admin and locationId is provided
+    if (isAdmin && formData.locationId) updates.locationId = formData.locationId;
 
     await onUpdate(updates);
   };
@@ -181,23 +185,37 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
         {errors.rank && <div className="form-error">{errors.rank}</div>}
       </div>
       
-      <div className="form-group mb-4">
-        <label className="form-label required">מיקום</label>
-        <select 
-          className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
-          name="locationId" 
-          value={formData.locationId} 
-          onChange={e => handleInputChange('locationId', e.target.value)} 
-          required
-          disabled={managementLoading}
-        >
-          <option value="">בחר מיקום</option>
-          {locations.map(location => (
-            <option key={location.id} value={location.id}>{location.name}</option>
-          ))}
-        </select>
-        {errors.locationId && <div className="form-error">{errors.locationId}</div>}
-      </div>
+      {isAdmin ? (
+        <div className="form-group mb-4">
+          <label className="form-label required">מיקום</label>
+          <select 
+            className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
+            name="locationId" 
+            value={formData.locationId} 
+            onChange={e => handleInputChange('locationId', e.target.value)} 
+            required
+            disabled={managementLoading}
+          >
+            <option value="">בחר מיקום</option>
+            {locations.map(location => (
+              <option key={location.id} value={location.id}>{location.name}</option>
+            ))}
+          </select>
+          {errors.locationId && <div className="form-error">{errors.locationId}</div>}
+        </div>
+      ) : (
+        <div className="form-group mb-4">
+          <label className="form-label">מיקום נוכחי</label>
+          <input 
+            type="text"
+            className="form-control"
+            value={userProfile.location || 'לא הוקצה מיקום'}
+            disabled
+            readOnly
+          />
+          <small className="form-text text-muted">פנה למנהל המערכת לשינוי מיקום</small>
+        </div>
+      )}
 
       <div className="d-flex justify-content-end gap-2">
         <button 

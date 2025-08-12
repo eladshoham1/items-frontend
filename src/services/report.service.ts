@@ -37,9 +37,9 @@ export const reportService = {
     return apiService.post<DailyReport>('/reports/daily', data);
   },
 
-  // Get today's daily report
-  async getTodaysDailyReport(): Promise<DailyReport> {
-    return apiService.get<DailyReport>('/reports/daily/today');
+  // Get current daily report (replaces getTodaysDailyReport)
+  async getCurrentDailyReport(): Promise<DailyReport> {
+    return apiService.get<DailyReport>('/reports/daily/current');
   },
 
   // Get daily report history (admin only)
@@ -59,6 +59,8 @@ export const reportService = {
 
   // Complete daily report (admin only)
   async completeDailyReport(data: CompleteDailyReportRequest): Promise<DailyReport> {
-    return apiService.post<DailyReport>('/reports/daily/complete', data);
+    return apiService.post<DailyReport>(`/reports/daily/${data.reportId}/complete`, {
+      notes: data.notes
+    });
   },
 };
