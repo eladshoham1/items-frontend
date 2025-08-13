@@ -520,7 +520,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                         {(detailsReceipt.receiptItems || []).map((ri, idx) => {
                                             const itemName = ri.item?.itemName?.name || '—';
                                             const idNumber = ri.item?.idNumber || '';
-                                            const isNeedReport = ri.item?.isNeedReport || false;
+                                            const isNeedReport = !!ri.item?.idNumber; // Changed to check idNumber instead
                                             const note = ri.item?.note || '';
                                             return (
                                                 <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>

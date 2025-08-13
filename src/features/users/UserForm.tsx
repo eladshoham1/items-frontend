@@ -44,6 +44,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConflictModal, setShowConflictModal] = useState(false);
+  const [showLastAdminModal, setShowLastAdminModal] = useState(false);
 
   // All locations are available since we don't filter by unit anymore
   const availableLocations = locations;
@@ -171,6 +172,9 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
       } else if (result.error?.status === 409) {
         // Handle 409 conflict error with modal
         setShowConflictModal(true);
+      } else if (result.error?.status === 403) {
+        // Handle 403 forbidden error (like last admin demotion)
+        setShowLastAdminModal(true);
       } else {
         alert('שגיאה בשמירת המשתמש');
       }
@@ -299,16 +303,28 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         
         {isAdmin && user && (
           <div className="form-group">
-            <label className="form-label">
-              <input 
-                type="checkbox"
-                className="form-checkbox"
-                name="isAdmin" 
-                checked={formData.isAdmin || false}
-                onChange={e => handleInputChange('isAdmin', e.target.checked)} 
-              />
-              <span className="ms-2">מנהל מערכת</span>
-            </label>
+            <div className="custom-checkbox-wrapper">
+              <label className="custom-checkbox">
+                <input
+                  type="checkbox"
+                  className="custom-checkbox-input"
+                  checked={formData.isAdmin || false}
+                  onChange={e => handleInputChange('isAdmin', e.target.checked)}
+                />
+                <span className="custom-checkbox-checkmark">
+                  <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path 
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <span className="custom-checkbox-label">
+                  <strong>מנהל מערכת?</strong>
+                  <small className="checkbox-description">האם המשתמש הוא מנהל מערכת?</small>
+                </span>
+              </label>
+            </div>
           </div>
         )}
 
@@ -328,6 +344,15 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         title="התנגשות נתונים"
         message="משתמש עם מספר אישי זה כבר קיים במערכת או שאין לך הרשאה לעדכון."
         resolutionMessage={`בדוק אם המשתמש כבר קיים במערכת עם אותו מספר אישי.\nבמידת הצורך, פנה למנהל המערכת כדי לקבל הרשאות מתאימות.`}
+        type="user"
+      />
+
+      <ConflictErrorModal 
+        isOpen={showLastAdminModal} 
+        onClose={() => setShowLastAdminModal(false)}
+        title="שגיאת הרשאות"
+        message="לא ניתן להסיר הרשאות מנהל מהמשתמש האחרון בעל הרשאות מנהל במערכת."
+        resolutionMessage="חייב להישאר לפחות מנהל אחד במערכת. הוסף מנהל נוסף לפני הסרת ההרשאות מהמשתמש הנוכחי."
         type="user"
       />
     </>

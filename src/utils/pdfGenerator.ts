@@ -30,8 +30,8 @@ const createReceiptHTML = (receipt: Receipt): string => {
     const itemName = receiptItem.item?.itemName?.name || '';
     const itemIdNumber = receiptItem.item?.idNumber || '';
     const itemNote = receiptItem.item?.note || '';
-    // Use the isNeedReport value directly from the receipt item data
-    const itemIsNeedReport = receiptItem.item?.isNeedReport || false;
+    // Check if item is cipher based on idNumber
+    const itemIsNeedReport = !!receiptItem.item?.idNumber;
 
     // Check if we already have an item with the same name for quantity grouping
     const existingItem = processedItems.find(

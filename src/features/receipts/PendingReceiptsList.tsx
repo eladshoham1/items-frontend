@@ -482,7 +482,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     {(detailsReceipt.receiptItems || []).map((ri, idx) => {
                       const itemName = ri.item?.itemName?.name || '—';
                       const idNumber = ri.item?.idNumber || '';
-                      const isNeedReport = ri.item?.isNeedReport || false;
+                      const isNeedReport = !!ri.item?.idNumber; // Changed to check idNumber
                       const note = ri.item?.note || '';
                       return (
                         <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
@@ -594,7 +594,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                       selectedReceipt.receiptItems
                         .reduce((grouped: { name: string, items: any[], count: number, isNeedReport: boolean }[], receiptItem) => {
                           const itemName = receiptItem.item?.itemName?.name || 'פריט לא ידוע';
-                          const isNeedReport = receiptItem.item?.isNeedReport || false;
+                          const isNeedReport = !!receiptItem.item?.idNumber; // Changed to check idNumber
                           
                           // For cipher items, always create separate entries
                           if (isNeedReport) {

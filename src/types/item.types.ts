@@ -12,8 +12,8 @@ export interface Item {
   };
   idNumber?: string | null;
   note?: string | null;
-  isNeedReport: boolean;
   isOperational: boolean;
+  requiresReporting?: boolean;
   lastReported?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -30,8 +30,8 @@ export type CreateItemRequest = {
   name?: string; // Legacy support - will be converted to nameId
   idNumber?: string | null;
   note?: string | null;
-  isNeedReport?: boolean;
   isOperational?: boolean;
+  requiresReporting?: boolean;
   quantity?: number;
 };
 
@@ -40,7 +40,7 @@ export type UpdateItemRequest = {
   name?: string;
   idNumber?: string | null;
   note?: string | null;
-  isNeedReport?: boolean;
   isOperational?: boolean;
+  requiresReporting?: boolean;
   receiptId?: string | null;
 } & { id: ID };
