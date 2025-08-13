@@ -71,6 +71,17 @@ export const useUsers = () => {
         };
       }
       
+      // Return detailed error information for forbidden actions (like last admin)
+      if (apiError.status === 403) {
+        return { 
+          success: false, 
+          error: { 
+            status: 403, 
+            message: apiError.message 
+          } 
+        };
+      }
+      
       return { success: false };
     }
   };

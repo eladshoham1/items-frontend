@@ -1,57 +1,43 @@
-import { ID } from './common.types';
-
-export interface ReportItem {
-  id: ID;
-  name: string;
-  idNumber: string;
-  userName: string;
-  phoneNumber: string;
-  hasRecentReport: boolean;
-  isReported?: boolean; // For local state management
-}
-
-export interface DailyReportResponse {
-  items: ReportItem[];
-  quantity: number;
-  timestamp: string;
-}
-
-export interface ReportStatusUpdate {
-  id: ID;
-  status: boolean;
-}
-
-export interface UpdateReportRequest {
-  items: ReportStatusUpdate[];
-}
-
 // New Daily Report Types
 export interface DailyReportItem {
   id: string;
-  name: string;
+  itemId: string;
+  itemName: string;
   idNumber?: string;
+  location: string;
   isReported: boolean;
   reportedAt?: string;
-  notes?: string;
+  reportedBy?: {
+    id: string;
+    name: string;
+    rank: string;
+  };
+  notes?: string | null;
+  createdAt: string;
 }
 
 export interface DailyReport {
   id: string;
-  reportDate: string;
-  createdBy: string; // Changed from createdById to match API
-  completedAt?: string;
-  isCompleted: boolean;
+  createdBy: {
+    id: string;
+    name: string;
+    rank: string;
+  };
   totalItems: number;
   reportedItems: number;
-  notes?: string;
+  isCompleted: boolean;
   createdAt: string;
-  updatedAt: string;
-  items: DailyReportItem[]; // Changed from reportItems to items to match API
+}
+
+export interface DailyReportResponse {
+  report: DailyReport;
+  items: DailyReportItem[];
+  userLocation: string;
+  isAdmin: boolean;
 }
 
 export interface CreateDailyReportRequest {
-  reportDate?: string;
-  notes?: string;
+  // Empty object - auto-generated reports don't need title or notes
 }
 
 export interface UpdateDailyReportItemRequest {
@@ -66,27 +52,95 @@ export interface UpdateDailyReportRequest {
 
 export interface CompleteDailyReportRequest {
   reportId: string;
-  notes?: string;
+}
+
+export interface DetailedDailyReportItem {
+  id: string;
+  reportId: string;
+  itemId: string;
+  isReported: boolean;
+  reportedAt?: string;
+  reportedById?: string;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  item: {
+    id: string;
+    nameId: string;
+    createdById: string;
+    isOperational: boolean;
+    requiresReporting: boolean;
+    idNumber: string;
+    note: string;
+    createdAt: string;
+    updatedAt: string;
+    itemName: {
+      name: string;
+    };
+    receiptItems?: any; // Complex nested structure
+  };
+  reportedBy?: {
+    id: string;
+    name: string;
+    rank: string;
+  };
+}
+
+export interface DetailedDailyReportResponse {
+  id: string;
+  createdById: string;
+  completedAt?: string;
+  completedById?: string;
+  isActive: boolean;
+  isCompleted: boolean;
+  totalItems: number;
+  reportedItems: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: {
+    id: string;
+    name: string;
+    rank: string;
+  };
+  completedBy?: {
+    id: string;
+    name: string;
+    rank: string;
+  };
+  reportItems: DetailedDailyReportItem[];
 }
 
 export interface DailyReportHistoryItem {
   id: string;
-  reportDate: string;
+  createdById: string;
+  completedAt?: string;
+  completedById?: string;
+  isActive: boolean;
   isCompleted: boolean;
   totalItems: number;
   reportedItems: number;
-  completedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   createdBy: {
+    id: string;
     name: string;
+    rank: string;
+  };
+  completedBy?: {
+    id: string;
+    name: string;
+    rank: string;
   };
 }
 
 export interface DailyReportHistoryResponse {
   reports: DailyReportHistoryItem[];
-  totalCount: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export interface SignUser {

@@ -1,64 +1,48 @@
 import { apiService } from './api.service';
 import { 
-  ReportStatusUpdate, 
-  UpdateReportRequest, 
   DashboardStatistics, 
-  DailyReportResponse,
   DailyReport,
+  DailyReportResponse,
   CreateDailyReportRequest,
   UpdateDailyReportRequest,
   CompleteDailyReportRequest,
-  DailyReportHistoryResponse
+  DailyReportHistoryResponse,
+  DetailedDailyReportResponse
 } from '../types';
 
 export const reportService = {
-  // Get daily report items (legacy endpoint)
-  async getDailyReport(): Promise<DailyReportResponse> {
-    return apiService.get<DailyReportResponse>('/reports');
-  },
-
-  // Update report status using new DTO structure (legacy endpoint)
-  async updateReportStatus(reportUpdates: ReportStatusUpdate[]): Promise<void> {
-    const updateRequest: UpdateReportRequest = {
-      items: reportUpdates
-    };
-    return apiService.patch<void>('/reports', updateRequest);
-  },
-
-  // Get dashboard statistics (now includes matrix data)
+  // Get dashboard statistics (admin only)
   async getStatistics(): Promise<DashboardStatistics> {
     return apiService.get<DashboardStatistics>('/reports/statistics');
   },
 
-  // NEW DAILY REPORT METHODS
-
-  // Create a new daily report
-  async createDailyReport(data: CreateDailyReportRequest): Promise<DailyReport> {
-    return apiService.post<DailyReport>('/reports/daily', data);
+  // Create a new daily report (admin only)
+  async createDailyReport(data: CreateDailyReportRequest): Promise<DailyReportResponse> {
+    return apiService.post<DailyReportResponse>('/reports/create', data);
   },
 
-  // Get today's daily report
-  async getTodaysDailyReport(): Promise<DailyReport> {
-    return apiService.get<DailyReport>('/reports/daily/today');
+  // Get current daily report
+  async getCurrentDailyReport(): Promise<DailyReportResponse> {
+    return apiService.get<DailyReportResponse>('/reports/current');
   },
 
   // Get daily report history (admin only)
   async getDailyReportHistory(page: number = 1, limit: number = 10): Promise<DailyReportHistoryResponse> {
-    return apiService.get<DailyReportHistoryResponse>(`/reports/daily/history?page=${page}&limit=${limit}`);
+    return apiService.get<DailyReportHistoryResponse>(`/reports/history?page=${page}&limit=${limit}`);
   },
 
-  // Get daily report by ID
-  async getDailyReportById(id: string): Promise<DailyReport> {
-    return apiService.get<DailyReport>(`/reports/daily/${id}`);
+  // Get daily report by ID (admin only)
+  async getDailyReportById(id: string): Promise<DetailedDailyReportResponse> {
+    return apiService.get<DetailedDailyReportResponse>(`/reports/${id}`);
   },
 
-  // Update daily report
+  // Update daily report items
   async updateDailyReport(id: string, data: UpdateDailyReportRequest): Promise<DailyReport> {
-    return apiService.patch<DailyReport>(`/reports/daily/${id}`, data);
+    return apiService.patch<DailyReport>('/reports/items', data);
   },
 
   // Complete daily report (admin only)
   async completeDailyReport(data: CompleteDailyReportRequest): Promise<DailyReport> {
-    return apiService.post<DailyReport>('/reports/daily/complete', data);
+    return apiService.post<DailyReport>('/reports/complete', data);
   },
 };

@@ -30,8 +30,8 @@ const createReceiptHTML = (receipt: Receipt): string => {
     const itemName = receiptItem.item?.itemName?.name || '';
     const itemIdNumber = receiptItem.item?.idNumber || '';
     const itemNote = receiptItem.item?.note || '';
-    // Use the isNeedReport value directly from the receipt item data
-    const itemIsNeedReport = receiptItem.item?.isNeedReport || false;
+    // Check if item is cipher based on idNumber
+    const itemIsNeedReport = !!receiptItem.item?.idNumber;
 
     // Check if we already have an item with the same name for quantity grouping
     const existingItem = processedItems.find(
@@ -516,6 +516,7 @@ interface DailyReportPDFData {
     idNumber: string;
     isReported: boolean;
     reportedAt: string;
+    reportedBy?: string;
     notes: string;
     unit?: string;
     location?: string;
@@ -523,12 +524,22 @@ interface DailyReportPDFData {
 }
 
 export const generateDailyReportPDF = (reportData: DailyReportPDFData): void => {
-  // Format date for display (date only, no time)
-  const reportDate = new Date(reportData.reportDate).toLocaleDateString('he-IL', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
+  // Format date for display (date only, no time) with safety check
+  let reportDate: string;
+  try {
+    const date = new Date(reportData.reportDate);
+    if (isNaN(date.getTime())) {
+      reportDate = 'תאריך לא תקין';
+    } else {
+      reportDate = date.toLocaleDateString('he-IL', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+  } catch (error) {
+    reportDate = 'תאריך לא תקין';
+  }
   
   const completionPercentage = reportData.totalItems > 0 
     ? Math.round((reportData.reportedItems / reportData.totalItems) * 100) 
@@ -578,7 +589,14 @@ export const generateDailyReportPDF = (reportData: DailyReportPDFData): void => 
               <span style="display: inline-block; padding: 8px 15px; border-radius: 12px; color: white; font-weight: bold; font-size: 14px; background: ${reportData.completedAt ? '#28a745' : '#ffc107'};">
                 ${reportData.completedAt ? '✅ דוח הושלם' : '⏳ דוח פתוח'}
               </span>
-              ${reportData.completedAt ? `<div style="margin-top: 8px; color: #666; font-size: 12px;">הושלם ב: ${new Date(reportData.completedAt).toLocaleDateString('he-IL')}</div>` : ''}
+              ${reportData.completedAt ? `<div style="margin-top: 8px; color: #666; font-size: 12px;">הושלם ב: ${(() => {
+                try {
+                  const date = new Date(reportData.completedAt);
+                  return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL') : 'תאריך לא תקין';
+                } catch (error) {
+                  return 'תאריך לא תקין';
+                }
+              })()}</div>` : ''}
             </div>
           </div>
           ` : ''}
@@ -593,11 +611,12 @@ export const generateDailyReportPDF = (reportData: DailyReportPDFData): void => 
             <table style="width: 100%; border-collapse: collapse; font-size: 12px; border: 2px solid #000;">
               <thead>
                 <tr style="background-color: #2980b9; color: white;">
-                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 30%; font-weight: bold; font-size: 13px;">שם פריט</th>
-                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 15%; font-weight: bold; font-size: 13px;">מספר צ'</th>
-                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 12%; font-weight: bold; font-size: 13px;">סטטוס דיווח</th>
-                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 18%; font-weight: bold; font-size: 13px;">תאריך דיווח</th>
-                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 25%; font-weight: bold; font-size: 13px;">יחידה ומיקום</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 25%; font-weight: bold; font-size: 13px;">שם פריט</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 12%; font-weight: bold; font-size: 13px;">מספר צ'</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 10%; font-weight: bold; font-size: 13px;">סטטוס דיווח</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 15%; font-weight: bold; font-size: 13px;">תאריך דיווח</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 18%; font-weight: bold; font-size: 13px;">מי דיווח</th>
+                  <th style="border: 2px solid #000; padding: 10px 8px; text-align: center; width: 20%; font-weight: bold; font-size: 13px;">יחידה ומיקום</th>
                 </tr>
               </thead>
               <tbody>
@@ -609,6 +628,7 @@ export const generateDailyReportPDF = (reportData: DailyReportPDFData): void => 
                       ${item.isReported ? '✅ דווח' : '❌ לא דווח'}
                     </td>
                     <td style="border: 1px solid #000; padding: 8px; text-align: center; line-height: 1.4; white-space: nowrap;">${item.reportedAt || '-'}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: center; line-height: 1.4; word-wrap: break-word;">${item.reportedBy || '-'}</td>
                     <td style="border: 1px solid #000; padding: 8px 10px; text-align: right; word-wrap: break-word; line-height: 1.4;">${item.unit && item.location ? `${item.unit} - ${item.location}` : item.unit || item.location || '-'}</td>
                   </tr>
                 `).join('')}
@@ -678,19 +698,35 @@ export const generateDailyReportPDF = (reportData: DailyReportPDFData): void => 
       const canvasHeight = canvas.height;
       const scaledHeight = (canvasHeight * pageWidth) / canvasWidth;
       
-      // Calculate pages needed
-      const totalPages = Math.ceil(scaledHeight / pageHeight);
+      console.log(`Canvas: ${canvasWidth}x${canvasHeight}, Scaled: ${pageWidth}x${scaledHeight}, Page Height: ${pageHeight}`);
       
-      console.log(`Canvas: ${canvasWidth}x${canvasHeight}, Scaled: ${pageWidth}x${scaledHeight}, Pages: ${totalPages}`);
-      
-      // Add pages to PDF
-      for (let i = 0; i < totalPages; i++) {
-        if (i > 0) {
-          pdf.addPage();
-        }
+      // Improved pagination logic to prevent extra blank pages
+      if (scaledHeight <= pageHeight * 0.95) { // Add 5% buffer to ensure single page detection
+        // Content fits on one page
+        pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, scaledHeight);
+        console.log('Single page PDF created');
+      } else {
+        // Content needs multiple pages
+        const totalPages = Math.ceil(scaledHeight / pageHeight);
+        console.log(`Multi-page PDF: ${totalPages} pages needed`);
         
-        const yOffset = -(pageHeight * i);
-        pdf.addImage(imgData, 'PNG', 0, yOffset, pageWidth, scaledHeight);
+        for (let i = 0; i < totalPages; i++) {
+          if (i > 0) {
+            pdf.addPage();
+          }
+          
+          const yOffset = -(pageHeight * i);
+          const remainingHeight = scaledHeight - (pageHeight * i);
+          
+          // Only add page if there's meaningful content (more than 20mm)
+          if (remainingHeight > 20) {
+            pdf.addImage(imgData, 'PNG', 0, yOffset, pageWidth, scaledHeight);
+            console.log(`Added page ${i + 1}, yOffset: ${yOffset}, remaining: ${remainingHeight}mm`);
+          } else {
+            console.log(`Skipped page ${i + 1} - insufficient content (${remainingHeight}mm)`);
+            break; // Stop adding pages when content is insufficient
+          }
+        }
       }
 
       // Clean up

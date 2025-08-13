@@ -10,6 +10,16 @@ export const paginate = <T>(
   startIndex: number;
   endIndex: number;
 } => {
+  // Safety check: ensure items is a valid array
+  if (!items || !Array.isArray(items)) {
+    return {
+      paginatedItems: [],
+      totalPages: 0,
+      startIndex: 0,
+      endIndex: 0,
+    };
+  }
+
   const totalPages = Math.ceil(items.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, items.length);

@@ -44,6 +44,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConflictModal, setShowConflictModal] = useState(false);
+  const [showLastAdminModal, setShowLastAdminModal] = useState(false);
 
   // All locations are available since we don't filter by unit anymore
   const availableLocations = locations;
@@ -83,7 +84,8 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
       newErrors.phoneNumber = 'מספר טלפון לא תקין';
     }
 
-    if (!validateRequired(formData.locationId)) {
+    // Only validate location if admin is creating/editing user
+    if (isAdmin && (!formData.locationId || !validateRequired(formData.locationId))) {
       newErrors.locationId = 'מיקום חובה';
     }
 
@@ -135,9 +137,13 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
           name: formData.name,
           personalNumber: formData.personalNumber,
           phoneNumber: formData.phoneNumber,
-          locationId: formData.locationId,
           rank: formData.rank,
         };
+        
+        // Only include locationId if admin is making the request and locationId is provided
+        if (isAdmin && formData.locationId) {
+          updateData.locationId = formData.locationId;
+        }
         
         // Only allow admin to update isAdmin
         if (isAdmin && formData.isAdmin !== undefined) {
@@ -146,7 +152,19 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         
         result = await updateUser(user.id, updateData);
       } else {
-        result = await createUser(formData);
+        // For creating new users, only include locationId if admin provides it
+        const createData: CreateUserRequest = {
+          name: formData.name,
+          personalNumber: formData.personalNumber,
+          phoneNumber: formData.phoneNumber,
+          rank: formData.rank,
+        };
+        
+        if (isAdmin && formData.locationId) {
+          createData.locationId = formData.locationId;
+        }
+        
+        result = await createUser(createData);
       }
 
       if (result.success) {
@@ -154,6 +172,9 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
       } else if (result.error?.status === 409) {
         // Handle 409 conflict error with modal
         setShowConflictModal(true);
+      } else if (result.error?.status === 403) {
+        // Handle 403 forbidden error (like last admin demotion)
+        setShowLastAdminModal(true);
       } else {
         alert('שגיאה בשמירת המשתמש');
       }
@@ -204,6 +225,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
             placeholder="הזן 7 ספרות"
             min="1000000"
             max="9999999"
+            style={{ textAlign: 'right', direction: 'rtl' }}
             required 
           />
           {errors.personalNumber && <div className="form-error">{errors.personalNumber}</div>}
@@ -238,36 +260,71 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
           {errors.rank && <div className="form-error">{errors.rank}</div>}
         </div>
         
-        <div className="form-group">
-          <label className="form-label">מיקום</label>
-          <select 
-            className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
-            name="locationId" 
-            value={formData.locationId} 
-            onChange={e => handleInputChange('locationId', e.target.value)} 
-            required
-            disabled={managementLoading}
-          >
-            <option value="">בחר מיקום</option>
-            {availableLocations.map(location => (
-              <option key={location.id} value={location.id}>{location.name}</option>
-            ))}
-          </select>
-          {errors.locationId && <div className="form-error">{errors.locationId}</div>}
-        </div>
+        {isAdmin && (
+          <div className="form-group">
+            <label className="form-label">מיקום</label>
+            <select 
+              className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
+              name="locationId" 
+              value={formData.locationId} 
+              onChange={e => handleInputChange('locationId', e.target.value)} 
+              disabled={managementLoading}
+            >
+              <option value="">בחר מיקום</option>
+              {availableLocations.map(location => (
+                <option key={location.id} value={location.id}>{location.name}</option>
+              ))}
+            </select>
+            {errors.locationId && <div className="form-error">{errors.locationId}</div>}
+            <small className="form-text text-muted">רק מנהלים יכולים להקצות מיקום למשתמשים</small>
+          </div>
+        )}
+        
+        {!isAdmin && user && user.location && (
+          <div className="form-group">
+            <label className="form-label">מיקום נוכחי</label>
+            <input 
+              type="text"
+              className="form-control"
+              value={user.location}
+              disabled
+              readOnly
+            />
+            <small className="form-text text-muted">פנה למנהל המערכת לשינוי מיקום</small>
+          </div>
+        )}
+        
+        {!isAdmin && user && !user.location && (
+          <div className="alert alert-warning">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            לא הוקצה מיקום עדיין. פנה למנהל המערכת להקצאת מיקום.
+          </div>
+        )}
         
         {isAdmin && user && (
           <div className="form-group">
-            <label className="form-label">
-              <input 
-                type="checkbox"
-                className="form-checkbox"
-                name="isAdmin" 
-                checked={formData.isAdmin || false}
-                onChange={e => handleInputChange('isAdmin', e.target.checked)} 
-              />
-              <span className="ms-2">מנהל מערכת</span>
-            </label>
+            <div className="custom-checkbox-wrapper">
+              <label className="custom-checkbox">
+                <input
+                  type="checkbox"
+                  className="custom-checkbox-input"
+                  checked={formData.isAdmin || false}
+                  onChange={e => handleInputChange('isAdmin', e.target.checked)}
+                />
+                <span className="custom-checkbox-checkmark">
+                  <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path 
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+                <span className="custom-checkbox-label">
+                  <strong>מנהל מערכת?</strong>
+                  <small className="checkbox-description">האם המשתמש הוא מנהל מערכת?</small>
+                </span>
+              </label>
+            </div>
           </div>
         )}
 
@@ -287,6 +344,15 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         title="התנגשות נתונים"
         message="משתמש עם מספר אישי זה כבר קיים במערכת או שאין לך הרשאה לעדכון."
         resolutionMessage={`בדוק אם המשתמש כבר קיים במערכת עם אותו מספר אישי.\nבמידת הצורך, פנה למנהל המערכת כדי לקבל הרשאות מתאימות.`}
+        type="user"
+      />
+
+      <ConflictErrorModal 
+        isOpen={showLastAdminModal} 
+        onClose={() => setShowLastAdminModal(false)}
+        title="שגיאת הרשאות"
+        message="לא ניתן להסיר הרשאות מנהל מהמשתמש האחרון בעל הרשאות מנהל במערכת."
+        resolutionMessage="חייב להישאר לפחות מנהל אחד במערכת. הוסף מנהל נוסף לפני הסרת ההרשאות מהמשתמש הנוכחי."
         type="user"
       />
     </>

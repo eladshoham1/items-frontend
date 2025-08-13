@@ -62,7 +62,9 @@ The application will automatically use the configured URL for all API calls.
 ### 2. Custom Hooks
 - **useUsers**: User management with CRUD operations
 - **useItems**: Item management with status tracking
-- **useReports**: Daily report management and statistics
+- **useDailyReports**: Daily report management and completion
+- **useDailyReportHistory**: Historical daily report data
+- **useDashboardStats**: Dashboard statistics and analytics
 
 ### 3. Service Layer
 - **userService**: User CRUD operations

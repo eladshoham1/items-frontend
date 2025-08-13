@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { CreateUserRequest, ranks } from '../../types';
-import { useManagement } from '../../contexts';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
 
 interface UserProfileSetupProps {
@@ -15,7 +14,6 @@ interface FormErrors {
   name?: string;
   personalNumber?: string;
   phoneNumber?: string;
-  locationId?: string;
   rank?: string;
 }
 
@@ -26,28 +24,13 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
   isLoading = false,
   error = null 
 }) => {
-  const { 
-    locations, 
-    loading: managementLoading,
-    loadLocations,
-  } = useManagement();
-  
   const [formData, setFormData] = useState<Omit<CreateUserRequest, 'firebaseUid'>>({
     name: '',
     personalNumber: 0,
     phoneNumber: '',
-    locationId: '',
     rank: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
-
-  // Lazy load locations for the dropdown when this screen mounts
-  useEffect(() => {
-    if (!locations || locations.length === 0) {
-      loadLocations();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -62,10 +45,6 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
 
     if (!validatePhoneNumber(formData.phoneNumber)) {
       newErrors.phoneNumber = 'מספר טלפון לא תקין';
-    }
-
-    if (!validateRequired(formData.locationId)) {
-      newErrors.locationId = 'מיקום חובה';
     }
 
     if (!validateRequired(formData.rank)) {
@@ -214,28 +193,15 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
               {errors.rank && <div className="form-error">{errors.rank}</div>}
             </div>
             
-            <div className="form-group mb-4">
-              <label className="form-label required">מיקום</label>
-              <select 
-                className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
-                name="locationId" 
-                value={formData.locationId} 
-                onChange={e => handleInputChange('locationId', e.target.value)} 
-                required
-                disabled={managementLoading}
-              >
-                <option value="">בחר מיקום</option>
-                {locations.map(location => (
-                  <option key={location.id} value={location.id}>{location.name}</option>
-                ))}
-              </select>
-              {errors.locationId && <div className="form-error">{errors.locationId}</div>}
+            <div className="alert alert-info mb-4" style={{ fontSize: '0.9rem' }}>
+              <i className="fas fa-info-circle me-2"></i>
+              <strong>הערה:</strong> מיקום יוקצה לך על ידי מנהל המערכת לאחר הרישום.
             </div>
             
             <button 
               type="submit" 
               className="btn btn-primary w-100" 
-              disabled={isLoading || managementLoading}
+              disabled={isLoading}
             >
               {isLoading ? (
                 <>

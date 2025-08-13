@@ -15,14 +15,14 @@ type ReportTab = 'current' | 'history';
 
 const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const [activeReportTab, setActiveReportTab] = useState<ReportTab>('current');
-  const { dailyReport, loading, error, updateDailyReport, completeDailyReport, toggleReportStatus, setReportStatusBulk, updateItemNotes } = useDailyReports();
+  const { dailyReportData, loading, error, createDailyReport, updateDailyReport, completeDailyReport, toggleReportStatus, setReportStatusBulk, updateItemNotes } = useDailyReports();
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
   } | null>(null);
   const [completing, setCompleting] = useState(false);
-  const [notes, setNotes] = useState('');
+  const [creatingReport, setCreatingReport] = useState(false);
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
   // If not admin, hide history tab
@@ -47,10 +47,10 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
 
   // Sort items based on sort config
   const sortedReportItems = (() => {
-    if (!dailyReport) return [];
+    if (!dailyReportData || !dailyReportData.items) return [];
     
     // Role-based filtering: users see only their items, admins see all
-    let filteredItems = dailyReport.items; // Changed from reportItems to items
+    let filteredItems = dailyReportData.items;
     if (!isAdmin && userProfile) {
       // Note: Need to add user filtering logic based on the new data structure
       // For now, showing all items as the server should handle the filtering
@@ -63,9 +63,9 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       let bValue: any;
 
       switch (sortConfig.key) {
-        case 'name':
-          aValue = a.name;
-          bValue = b.name;
+        case 'itemName':
+          aValue = a.itemName;
+          bValue = b.itemName;
           break;
         case 'idNumber':
           aValue = a.idNumber || '';
@@ -78,6 +78,10 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         case 'reportedAt':
           aValue = a.reportedAt ? new Date(a.reportedAt) : new Date(0);
           bValue = b.reportedAt ? new Date(b.reportedAt) : new Date(0);
+          break;
+        case 'reportedBy':
+          aValue = a.reportedBy?.name || '';
+          bValue = b.reportedBy?.name || '';
           break;
         default:
           return 0;
@@ -120,7 +124,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   }, [sortedReportItems]);
 
   const handleSubmitReport = async () => {
-    if (!dailyReport) return;
+    if (!dailyReportData) return;
 
     const reportUpdates: UpdateDailyReportItemRequest[] = sortedReportItems.map(item => ({
       itemId: item.id,
@@ -128,7 +132,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       notes: item.notes || undefined,
     }));
 
-    const success = await updateDailyReport(dailyReport.id, { reportItems: reportUpdates });
+    const success = await updateDailyReport(dailyReportData.report.id, { reportItems: reportUpdates });
     
     if (success) {
       alert('דיווח עודכן בהצלחה');
@@ -138,7 +142,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   };
 
   const handleCompleteReport = async () => {
-    if (!dailyReport || !isAdmin) return;
+    if (!dailyReportData || !isAdmin) return;
 
     setCompleting(true);
     try {
@@ -149,22 +153,40 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         notes: item.notes || undefined,
       }));
 
-      await updateDailyReport(dailyReport.id, { reportItems: reportUpdates });
+      await updateDailyReport(dailyReportData.report.id, { reportItems: reportUpdates });
 
       // Then complete the report
       const success = await completeDailyReport({
-        reportId: dailyReport.id,
-        notes: notes || undefined,
+        reportId: dailyReportData.report.id,
       });
 
       if (success) {
         alert('הדוח הושלם בהצלחה! דוח חדש נוצר למחר');
-        setNotes('');
       } else {
         alert('שגיאה בהשלמת הדוח');
       }
     } finally {
       setCompleting(false);
+    }
+  };
+
+  const handleCreateReport = async () => {
+    if (!isAdmin) return;
+
+    setCreatingReport(true);
+    try {
+      const success = await createDailyReport({});
+
+      if (success) {
+        alert('דוח חדש נוצר בהצלחה');
+      } else {
+        alert('שגיאה ביצירת דוח חדש');
+      }
+    } catch (error) {
+      console.error('Error creating report:', error);
+      alert('שגיאה ביצירת דוח חדש');
+    } finally {
+      setCreatingReport(false);
     }
   };
 
@@ -194,7 +216,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         {/* Sub-navigation */}
         <div className="card">
           <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs" role="tablist">
+            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
               {availableReportTabs.map(tab => (
                 <button
                   key={tab}
@@ -202,6 +224,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   onClick={() => setActiveReportTab(tab)}
                   type="button"
                   role="tab"
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                   {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
@@ -215,13 +238,30 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     );
   }
 
+  // Check if user has a location assigned
+  if (userProfile && !userProfile.location) {
+    return (
+      <div className="card">
+        <div className="card-header">
+          <h2 className="mb-0">דוח יומי</h2>
+        </div>
+        <div className="card-body">
+          <div className="alert alert-warning">
+            <h4>אין לך גישה למערכת</h4>
+            <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div>
         {/* Sub-navigation */}
         <div className="card">
           <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs" role="tablist">
+            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
               {availableReportTabs.map(tab => (
                 <button
                   key={tab}
@@ -229,6 +269,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   onClick={() => setActiveReportTab(tab)}
                   type="button"
                   role="tab"
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                   {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
@@ -259,7 +300,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         {/* Sub-navigation */}
         <div className="card">
           <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs" role="tablist">
+            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
               {availableReportTabs.map(tab => (
                 <button
                   key={tab}
@@ -267,6 +308,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   onClick={() => setActiveReportTab(tab)}
                   type="button"
                   role="tab"
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                   {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
@@ -285,7 +327,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       {/* Sub-navigation */}
       <div className="card">
         <div className="card-header">
-          <nav className="nav nav-tabs card-header-tabs" role="tablist">
+          <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
             {availableReportTabs.map(tab => (
               <button
                 key={tab}
@@ -293,6 +335,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 onClick={() => setActiveReportTab(tab)}
                 type="button"
                 role="tab"
+                style={{ whiteSpace: 'nowrap' }}
               >
                 <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
                 {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
@@ -305,7 +348,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
           <h2 className="mb-0">דוח יומי - {getCurrentDate()}</h2>
-          {dailyReport?.isCompleted && (
+          {dailyReportData?.report?.isCompleted && (
             <span className="badge bg-success fs-6">
               <i className="fas fa-check-circle me-1"></i>
               דוח הושלם
@@ -313,7 +356,63 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           )}
         </div>
         <div className="card-body">
-          {/* Reporting Progress Indicator - For All Users */}
+          {/* Handle case when no daily report exists or report has no items */}
+          {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) && (
+            <div>
+              {isAdmin ? (
+                /* Admin can create a new report */
+                <div className="text-center">
+                  <div className="alert alert-info">
+                    <h4><i className="fas fa-plus-circle me-2"></i>אין דוח יומי פעיל</h4>
+                    <p>לא קיים דוח יומי פעיל כרגע או שהדוח ריק. בתור מנהל, אתה יכול ליצור דוח חדש עבור היום.</p>
+                  </div>
+                  
+                  <div className="card">
+                    <div className="card-header">
+                      <h5 className="mb-0"><i className="fas fa-file-plus me-2"></i>יצירת דוח יומי חדש</h5>
+                    </div>
+                    <div className="card-body">
+                      <div className="row justify-content-center">
+                        <div className="col-md-6">
+                          <p className="text-center mb-4">לחץ על הכפתור למטה כדי ליצור דוח יומי חדש עבור היום.</p>
+                          
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-lg w-100"
+                            onClick={handleCreateReport}
+                            disabled={creatingReport}
+                          >
+                            {creatingReport ? (
+                              <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                יוצר דוח...
+                              </>
+                            ) : (
+                              <>
+                                <i className="fas fa-plus me-2"></i>
+                                צור דוח יומי חדש
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Regular users see a message */
+                <div className="alert alert-warning text-center">
+                  <h4><i className="fas fa-clock me-2"></i>אין דוח יומי פעיל</h4>
+                  <p>כרגע אין דוח יומי פעיל. אנא חכה שהמנהל יתחיל דוח חדש.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Show report content only when dailyReportData exists and has items */}
+          {dailyReportData && dailyReportData.items && dailyReportData.items.length > 0 && (
+            <>
+              {/* Reporting Progress Indicator - For All Users */}
           <div className="mb-4 p-3" style={{ 
             background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
             borderRadius: '15px',
@@ -413,14 +512,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 <tr>
                   <th 
                     className="sortable-header"
-                    onClick={() => handleSort('name')}
+                    onClick={() => handleSort('itemName')}
                     title="לחץ למיון לפי שם פריט"
-                    data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
+                    data-sorted={sortConfig?.key === 'itemName' ? 'true' : 'false'}
                   >
                     <div className="d-flex align-items-center justify-content-between">
                       <span>שם פריט</span>
                       <div className="sort-indicator">
-                        {getSortIcon('name')}
+                        {getSortIcon('itemName')}
                       </div>
                     </div>
                   </th>
@@ -452,6 +551,19 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   </th>
                   <th 
                     className="sortable-header"
+                    onClick={() => handleSort('reportedBy')}
+                    title="לחץ למיון לפי מי דיווח"
+                    data-sorted={sortConfig?.key === 'reportedBy' ? 'true' : 'false'}
+                  >
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span>מי דיווח</span>
+                      <div className="sort-indicator">
+                        {getSortIcon('reportedBy')}
+                      </div>
+                    </div>
+                  </th>
+                  <th 
+                    className="sortable-header"
                     onClick={() => handleSort('isReported')}
                     title="לחץ למיון לפי סטטוס דיווח"
                     data-sorted={sortConfig?.key === 'isReported' ? 'true' : 'false'}
@@ -466,7 +578,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                           title="סמן/נקה הכל בכל הדפים"
                           className="form-check-input"
                           onClick={(e) => e.stopPropagation()}
-                          disabled={dailyReport?.isCompleted}
+                          disabled={dailyReportData?.report?.isCompleted}
                         />
                         <div className="sort-indicator">{getSortIcon('isReported')}</div>
                       </div>
@@ -478,16 +590,20 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
               <tbody>
                 {paginatedItems.map(item => (
                   <tr key={item.id}>
-                    <td>{item.name}</td>
+                    <td>{item.itemName}</td>
                     <td>{item.idNumber || '-'}</td>
-                    <td>{item.reportedAt ? new Date(item.reportedAt).toLocaleDateString('he-IL') : '-'}</td>
+                    <td>{item.reportedAt ? (() => {
+                      const date = new Date(item.reportedAt);
+                      return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL') : 'תאריך לא תקין';
+                    })() : '-'}</td>
+                    <td>{item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '-'}</td>
                     <td>
                       <input
                         type="checkbox"
                         checked={item.isReported || false}
                         onChange={() => handleCheckboxChange(item.id)}
                         className="form-check-input"
-                        disabled={dailyReport?.isCompleted}
+                        disabled={dailyReportData?.report?.isCompleted}
                       />
                     </td>
                     <td>
@@ -495,13 +611,13 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                         type="text"
                         value={item.notes || ''}
                         onChange={(e) => {
-                          if (!dailyReport?.isCompleted) {
+                          if (!dailyReportData?.report?.isCompleted) {
                             updateItemNotes(item.id, e.target.value);
                           }
                         }}
                         className="form-control form-control-sm"
                         placeholder="הערות..."
-                        disabled={dailyReport?.isCompleted}
+                        disabled={dailyReportData?.report?.isCompleted}
                         style={{ minWidth: '150px' }}
                       />
                     </td>
@@ -526,13 +642,13 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 <button 
                   className="btn btn-primary" 
                   onClick={handleSubmitReport}
-                  disabled={dailyReport?.isCompleted}
+                  disabled={dailyReportData?.report?.isCompleted}
                 >
                   <i className="fas fa-save me-1"></i>
                   שמור דיווח
                 </button>
                 
-                {isAdmin && !dailyReport?.isCompleted && (
+                {isAdmin && !dailyReportData?.report?.isCompleted && (
                   <button 
                     className="btn btn-success" 
                     onClick={handleCompleteReport}
@@ -553,39 +669,12 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 )}
               </div>
               
-              {dailyReport?.isCompleted && (
+              {dailyReportData?.report?.isCompleted && (
                 <div className="alert alert-success d-inline-flex align-items-center mb-0">
                   <i className="fas fa-check-circle me-2"></i>
-                  דוח הושלם ב: {dailyReport.completedAt ? new Date(dailyReport.completedAt).toLocaleDateString('he-IL') : ''}
+                  הדוח הושלם
                 </div>
               )}
-            </div>
-          )}
-          
-          {/* Admin Notes Section */}
-          {isAdmin && !dailyReport?.isCompleted && (
-            <div className="mt-4">
-              <div className="card">
-                <div className="card-header">
-                  <h5 className="mb-0">
-                    <i className="fas fa-sticky-note me-2"></i>
-                    הערות מנהל (אופציונלי)
-                  </h5>
-                </div>
-                <div className="card-body">
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="הכנס הערות להשלמת הדוח..."
-                    style={{ direction: 'rtl' }}
-                  />
-                  <small className="text-muted">
-                    ההערות יתווספו לדוח המושלם ויהיו זמינות בהיסטוריה
-                  </small>
-                </div>
-              </div>
             </div>
           )}
           
@@ -595,6 +684,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
               <h4>אין פריטים לדיווח</h4>
               <p>לא נמצאו פריטים בדוח היומי</p>
             </div>
+          )}
+            </>
           )}
         </div>
       </div>

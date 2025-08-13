@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ServerError, SmartPagination } from '../../shared/components';
 import { useDailyReportHistory } from '../../hooks';
-import { DailyReportHistoryItem, DailyReport } from '../../types';
-import { formatDateString } from '../../utils';
+import { DailyReportHistoryItem } from '../../types';
 import { generateDailyReportPDF } from '../../utils/pdfGenerator';
 
 interface DailyReportHistoryProps {
@@ -17,13 +16,13 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
-  } | null>({ key: 'reportDate', direction: 'desc' });
+  } | null>({ key: 'createdAt', direction: 'desc' });
 
   useEffect(() => {
     if (isAdmin) {
       fetchHistory(currentPage, 10);
     }
-  }, [currentPage, isAdmin]);
+  }, [currentPage, isAdmin, fetchHistory]); // Now safe to include fetchHistory since it's wrapped with useCallback
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -42,6 +41,25 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
       : <i className="fas fa-sort-down ms-1"></i>;
   };
 
+  const formatDateWithTime = (dateString: string): string => {
+    if (!dateString) {
+      return 'תאריך לא זמין';
+    }
+    
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'תאריך לא תקין';
+    }
+    
+    return date.toLocaleDateString('he-IL', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const handleDownloadPDF = async (reportItem: DailyReportHistoryItem) => {
     try {
       setDownloadingId(reportItem.id);
@@ -56,24 +74,28 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
 
       // Generate PDF
       const reportData = {
-        reportDate: fullReport.reportDate,
+        reportDate: reportItem.createdAt, // Use createdAt from the report
         totalItems: fullReport.totalItems,
         reportedItems: fullReport.reportedItems,
-        completedAt: fullReport.completedAt,
-        items: fullReport.items.map(item => ({ // Changed from reportItems to items
-          name: item.name,
-          idNumber: item.idNumber || '',
+        completedAt: reportItem.completedAt, // Use completedAt from history item
+        items: fullReport.reportItems.map((item: any) => ({ // Updated to use reportItems
+          name: item.item.itemName.name, // Updated path to item name
+          idNumber: item.item.idNumber || '',
           isReported: item.isReported,
-          reportedAt: item.reportedAt ? new Date(item.reportedAt).toLocaleDateString('he-IL', {
-            day: '2-digit',
-            month: '2-digit',
-            year: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          }).replace(',', '') : '',
+          reportedAt: item.reportedAt ? (() => {
+            const date = new Date(item.reportedAt);
+            return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL', {
+              day: '2-digit',
+              month: '2-digit',
+              year: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }).replace(',', '') : '';
+          })() : '',
+          reportedBy: item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '',
           notes: item.notes || '',
-          unit: '', // TODO: Add unit data from backend if available
-          location: '' // TODO: Add location data from backend if available
+          unit: item.item.receiptItems?.receipt?.signedBy?.location?.unit?.name || '',
+          location: item.item.receiptItems?.receipt?.signedBy?.location?.name || ''
         }))
       };
 
@@ -95,9 +117,12 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     let bValue: any;
 
     switch (sortConfig.key) {
-      case 'reportDate':
-        aValue = new Date(a.reportDate);
-        bValue = new Date(b.reportDate);
+      case 'createdAt':
+        aValue = new Date(a.createdAt);
+        bValue = new Date(b.createdAt);
+        // Handle invalid dates
+        if (isNaN(aValue.getTime())) aValue = new Date(0);
+        if (isNaN(bValue.getTime())) bValue = new Date(0);
         break;
       case 'totalItems':
         aValue = a.totalItems;
@@ -177,7 +202,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
       <div className="card-header">
         <h2 className="mb-0">היסטוריית דוחות יומיים</h2>
         <small className="text-muted">
-          סה"כ {history.totalCount} דוחות
+          סה"כ {history.pagination.total} דוחות
         </small>
       </div>
       <div className="card-body">
@@ -186,20 +211,22 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
             <thead>
               <tr>
                 <th 
-                  className="sortable-header"
-                  onClick={() => handleSort('reportDate')}
+                  className="sortable-header text-center"
+                  onClick={() => handleSort('createdAt')}
                   title="לחץ למיון לפי תאריך דוח"
-                  data-sorted={sortConfig?.key === 'reportDate' ? 'true' : 'false'}
+                  data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
                 >
                   <div className="d-flex align-items-center justify-content-between">
                     <span>תאריך דוח</span>
                     <div className="sort-indicator">
-                      {getSortIcon('reportDate')}
+                      {getSortIcon('createdAt')}
                     </div>
                   </div>
                 </th>
+                <th className="text-center">נוצר על ידי</th>
+                <th className="text-center">הושלם על ידי</th>
                 <th 
-                  className="sortable-header"
+                  className="sortable-header text-center"
                   onClick={() => handleSort('totalItems')}
                   title="לחץ למיון לפי סהכ פריטים"
                   data-sorted={sortConfig?.key === 'totalItems' ? 'true' : 'false'}
@@ -212,7 +239,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="sortable-header text-center"
                   onClick={() => handleSort('reportedItems')}
                   title="לחץ למיון לפי פריטים שדווחו"
                   data-sorted={sortConfig?.key === 'reportedItems' ? 'true' : 'false'}
@@ -225,7 +252,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="sortable-header text-center"
                   onClick={() => handleSort('completionPercentage')}
                   title="לחץ למיון לפי אחוז השלמה"
                   data-sorted={sortConfig?.key === 'completionPercentage' ? 'true' : 'false'}
@@ -238,7 +265,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="sortable-header text-center"
                   onClick={() => handleSort('isCompleted')}
                   title="לחץ למיון לפי סטטוס השלמה"
                   data-sorted={sortConfig?.key === 'isCompleted' ? 'true' : 'false'}
@@ -250,8 +277,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                     </div>
                   </div>
                 </th>
-                <th>נוצר על ידי</th>
-                <th>פעולות</th>
+                <th className="text-center">פעולות</th>
               </tr>
             </thead>
             <tbody>
@@ -262,19 +288,27 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                 
                 return (
                   <tr key={report.id}>
-                    <td>{formatDateString(report.reportDate)}</td>
-                    <td>
+                    <td className="text-center">{formatDateWithTime(report.createdAt)}</td>
+                    <td className="text-center">{report.createdBy.rank} {report.createdBy.name}</td>
+                    <td className="text-center">
+                      {report.completedBy ? (
+                        <span>{report.completedBy.rank} {report.completedBy.name}</span>
+                      ) : (
+                        <span className="text-muted">-</span>
+                      )}
+                    </td>
+                    <td className="text-center">
                       <span className="badge bg-secondary">
                         {report.totalItems}
                       </span>
                     </td>
-                    <td>
+                    <td className="text-center">
                       <span className="badge bg-primary">
                         {report.reportedItems}
                       </span>
                     </td>
-                    <td>
-                      <div className="d-flex align-items-center">
+                    <td className="text-center">
+                      <div className="d-flex align-items-center justify-content-center">
                         <div 
                           className="progress me-2" 
                           style={{ width: '60px', height: '20px' }}
@@ -292,15 +326,14 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                         </span>
                       </div>
                     </td>
-                    <td>
+                    <td className="text-center">
                       <span className={`badge ${
                         report.isCompleted ? 'bg-success' : 'bg-warning'
                       }`}>
                         {report.isCompleted ? '✅ הושלם' : '⏳ בעבודה'}
                       </span>
                     </td>
-                    <td>{report.createdBy.name}</td>
-                    <td>
+                    <td className="text-center">
                       <button
                         className="btn btn-outline-primary btn-sm"
                         onClick={() => handleDownloadPDF(report)}
@@ -327,10 +360,10 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
           </table>
         </div>
 
-        {history.totalPages > 1 && (
+        {history.pagination.pages > 1 && (
           <SmartPagination
             currentPage={currentPage}
-            totalPages={history.totalPages}
+            totalPages={history.pagination.pages}
             onPageChange={setCurrentPage}
           />
         )}

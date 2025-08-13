@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Item, CreateItemRequest } from '../../types';
+import { Item, CreateItemRequest, User } from '../../types';
 import { useItems } from '../../hooks';
 import { useManagement } from '../../contexts';
 import { validateRequired, sanitizeInput, getConflictResolutionMessage } from '../../utils';
@@ -8,6 +8,8 @@ import './ItemForm.css';
 
 interface ItemFormProps {
   item: Item | null;
+  userProfile: User;
+  isAdmin: boolean;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -18,7 +20,7 @@ interface FormErrors {
   note?: string;
 }
 
-const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
+const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSuccess, onCancel }) => {
   const { createItem, updateItem } = useItems();
   const { 
     itemNames, 
@@ -30,9 +32,8 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
     name: '',
     idNumber: '',
     note: '',
-    isNeedReport: false,
-    isAvailable: true,
     isOperational: true,
+    requiresReporting: false,
   });
   const [quantity, setQuantity] = useState<number>(1);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -58,37 +59,34 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
         name: item.itemName?.name || '',
         idNumber: item.idNumber || '',
         note: item.note || '',
-        isNeedReport: item.isNeedReport || false,
-        isAvailable: item.isAvailable,
         isOperational: item.isOperational ?? true,
+        requiresReporting: item.requiresReporting ?? false,
       });
       // Reset quantity to 1 when editing existing item
       setQuantity(1);
     } else {
+      // Reset form data when creating new item
+      setFormData({
+        name: '',
+        idNumber: '',
+        note: '',
+        isOperational: true,
+        requiresReporting: false,
+      });
       // Reset quantity when creating new item
       setQuantity(1);
     }
   }, [item]);
 
-  // Clear idNumber when isNeedReport becomes false, and reset quantity when isNeedReport becomes true
-  useEffect(() => {
-    if (!formData.isNeedReport && formData.idNumber) {
-      setFormData(prev => ({ ...prev, idNumber: '' }));
-    }
-    if (formData.isNeedReport && quantity > 1) {
-      setQuantity(1);
-    }
-  }, [formData.isNeedReport, formData.idNumber, quantity]);
-
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!validateRequired(formData.name)) {
+    if (!validateRequired(formData.name || '')) {
       newErrors.name = 'שם פריט חובה';
     }
 
-    if (formData.isNeedReport && !validateRequired(formData.idNumber || '')) {
-      newErrors.idNumber = 'מספר צ\' חובה עבור פריטים בצופן';
+    if (formData.requiresReporting && !validateRequired(formData.idNumber || '')) {
+      newErrors.idNumber = 'מספר צ\' חובה עבור פריטים הדורשים דיווח';
     }
 
     setErrors(newErrors);
@@ -120,12 +118,14 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
 
     try {
       if (item?.id) {
-        // For updates, exclude isAvailable and quantity from the request body
-        const { isAvailable, quantity: _, ...updateData } = formData;
-        // Remove idNumber if isNeedReport is false
-        if (!formData.isNeedReport) {
+        // For updates, exclude quantity from the request body and handle idNumber properly
+        const { quantity: _, ...updateData } = formData;
+        
+        // If requiresReporting is false, remove idNumber entirely from the request body
+        if (!updateData.requiresReporting) {
           delete updateData.idNumber;
         }
+        
         const result = await updateItem(item.id, updateData);
         
         if (result.success) {
@@ -135,27 +135,37 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           setConflictError({
             isOpen: true,
             message: result.error || 'לא ניתן לעדכן פריט הקשור לקבלה חתומה',
-            itemName: formData.name
+            itemName: formData.name || 'פריט לא ידוע'
           });
         } else {
           alert(result.error || 'שגיאה בעדכון הפריט');
         }
       } else {
-        // For creating new items, exclude isAvailable from the request body
-        const { isAvailable, ...formDataWithoutAvailable } = formData;
+        // Validate admin permissions for creating new items
+        if (!isAdmin) {
+          alert('רק מנהלים יכולים ליצור פריטים חדשים');
+          setIsSubmitting(false);
+          return;
+        }
+
+        // For creating new items, prepare the request data
         const requestData = {
-          ...formDataWithoutAvailable,
-          ...(quantity > 1 ? { quantity } : {})
+          ...formData,
+          // Only include quantity if requiresReporting is false and quantity > 1
+          ...(!formData.requiresReporting && quantity > 1 ? { quantity } : {})
         };
-        // Remove idNumber if isNeedReport is false
-        if (!formData.isNeedReport) {
+        
+        // If requiresReporting is false, remove idNumber entirely from the request body
+        if (!requestData.requiresReporting) {
           delete requestData.idNumber;
         }
+        
+        console.log('Sending item data:', requestData); // Debug log
         
         const result = await createItem(requestData as CreateItemRequest);
         
         if (result.success) {
-          if (quantity > 1) {
+          if (!formData.requiresReporting && quantity > 1) {
             alert(`נוצרו בהצלחה ${quantity} פריטים`);
           }
           onSuccess();
@@ -163,7 +173,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           setConflictError({
             isOpen: true,
             message: result.error || 'פריט עם מספר צ\' זה כבר קיים במערכת',
-            itemName: formData.name
+            itemName: formData.name || 'פריט לא ידוע'
           });
         } else {
           alert(result.error || 'שגיאה בשמירת הפריט');
@@ -180,6 +190,13 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
   return (
     <>
       <div className="item-form-container">
+        {!item && !isAdmin && (
+          <div className="alert alert-warning mb-4" style={{ fontSize: '0.9rem' }}>
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            <strong>הערה:</strong> רק מנהלי מערכת יכולים ליצור פריטים חדשים.
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">שם פריט</label>
@@ -198,31 +215,6 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
             </select>
             {errors.name && <div className="form-error">{errors.name}</div>}
           </div>
-
-        <div className="form-group">
-          <div className="custom-checkbox-wrapper">
-            <label className="custom-checkbox">
-              <input
-                type="checkbox"
-                className="custom-checkbox-input"
-                checked={formData.isNeedReport}
-                onChange={e => setFormData(prev => ({ ...prev, isNeedReport: e.target.checked }))}
-              />
-              <span className="custom-checkbox-checkmark">
-                <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path 
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <span className="custom-checkbox-label">
-                <strong>צופן?</strong>
-                <small className="checkbox-description">סמן אם הפריט דורש דיווח מיוחד</small>
-              </span>
-            </label>
-          </div>
-        </div>
 
         <div className="form-group">
           <div className="custom-checkbox-wrapper">
@@ -249,8 +241,54 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           </div>
         </div>
 
-        {/* Quantity selector - only for new items when NOT צופן */}
-        {!item && !formData.isNeedReport && (
+        <div className="form-group">
+          <div className="custom-checkbox-wrapper">
+            <label className="custom-checkbox">
+              <input
+                type="checkbox"
+                className="custom-checkbox-input"
+                checked={formData.requiresReporting}
+                onChange={e => setFormData(prev => ({ 
+                  ...prev, 
+                  requiresReporting: e.target.checked,
+                  // Clear idNumber when switching off requiresReporting
+                  idNumber: e.target.checked ? prev.idNumber : ''
+                }))}
+              />
+              <span className="custom-checkbox-checkmark">
+                <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path 
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span className="custom-checkbox-label">
+                <strong>צופן?</strong>
+                <small className="checkbox-description">האם הפריט דורש דיווח?</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* ID Number field - only when requiresReporting is true */}
+        {formData.requiresReporting && (
+          <div className="form-group">
+            <label className="form-label">מספר צ'</label>
+            <input 
+              className={`form-control ${errors.idNumber ? 'is-invalid' : ''}`}
+              name="idNumber" 
+              value={formData.idNumber || ''} 
+              onChange={e => handleInputChange('idNumber', e.target.value)} 
+              placeholder="הזן מספר צ'"
+              required={formData.requiresReporting}
+            />
+            {errors.idNumber && <div className="form-error">{errors.idNumber}</div>}
+          </div>
+        )}
+
+        {/* Quantity selector - only for new items and when requiresReporting is false */}
+        {!item && !formData.requiresReporting && (
           <div className="form-group">
             <label className="form-label">כמות ליצירה</label>
             <div className="d-flex align-items-center gap-3">
@@ -277,28 +315,12 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
           </div>
         )}
         
-        {/* ID Number field - only when isNeedReport is true */}
-        {formData.isNeedReport && (
-          <div className="form-group conditional-field">
-            <label className="form-label">מספר צ'</label>
-            <input 
-              className={`form-control ${errors.idNumber ? 'is-invalid' : ''}`}
-              name="idNumber" 
-              value={formData.idNumber} 
-              onChange={e => handleInputChange('idNumber', e.target.value)} 
-              placeholder="הזן מספר צ'"
-              required
-            />
-            {errors.idNumber && <div className="form-error">{errors.idNumber}</div>}
-          </div>
-        )}
-        
         <div className="form-group">
           <label className="form-label">הערה</label>
           <textarea 
             className={`form-control ${errors.note ? 'is-invalid' : ''}`}
             name="note" 
-            value={formData.note} 
+            value={formData.note || ''} 
             onChange={e => handleInputChange('note', e.target.value)} 
             rows={3}
           />
@@ -312,7 +334,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, onSuccess, onCancel }) => {
             <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
               {isSubmitting ? 'שומר...' : (
                 item ? 'עדכן' : (
-                  quantity > 1 ? `צור ${quantity} פריטים` : 'צור פריט'
+                  (!formData.requiresReporting && quantity > 1) ? `צור ${quantity} פריטים` : 'צור פריט'
                 )
               )}
             </button>

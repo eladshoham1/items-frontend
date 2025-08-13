@@ -172,7 +172,7 @@ const App: React.FC = () => {
       case 'users':
         return isAdmin ? <UsersTab isAdmin={isAdmin} /> : null;
       case 'items':
-        return isAdmin ? <ItemsTab /> : null;
+        return isAdmin ? <ItemsTab userProfile={userProfile} isAdmin={isAdmin} /> : null;
       case 'management':
         return isAdmin ? <ManagementTab /> : null;
       case 'settings':

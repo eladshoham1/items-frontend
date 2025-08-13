@@ -1,100 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { reportService } from '../services';
 import { 
-  ReportItem, 
-  ReportStatusUpdate, 
   DashboardStatistics, 
   DailyReportResponse,
-  DailyReport,
   DailyReportHistoryResponse,
   CreateDailyReportRequest,
   UpdateDailyReportRequest,
-  CompleteDailyReportRequest
+  CompleteDailyReportRequest,
+  DetailedDailyReportResponse
 } from '../types';
-
-export const useReports = () => {
-  const [reportItems, setReportItems] = useState<ReportItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchReportItems = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data: DailyReportResponse = await reportService.getDailyReport();
-      // Handle the new response structure
-      if (data && Array.isArray(data.items)) {
-        // Add isReported property for local state management
-        const itemsWithReportStatus = data.items.map(item => ({
-          ...item,
-          isReported: item.hasRecentReport
-        }));
-        setReportItems(itemsWithReportStatus);
-      } else {
-        setReportItems([]);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch report items');
-      setReportItems([]); // Ensure empty array on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateReportStatus = async (updates: ReportStatusUpdate[]): Promise<boolean> => {
-    try {
-      setError(null);
-      await reportService.updateReportStatus(updates);
-      return true;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update report status');
-      return false;
-    }
-  };
-
-  const toggleReportStatus = (itemId: string) => {
-    setReportItems(prev =>
-      prev.map(item =>
-        item.id === itemId ? { ...item, isReported: !item.isReported } : item
-      )
-    );
-  };
-
-  // New: bulk set status for multiple items
-  const setReportStatusBulk = (ids: string[], status: boolean) => {
-    setReportItems(prev => prev.map(item => ids.includes(item.id) ? { ...item, isReported: status } : item));
-  };
-
-  useEffect(() => {
-    fetchReportItems();
-  }, []);
-
-  return {
-    reportItems,
-    loading,
-    error,
-    refetch: fetchReportItems,
-    updateReportStatus,
-    toggleReportStatus,
-    setReportStatusBulk,
-  };
-};
 
 // New hook for daily reports
 export const useDailyReports = () => {
-  const [dailyReport, setDailyReport] = useState<DailyReport | null>(null);
+  const [dailyReportData, setDailyReportData] = useState<DailyReportResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchTodaysDailyReport = async () => {
+  const fetchCurrentDailyReport = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await reportService.getTodaysDailyReport();
-      setDailyReport(data);
+      const data = await reportService.getCurrentDailyReport();
+      setDailyReportData(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch today\'s daily report');
-      setDailyReport(null);
+      setError(err instanceof Error ? err.message : 'Failed to fetch current daily report');
+      setDailyReportData(null);
     } finally {
       setLoading(false);
     }
@@ -104,7 +34,9 @@ export const useDailyReports = () => {
     try {
       setError(null);
       const newReport = await reportService.createDailyReport(data);
-      setDailyReport(newReport);
+      setDailyReportData(newReport);
+      // Refetch to ensure we have the complete data structure
+      await fetchCurrentDailyReport();
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create daily report');
@@ -115,8 +47,10 @@ export const useDailyReports = () => {
   const updateDailyReport = async (id: string, data: UpdateDailyReportRequest): Promise<boolean> => {
     try {
       setError(null);
-      const updatedReport = await reportService.updateDailyReport(id, data);
-      setDailyReport(updatedReport);
+      // Note: The server response structure might be different, we may need to adjust this
+      await reportService.updateDailyReport(id, data);
+      // Refetch the current report after update
+      await fetchCurrentDailyReport();
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update daily report');
@@ -127,8 +61,10 @@ export const useDailyReports = () => {
   const completeDailyReport = async (data: CompleteDailyReportRequest): Promise<boolean> => {
     try {
       setError(null);
-      const completedReport = await reportService.completeDailyReport(data);
-      setDailyReport(completedReport);
+      // Note: The server response structure might be different, we may need to adjust this
+      await reportService.completeDailyReport(data);
+      // Refetch the current report after completion
+      await fetchCurrentDailyReport();
       return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete daily report');
@@ -137,13 +73,13 @@ export const useDailyReports = () => {
   };
 
   const toggleReportStatus = (itemId: string) => {
-    if (!dailyReport) return;
+    if (!dailyReportData) return;
     
-    setDailyReport(prev => {
+    setDailyReportData(prev => {
       if (!prev) return prev;
       return {
         ...prev,
-        items: prev.items.map(item => // Changed from reportItems to items
+        items: prev.items.map(item =>
           item.id === itemId ? { ...item, isReported: !item.isReported } : item
         )
       };
@@ -151,13 +87,13 @@ export const useDailyReports = () => {
   };
 
   const setReportStatusBulk = (itemIds: string[], status: boolean) => {
-    if (!dailyReport) return;
+    if (!dailyReportData) return;
     
-    setDailyReport(prev => {
+    setDailyReportData(prev => {
       if (!prev) return prev;
       return {
         ...prev,
-        items: prev.items.map(item => // Changed from reportItems to items
+        items: prev.items.map(item =>
           itemIds.includes(item.id) ? { ...item, isReported: status } : item
         )
       };
@@ -165,9 +101,9 @@ export const useDailyReports = () => {
   };
 
   const updateItemNotes = (itemId: string, notes: string) => {
-    if (!dailyReport) return;
+    if (!dailyReportData) return;
     
-    setDailyReport(prev => {
+    setDailyReportData(prev => {
       if (!prev) return prev;
       return {
         ...prev,
@@ -179,20 +115,20 @@ export const useDailyReports = () => {
   };
 
   useEffect(() => {
-    fetchTodaysDailyReport();
+    fetchCurrentDailyReport();
   }, []);
 
   return {
-    dailyReport,
+    dailyReportData,
     loading,
     error,
-    refetch: fetchTodaysDailyReport,
+    refetch: fetchCurrentDailyReport,
     createDailyReport,
     updateDailyReport,
     completeDailyReport,
     toggleReportStatus,
     setReportStatusBulk,
-    updateItemNotes, // Add this new function
+    updateItemNotes,
   };
 };
 
@@ -202,7 +138,7 @@ export const useDailyReportHistory = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchHistory = async (page: number = 1, limit: number = 10) => {
+  const fetchHistory = useCallback(async (page: number = 1, limit: number = 10) => {
     try {
       setLoading(true);
       setError(null);
@@ -214,9 +150,9 @@ export const useDailyReportHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty dependency array since this function doesn't depend on any props or state
 
-  const getDailyReportById = async (id: string): Promise<DailyReport | null> => {
+  const getDailyReportById = useCallback(async (id: string): Promise<DetailedDailyReportResponse | null> => {
     try {
       setError(null);
       return await reportService.getDailyReportById(id);
@@ -224,7 +160,7 @@ export const useDailyReportHistory = () => {
       setError(err instanceof Error ? err.message : 'Failed to fetch daily report');
       return null;
     }
-  };
+  }, []);
 
   return {
     history,

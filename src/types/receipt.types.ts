@@ -45,7 +45,7 @@ export interface Receipt {
       id: string;
       idNumber?: string | null;
       note?: string;
-      isNeedReport?: boolean;
+      requiresReporting?: boolean;
       itemName: {
         name: string;
       };
@@ -66,6 +66,7 @@ export interface BackendReceiptItem {
     };
     idNumber?: string | null;
     note?: string | null;
+    requiresReporting?: boolean;
   };
 }
 
@@ -79,6 +80,7 @@ export interface ReceiptItemWithDetails {
     id: string;
     idNumber?: string | null;
     note?: string | null;
+    requiresReporting?: boolean;
     itemName?: {
       name: string;
     };
@@ -88,8 +90,8 @@ export interface ReceiptItemWithDetails {
 export interface ReceiptItem {
   id: string;
   name: string;
-  idNumber?: string;
-  isNeedReport?: boolean;
+  idNumber?: string | null;
+  requiresReporting?: boolean;
   quantity?: number;
 }
 

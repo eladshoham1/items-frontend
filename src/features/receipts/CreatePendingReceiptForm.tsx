@@ -17,7 +17,7 @@ interface ReceiptItem {
   id: string;
   name: string;
   idNumber?: string;
-  isNeedReport: boolean;
+  requiresReporting?: boolean;
   quantity?: number;
 }
 
@@ -49,7 +49,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span className="item-badge item-badge-origin">
-            צופן: {item.isNeedReport ? 'כן' : 'לא'}
+            צופן: {item.requiresReporting ? 'כן' : 'לא'}
           </span>
           {item.idNumber && (
             <span className="item-badge item-badge-id">
@@ -59,7 +59,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
         </div>
         
         {/* Quantity controls for non-cipher items */}
-        {!item.isNeedReport && onQuantityChange && maxAvailable > 1 && (
+        {!item.requiresReporting && onQuantityChange && maxAvailable > 1 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <button
               type="button"
@@ -118,6 +118,14 @@ const ItemCard: React.FC<ItemCardProps> = ({
   );
 };
 
+// Define a unified interface for available items used in this form
+interface AvailableItemForForm {
+  id: string;
+  idNumber?: string;
+  requiresReporting?: boolean;
+  itemName?: { name: string };
+}
+
 const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   onSuccess,
   onCancel,
@@ -135,7 +143,6 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       id: item.itemId,
       name: item.item?.itemName?.name || 'פריט לא ידוע',
       idNumber: item.item?.idNumber || undefined,
-      isNeedReport: item.item?.isNeedReport || false,
       quantity: 1
     })) || []
   );
@@ -149,39 +156,37 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   const isUpdateMode = !!originalReceipt;
 
   // Calculate available items (include original items for update mode)
-  const availableItems = useMemo(() => {
+  const availableItems = useMemo((): AvailableItemForForm[] => {
     if (!Array.isArray(serverAvailableItems)) {
       return [];
     }
 
     if (isUpdateMode && originalReceipt) {
-      const originalItems = originalReceipt.receiptItems?.map(receiptItem => ({
+      const originalItems: AvailableItemForForm[] = originalReceipt.receiptItems?.map(receiptItem => ({
         id: receiptItem.itemId,
         idNumber: receiptItem.item?.idNumber || undefined,
         itemName: receiptItem.item?.itemName || { name: 'פריט לא ידוע' },
-        isNeedReport: receiptItem.item?.isNeedReport || false
       })) || [];
       
       // Merge original items with available items, avoiding duplicates
-      const mergedItems = [...originalItems];
-      serverAvailableItems.forEach(item => {
+      const mergedItems: AvailableItemForForm[] = [...originalItems];
+      serverAvailableItems.forEach((item: any) => {
         if (!mergedItems.find(existing => existing.id === item.id)) {
           mergedItems.push({
             id: item.id,
-            idNumber: item.idNumber,
-            itemName: item.itemName,
-            isNeedReport: item.isNeedReport || false
+            idNumber: item.idNumber || undefined,
+            itemName: item.itemName || { name: 'Unknown Item' },
           });
         }
       });
       
       return mergedItems;
     } else {
-      return serverAvailableItems.map(item => ({
+      return serverAvailableItems.map((item: any) => ({
         id: item.id,
-        idNumber: item.idNumber,
-        itemName: item.itemName,
-        isNeedReport: item.isNeedReport || false
+        idNumber: item.idNumber || undefined,
+        itemName: item.itemName || { name: 'Unknown Item' },
+        isNeedReport: item.isNeedReport || false,
       }));
     }
   }, [serverAvailableItems, isUpdateMode, originalReceipt]);
@@ -216,8 +221,8 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   const maxAvailableQuantity = useMemo(() => {
     if (!selectedItem) return 0;
     
-    // For cipher items (isNeedReport = true), quantity is always 1
-    if (selectedItem.isNeedReport) return 1;
+    // For cipher items (requiresReporting), quantity is always 1
+    if (selectedItem.requiresReporting) return 1;
     
     // For non-cipher items, count how many of the same name are available and not already selected
     const sameNameItems = availableItems.filter(item =>
@@ -232,15 +237,15 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   const addItem = () => {
     if (!selectedItem) return;
     
-    const quantityToAdd = selectedItem.isNeedReport ? 1 : selectedQuantity;
-    
-    // For cipher items (isNeedReport = true), add the specific item
-    if (selectedItem.isNeedReport) {
+    const quantityToAdd = selectedItem.requiresReporting ? 1 : selectedQuantity;
+
+    // For cipher items (requiresReporting), add the specific item
+    if (selectedItem.requiresReporting) {
       const newItem: ReceiptItem = {
         id: selectedItem.id,
         name: selectedItem.itemName?.name || 'פריט לא ידוע',
-        idNumber: selectedItem.idNumber,
-        isNeedReport: selectedItem.isNeedReport,
+        idNumber: selectedItem.idNumber || undefined,
+        requiresReporting: selectedItem.requiresReporting,
         quantity: 1
       };
       setReceiptItems(prev => [...prev, newItem]);
@@ -254,8 +259,8 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       const itemsToAdd = sameNameItems.slice(0, quantityToAdd).map(item => ({
         id: item.id,
         name: item.itemName?.name || 'פריט לא ידוע',
-        idNumber: item.idNumber,
-        isNeedReport: item.isNeedReport,
+        idNumber: item.idNumber || undefined,
+        requiresReporting: item.requiresReporting,
         quantity: 1
       }));
       
@@ -280,7 +285,7 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
     
     // Add the current selected items of the same name to the total
     const currentItemsOfSameName = receiptItems.filter(receiptItem => 
-      receiptItem.name === itemName && !receiptItem.isNeedReport
+      receiptItem.name === itemName && !receiptItem.requiresReporting
     );
     
     return sameNameItems.length + currentItemsOfSameName.length;
@@ -435,7 +440,7 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
               )}
               {filteredAvailableItems.map(item => (
                 <option key={item.id} value={item.id}>
-                  {item.itemName?.name || 'ללא שם'} {item.isNeedReport ? '(צופן)' : ''} {item.idNumber && `- ${item.idNumber}`}
+                  {item.itemName?.name || 'ללא שם'} {item.requiresReporting ? '(צופן)' : ''} {item.idNumber && `- ${item.idNumber}`}
                 </option>
               ))}
             </select>

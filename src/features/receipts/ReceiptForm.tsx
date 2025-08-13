@@ -37,7 +37,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
             </span>
           )}
           <span className="item-badge item-badge-origin">
-            צופן: {item.isNeedReport ? 'כן' : 'לא'}
+            צופן: {item.idNumber ? 'כן' : 'לא'}
           </span>
         </div>
       </div>
@@ -160,7 +160,6 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
         id: itemToAdd.id,
         name: itemToAdd.itemName?.name || '',
         idNumber: itemToAdd.idNumber || '',
-        isNeedReport: itemToAdd.isNeedReport,
         quantity: 1 // Each item has quantity 1, but we track it for display
       });
     }
@@ -395,7 +394,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
                       )}
                       {filteredAvailableItems.map(item => (
                         <option key={item.id} value={item.id}>
-                          {item.itemName?.name || 'ללא שם'} {item.isNeedReport ? '(צופן)' : ''} {item.idNumber && `- ${item.idNumber}`}
+                          {item.itemName?.name || 'ללא שם'} {item.idNumber ? '(צופן)' : ''} {item.idNumber && `- ${item.idNumber}`}
                         </option>
                       ))}
                     </select>
