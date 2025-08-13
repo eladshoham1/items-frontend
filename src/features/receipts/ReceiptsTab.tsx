@@ -406,6 +406,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                             pendingReceipts={userPendingReceipts}
                             onRefresh={handlePendingReceiptsRefresh}
                             isAdmin={isAdmin}
+                            currentUserId={userProfile?.id}
                         />
                     </div>
                 );

@@ -12,12 +12,14 @@ interface PendingReceiptsListProps {
   pendingReceipts: Receipt[];
   onRefresh: () => void;
   isAdmin: boolean;
+  currentUserId?: string; // Add current user ID prop
 }
 
 const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   pendingReceipts,
   onRefresh,
   isAdmin,
+  currentUserId,
 }) => {
   const { signPendingReceipt, deleteReceipt } = useReceipts();
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
@@ -43,6 +45,13 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
 
   // Helper: safely get unit (prefer receiver unit, fallback to issuer)
   const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
+
+  // Helper: check if current user can sign this receipt
+  const canUserSignReceipt = (receipt: Receipt) => {
+    if (isAdmin) return true; // Admins can always sign
+    if (!currentUserId) return false; // No user ID provided
+    return receipt.signedById === currentUserId; // Only if user is the designated receiver
+  };
 
   // Search and sort logic
   const handleSort = (key: string) => {
@@ -185,6 +194,12 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   };
 
   const handleSignClick = (receipt: Receipt) => {
+    // Additional security check
+    if (!isAdmin && !canUserSignReceipt(receipt)) {
+      alert('אין לך הרשאה לחתום על קבלה זו. הקבלה מיועדת למשתמש אחר.');
+      return;
+    }
+    
     setSelectedReceipt(receipt);
     setIsSignModalOpen(true);
     setSignature('');
@@ -342,49 +357,79 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
               </tr>
             </thead>
             <tbody>
-              {paginatedReceipts.map((receipt) => (
-                <tr key={receipt.id} onClick={() => setDetailsReceipt(receipt)} style={{ cursor: 'pointer' }}>
-                  {isAdmin && (
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedReceiptIds.includes(receipt.id)}
-                        onChange={() => handleToggleReceiptSelection(receipt.id)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
+              {paginatedReceipts.map((receipt) => {
+                const canSign = canUserSignReceipt(receipt);
+                return (
+                  <tr 
+                    key={receipt.id} 
+                    onClick={() => setDetailsReceipt(receipt)} 
+                    style={{ 
+                      cursor: 'pointer',
+                      opacity: !isAdmin && !canSign ? 0.6 : 1,
+                      backgroundColor: !isAdmin && !canSign ? '#f8f9fa' : 'transparent'
+                    }}
+                  >
+                    {isAdmin && (
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={selectedReceiptIds.includes(receipt.id)}
+                          onChange={() => handleToggleReceiptSelection(receipt.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                    )}
+                    <td>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
+                    <td>
+                      <div className="d-flex align-items-center">
+                        {receipt.signedBy?.name || 'משתמש לא ידוע'}
+                        {!isAdmin && !canSign && (
+                          <span 
+                            className="badge bg-warning ms-2" 
+                            style={{ fontSize: '10px' }}
+                            title="קבלה זו מיועדת למשתמש אחר"
+                          >
+                            לא זמין
+                          </span>
+                        )}
+                      </div>
                     </td>
-                  )}
-                  <td>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
-                  <td>{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
-                  <td>{getUnit(receipt)}</td>
-                  <td>{receipt.receiptItems?.length || 0}</td>
-                  <td>{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
-                  <td>
-                    <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
-                      {isAdmin && (
-                        <button 
-                          className="btn btn-primary btn-sm" 
-                          onClick={() => handleUpdateClick(receipt)}
-                          title="עדכן קבלה"
-                        >
-                          <i className="fas fa-edit"></i>
-                          עדכן
-                        </button>
-                      )}
-                      {!isAdmin && (
-                        <button
-                          className="btn-sign btn-sm"
-                          onClick={() => handleSignClick(receipt)}
-                        >
-                          <i className="fas fa-signature"></i>
-                          חתום וקבל
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    <td>{getUnit(receipt)}</td>
+                    <td>{receipt.receiptItems?.length || 0}</td>
+                    <td>{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
+                    <td>
+                      <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
+                        {isAdmin && (
+                          <button 
+                            className="btn btn-primary btn-sm" 
+                            onClick={() => handleUpdateClick(receipt)}
+                            title="עדכן קבלה"
+                          >
+                            <i className="fas fa-edit"></i>
+                            עדכן
+                          </button>
+                        )}
+                        {!isAdmin && (
+                          <button
+                            className="btn-sign btn-sm"
+                            onClick={() => handleSignClick(receipt)}
+                            disabled={!canSign}
+                            title={canSign ? "חתום וקבל" : "קבלה זו מיועדת למשתמש אחר"}
+                            style={{
+                              opacity: canSign ? 1 : 0.5,
+                              cursor: canSign ? 'pointer' : 'not-allowed'
+                            }}
+                          >
+                            <i className="fas fa-signature"></i>
+                            {canSign ? 'חתום וקבל' : 'לא זמין'}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

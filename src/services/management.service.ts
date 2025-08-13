@@ -301,10 +301,19 @@ class ManagementService {
   }
 
   async importDatabase(payload: any, override: boolean = false): Promise<ManagementResponse<any>> {
-    // Delegate to async starter per new server contract
-    const started = await this.startImport(payload, override);
-    if (!started.success) return started as any;
-    return started as any;
+    try {
+      const requestBody = { data: payload, isOverride: override };
+      const response = await apiService.post<any>('/backup/import', requestBody);
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בייבוא נתונים',
+      };
+    }
   }
 
   // New async import starter: returns process id immediately

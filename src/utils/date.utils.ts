@@ -21,7 +21,16 @@ export const formatDateTime = (date: Date): string => {
 };
 
 export const formatDateString = (dateString: string): string => {
-  return formatDate(new Date(dateString));
+  if (!dateString) {
+    return 'תאריך לא זמין';
+  }
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return 'תאריך לא תקין';
+  }
+  
+  return formatDate(date);
 };
 
 export const getCurrentDate = (): string => {

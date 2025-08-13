@@ -1,39 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { managementService } from '../../services/management.service';
 import { Modal } from '../../shared/components';
 import { useManagement } from '../../contexts';
-
-const POLL_INTERVAL_MS = 800; // poll every 0.8s
-
-// Map server status to Hebrew and badge style
-const statusToHebrew = (s?: string) => {
-  switch (s) {
-    case 'pending':
-      return 'ממתין';
-    case 'running':
-      return 'בתהליך';
-    case 'completed':
-      return 'הושלם';
-    case 'failed':
-      return 'נכשל';
-    default:
-      return s || '';
-  }
-};
-const statusBadgeClass = (s?: string) => {
-  switch (s) {
-    case 'completed':
-      return 'badge rounded-pill bg-success';
-    case 'running':
-      return 'badge rounded-pill bg-info text-dark';
-    case 'pending':
-      return 'badge rounded-pill bg-secondary';
-    case 'failed':
-      return 'badge rounded-pill bg-danger';
-    default:
-      return 'badge rounded-pill bg-light text-dark';
-  }
-};
 
 const BackupRestoreTab: React.FC = () => {
   const [busy, setBusy] = useState(false);
@@ -44,138 +12,50 @@ const BackupRestoreTab: React.FC = () => {
   const [selectedFileName, setSelectedFileName] = useState<string>('');
   const [override, setOverride] = useState<boolean>(false);
 
-  // Progress state
-  const [progress, setProgress] = useState<number>(0);
-  const [processId, setProcessId] = useState<string | null>(null);
-  const [activeType, setActiveType] = useState<'import' | 'export' | null>(null);
-  const pollRef = useRef<number | null>(null);
+  // Export/Import result details
+  const [exportResult, setExportResult] = useState<any | null>(null);
+  const [importResult, setImportResult] = useState<any | null>(null);
 
   const { loadAllData } = useManagement();
-
-  // New state for export and import details
-  const [exportDetails, setExportDetails] = useState<{ tables?: any[]; totalStatistics?: any; message?: string; status?: string; result?: any } | null>(null);
-  const [importDetails, setImportDetails] = useState<{ tables?: any[]; totalStatistics?: any; message?: string; status?: string } | null>(null);
-
-  useEffect(() => {
-    return () => {
-      // cleanup polling on unmount
-      if (pollRef.current) {
-        window.clearInterval(pollRef.current);
-      }
-    };
-  }, []);
-
-  const startPolling = (type: 'import' | 'export', id: string) => {
-    if (pollRef.current) window.clearInterval(pollRef.current);
-    pollRef.current = window.setInterval(async () => {
-      try {
-        const status = type === 'import'
-          ? await managementService.getImportStatus(id)
-          : await managementService.getExportStatus(id);
-        if (status.success && status.data) {
-          const pct = Math.max(0, Math.min(100, Math.round(status.data.progress)));
-          setProgress(pct);
-
-          if (type === 'export') {
-            const next = (status as any).data || {};
-            setExportDetails(prev => ({
-              tables: next.tables && next.tables.length ? next.tables : (prev?.tables || []),
-              totalStatistics: next.totalStatistics ?? prev?.totalStatistics,
-              message: next.message ?? prev?.message,
-              status: next.status ?? prev?.status,
-              result: next.result ?? prev?.result,
-            }));
-          } else {
-            const next = (status as any).data || {};
-            setImportDetails(prev => ({
-              tables: next.tables && next.tables.length ? next.tables : (prev?.tables || []),
-              totalStatistics: next.totalStatistics ?? prev?.totalStatistics,
-              message: next.message ?? prev?.message,
-              status: next.status ?? prev?.status,
-            }));
-          }
-
-          // When export is done and a downloadUrl or inline data is available
-          if (type === 'export' && ((status as any).data?.done || pct === 100)) {
-            const url = (status as any).data?.downloadUrl as string | undefined;
-            const result = (status as any).data?.result as any | undefined;
-            if (url) {
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              setSuccess('ייצוא הושלם והקובץ הורד בהצלחה');
-            } else if (result) {
-              // Download the full result JSON (including metadata like compressed/version/size/data)
-              const blob = new Blob([
-                JSON.stringify(result, null, 2)
-              ], { type: 'application/json;charset=utf-8' });
-              const objectUrl = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = objectUrl;
-              a.download = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(objectUrl);
-              setSuccess('ייצוא הושלם והקובץ הורד בהצלחה');
-            }
-          }
-
-          if ((status as any).data?.done || pct === 100) {
-            stopPolling();
-            if (type === 'import') {
-              await loadAllData();
-              setSuccess('ייבוא הושלם בהצלחה.');
-            }
-            setBusy(false);
-            setProcessId(null);
-            setActiveType(null);
-          }
-        }
-      } catch (e: any) {
-        // stop polling on errors and surface message
-        stopPolling();
-        setBusy(false);
-        setProcessId(null);
-        setActiveType(null);
-        setError(e?.message || 'שגיאה בעדכון התקדמות התהליך');
-      }
-    }, POLL_INTERVAL_MS);
-  };
-
-  const stopPolling = () => {
-    if (pollRef.current) {
-      window.clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  };
 
   const handleExport = async () => {
     try {
       setBusy(true);
       setError(null);
       setSuccess(null);
-      setProgress(0);
-      setExportDetails(null);
-      setImportDetails(null);
-      setActiveType('export');
-      const resp = await managementService.startExport();
-      if (!resp.success || !resp.data) {
+      setExportResult(null);
+      setImportResult(null);
+      
+      const resp = await managementService.exportDatabase();
+      console.log('Export response:', resp); // Debug log
+      
+      if (!resp.success) {
         setBusy(false);
-        setError(resp.error || 'שגיאה בתחילת ייצוא');
-        setActiveType(null);
+        setError(resp.error || 'שגיאה בייצוא');
         return;
       }
-      const id = resp.data.id;
-      setProcessId(id);
-      startPolling('export', id);
+      
+      // Save export result for display
+      setExportResult(resp.data); // Use resp.data instead of resp
+      
+      // Download the exported data
+      const blob = new Blob([
+        JSON.stringify(resp.data.data, null, 2) // Download only the data part
+      ], { type: 'application/json;charset=utf-8' });
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = `backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(objectUrl);
+      
+      setSuccess('ייצוא הושלם והקובץ הורד בהצלחה');
+      setBusy(false);
     } catch (e: any) {
       setBusy(false);
-      setActiveType(null);
-      setError(e?.message || 'שגיאה בתחילת ייצוא');
+      setError(e?.message || 'שגיאה בייצוא');
     }
   };
 
@@ -202,25 +82,27 @@ const BackupRestoreTab: React.FC = () => {
       setBusy(true);
       setError(null);
       setSuccess(null);
-      setProgress(0);
-      setImportDetails(null);
-      setExportDetails(null);
-      setActiveType('import');
-      const resp = await managementService.startImport(pendingPayload, override);
-      if (!resp.success || !resp.data) {
+      setExportResult(null);
+      setImportResult(null);
+      
+      const resp = await managementService.importDatabase(pendingPayload, override);
+      console.log('Import response:', resp); // Debug log
+      
+      if (!resp.success) {
         setBusy(false);
-        setError(resp.error || 'שגיאה בתחילת ייבוא');
-        setActiveType(null);
+        setError(resp.error || 'שגיאה בייבוא');
         return;
       }
-      const id = resp.data.id;
-      setProcessId(id);
-      setIsConfirmOpen(false); // close modal once started
-      startPolling('import', id);
+      
+      // Save import result for display
+      setImportResult(resp.data); // Use resp.data instead of resp
+      setIsConfirmOpen(false);
+      await loadAllData();
+      setSuccess('ייבוא הושלם בהצלחה');
+      setBusy(false);
     } catch (e: any) {
       setBusy(false);
-      setActiveType(null);
-      setError(e?.message || 'שגיאה בתחילת ייבוא');
+      setError(e?.message || 'שגיאה בייבוא');
     } finally {
       setPendingPayload(null);
       setSelectedFileName('');
@@ -265,7 +147,7 @@ const BackupRestoreTab: React.FC = () => {
         </div>
       )}
 
-      {busy && !processId && (
+      {busy && (
         <div className="saving-indicator" style={{ marginTop: 16 }}>
           <div className="saving-spinner"></div>
           <span style={{ marginRight: 8 }}>מבצע פעולה...</span>
@@ -273,138 +155,382 @@ const BackupRestoreTab: React.FC = () => {
       )}
 
       {/* פרטי ייצוא */}
-      {(activeType === 'export' || exportDetails) ? (
-        <div className="card mt-3">
-          <div className="card-header d-flex align-items-center justify-content-between">
-            <div>פרטי ייצוא</div>
-            <div className="d-flex align-items-center gap-2">
-              {exportDetails?.status && (
-                <span className={statusBadgeClass(exportDetails.status)}>{statusToHebrew(exportDetails.status)}</span>
-              )}
-              <small className="text-muted">התקדמות: {progress}%</small>
+      {exportResult && (
+        <div className="card mt-4 border-0 shadow">
+          <div className="card-header bg-primary text-white py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h4 className="mb-1 fw-bold">
+                  <i className="fas fa-download me-2"></i>
+                  תוצאות ייצוא נתונים
+                </h4>
+                <small className="opacity-75">
+                  {exportResult.statistics?.summary?.exportedAt ? new Date(exportResult.statistics.summary.exportedAt).toLocaleString('he-IL') : 'לא זמין'} • 
+                  {exportResult.statistics?.summary?.totalRecords || 0} רשומות כולל • 
+                  {exportResult.statistics?.summary?.totalTables || 0} טבלאות
+                </small>
+              </div>
+              <div className="badge bg-success bg-opacity-20 text-white fs-6 px-3 py-2">
+                <i className="fas fa-check-circle me-2"></i>הושלם בהצלחה
+              </div>
             </div>
           </div>
-          <div className="card-body">
-            {exportDetails?.message && (
-              <div className="mb-2 text-muted">{exportDetails.message}</div>
-            )}
+          
+          <div className="card-body p-0">
             <div className="table-responsive">
-              <table className="table table-sm table-striped table-hover align-middle">
-                <thead className="table-light">
+              <table className="table table-hover mb-0">
+                <thead className="table-dark">
                   <tr>
-                    <th>טבלה</th>
-                    <th className="text-end">סה"כ</th>
-                    <th className="text-end">הצליחו</th>
-                    <th className="text-end">קיימים</th>
-                    <th className="text-end">נכשלו</th>
-                    <th className="text-end">אחוז</th>
-                    <th>סטטוס</th>
+                    <th className="border-0 fw-bold py-3 px-4" style={{ width: '25%' }}>
+                      <i className="fas fa-table me-2 text-primary"></i>שם הטבלה
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
+                      <i className="fas fa-database me-2 text-info"></i>קיימים ב-DB
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
+                      <i className="fas fa-check-circle me-2 text-success"></i>הצליחו
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
+                      <i className="fas fa-times-circle me-2 text-danger"></i>נכשלו
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
+                      <i className="fas fa-exclamation-triangle me-2 text-warning"></i>שגיאות
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
+                      פעולות
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(exportDetails?.tables?.length ? exportDetails.tables : []).map((t: any) => (
-                    <tr key={t.tableName}>
-                      <td>{t.tableName}</td>
-                      <td className="text-end">{t.total}</td>
-                      <td className="text-end">{t.success}</td>
-                      <td className="text-end">{t.existing}</td>
-                      <td className="text-end">{t.failed}</td>
-                      <td className="text-end">{t.percentage}%</td>
-                      <td>
-                        <span className={statusBadgeClass(t.status)}>{statusToHebrew(t.status)}</span>
-                      </td>
-                    </tr>
-                  ))}
-                  {(!exportDetails || !exportDetails.tables || exportDetails.tables.length === 0) && (
-                    <tr>
-                      <td colSpan={7} className="text-center text-muted py-4">
-                        <div className="spinner-border spinner-border-sm me-2" role="status" />
-                        מכין טבלאות... (התקדמות {progress}%)
-                      </td>
-                    </tr>
-                  )}
+                  {exportResult.statistics?.tables ? 
+                    Object.entries(exportResult.statistics.tables).map(([tableName, tableStats]) => {
+                      const stats = tableStats as { total: number; success: number; failed: number; errors: string[] };
+                      return (
+                        <tr key={tableName} className="align-middle">
+                          <td className="px-4 py-3">
+                            <div className="d-flex align-items-center">
+                              <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                   style={{ width: '40px', height: '40px' }}>
+                                <i className="fas fa-table text-primary"></i>
+                              </div>
+                              <div>
+                                <div className="fw-semibold text-dark">{tableName}</div>
+                                <small className="text-muted">{stats.total} רשומות</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className="badge bg-info bg-opacity-15 text-info px-3 py-2 rounded-pill fw-bold">
+                              {stats.total}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className="badge bg-success bg-opacity-15 text-success px-3 py-2 rounded-pill fw-bold">
+                              {stats.success}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${stats.failed > 0 ? 'bg-danger bg-opacity-15 text-danger' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
+                              {stats.failed}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${stats.errors && stats.errors.length > 0 ? 'bg-warning bg-opacity-15 text-warning' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
+                              {stats.errors ? stats.errors.length : 0}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            <button 
+                              className="btn btn-outline-primary btn-sm rounded-pill"
+                              onClick={() => {
+                                const tableData = exportResult.data?.[tableName as keyof typeof exportResult.data];
+                                if (tableData && Array.isArray(tableData) && tableData.length > 0) {
+                                  const blob = new Blob([JSON.stringify(tableData, null, 2)], { type: 'application/json' });
+                                  const url = URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = `${tableName}-data.json`;
+                                  a.click();
+                                  URL.revokeObjectURL(url);
+                                } else {
+                                  alert(`אין נתונים להורדה עבור טבלה ${tableName}`);
+                                }
+                              }}
+                              disabled={!exportResult.data?.[tableName as keyof typeof exportResult.data] || 
+                                       (Array.isArray(exportResult.data[tableName as keyof typeof exportResult.data]) && 
+                                        (exportResult.data[tableName as keyof typeof exportResult.data] as any[]).length === 0)}
+                              title={exportResult.data?.[tableName as keyof typeof exportResult.data] && 
+                                     Array.isArray(exportResult.data[tableName as keyof typeof exportResult.data]) && 
+                                     (exportResult.data[tableName as keyof typeof exportResult.data] as any[]).length > 0 
+                                     ? "הורד נתונים" : "אין נתונים להורדה"}
+                            >
+                              <i className="fas fa-download me-1"></i>
+                              הורד
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    }) : (
+                      <tr>
+                        <td colSpan={6} className="text-center py-5">
+                          <div className="text-muted">
+                            <i className="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                            <p className="mb-0 fw-medium">אין נתונים להצגה</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  }
                 </tbody>
               </table>
             </div>
-            {exportDetails?.totalStatistics && (
-              <div className="row g-3 mt-2 text-muted">
-                <div className="col-auto">רשומות בכלל: <strong>{exportDetails.totalStatistics.totalRecords}</strong></div>
-                <div className="col-auto">הצליחו: <strong>{exportDetails.totalStatistics.totalSuccess}</strong></div>
-                <div className="col-auto">קיימים: <strong>{exportDetails.totalStatistics.totalExisting}</strong></div>
-                <div className="col-auto">נכשלו: <strong>{exportDetails.totalStatistics.totalFailed}</strong></div>
-                <div className="col-auto">אחוז כולל: <strong>{exportDetails.totalStatistics.overallPercentage}%</strong></div>
-              </div>
-            )}
+          </div>
+
+          <div className="card-footer bg-light border-0 py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <small className="text-muted">
+                <i className="fas fa-info-circle me-1"></i>
+                {exportResult.message || 'ייצוא הושלם בהצלחה'}
+              </small>
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => {
+                  const blob = new Blob([JSON.stringify(exportResult.statistics, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'export-statistics.json';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <i className="fas fa-download me-1"></i>הורד סטטיסטיקות
+              </button>
+            </div>
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* פרטי ייבוא */}
-      {(activeType === 'import' || importDetails) ? (
-        <div className="card mt-3">
-          <div className="card-header d-flex align-items-center justify-content-between">
-            <div>פרטי ייבוא</div>
-            <div className="d-flex align-items-center gap-2">
-              {importDetails?.status && (
-                <span className={statusBadgeClass(importDetails.status)}>{statusToHebrew(importDetails.status)}</span>
-              )}
-              <small className="text-muted">התקדמות: {progress}%</small>
+      {importResult && (
+        <div className="card mt-4 border-0 shadow">
+          <div className="card-header bg-success text-white py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h4 className="mb-1 fw-bold">
+                  <i className="fas fa-upload me-2"></i>
+                  תוצאות ייבוא נתונים
+                </h4>
+                <small className="opacity-75">
+                  {importResult.importedAt ? new Date(importResult.importedAt).toLocaleString('he-IL') : 'לא זמין'} • 
+                  {importResult.statistics?.importedRecords || 0} יובאו • 
+                  {importResult.statistics?.skippedRecords || 0} דולגו • 
+                  {importResult.statistics?.totalTables || 0} טבלאות
+                </small>
+              </div>
+              <div className="badge bg-light bg-opacity-20 text-white fs-6 px-3 py-2">
+                <i className="fas fa-check-circle me-2"></i>הושלם בהצלחה
+              </div>
             </div>
           </div>
-          <div className="card-body">
-            {importDetails?.message && (
-              <div className="mb-2 text-muted">{importDetails.message}</div>
-            )}
+          
+          <div className="card-body p-0">
             <div className="table-responsive">
-              <table className="table table-sm table-striped table-hover align-middle">
-                <thead className="table-light">
+              <table className="table table-hover mb-0">
+                <thead className="table-dark">
                   <tr>
-                    <th>טבלה</th>
-                    <th className="text-end">סה"כ</th>
-                    <th className="text-end">הצליחו</th>
-                    <th className="text-end">קיימים</th>
-                    <th className="text-end">נכשלו</th>
-                    <th className="text-end">אחוז</th>
-                    <th>סטטוס</th>
+                    <th className="border-0 fw-bold py-3 px-4" style={{ width: '20%' }}>
+                      <i className="fas fa-table me-2 text-primary"></i>שם הטבלה
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
+                      <i className="fas fa-database me-2 text-info"></i>קיימים ב-DB
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
+                      <i className="fas fa-check-circle me-2 text-success"></i>הצליחו
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
+                      <i className="fas fa-times-circle me-2 text-danger"></i>נכשלו
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
+                      <i className="fas fa-skip-forward me-2 text-warning"></i>דולגו
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
+                      <i className="fas fa-exclamation-triangle me-2 text-warning"></i>הודעות שגיאה
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
+                      פעולות
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(importDetails?.tables?.length ? importDetails.tables : []).map((t: any) => (
-                    <tr key={t.tableName}>
-                      <td>{t.tableName}</td>
-                      <td className="text-end">{t.total}</td>
-                      <td className="text-end">{t.success}</td>
-                      <td className="text-end">{t.existing}</td>
-                      <td className="text-end">{t.failed}</td>
-                      <td className="text-end">{t.percentage}%</td>
-                      <td>
-                        <span className={statusBadgeClass(t.status)}>{statusToHebrew(t.status)}</span>
-                      </td>
-                    </tr>
-                  ))}
-                  {(!importDetails || !importDetails.tables || importDetails.tables.length === 0) && (
-                    <tr>
-                      <td colSpan={7} className="text-center text-muted py-4">
-                        <div className="spinner-border spinner-border-sm me-2" role="status" />
-                        מכין טבלאות... (התקדמות {progress}%)
-                      </td>
-                    </tr>
-                  )}
+                  {importResult.statistics?.tableStats ? 
+                    Object.entries(importResult.statistics.tableStats).map(([tableName, stats]) => {
+                      const tableStats = stats as { total: number; imported: number; skipped: number; errors?: string[] };
+                      const hasErrors = tableStats.errors && tableStats.errors.length > 0;
+                      const failed = tableStats.total - tableStats.imported - tableStats.skipped;
+                      const cleanTableName = tableName.replace(/[^a-zA-Z0-9]/g, '');
+                      
+                      return (
+                        <tr key={tableName} className="align-middle">
+                          <td className="px-4 py-3">
+                            <div className="d-flex align-items-center">
+                              <div className={`rounded-circle d-flex align-items-center justify-content-center me-3 ${hasErrors ? 'bg-warning bg-opacity-15' : 'bg-success bg-opacity-15'}`} 
+                                   style={{ width: '40px', height: '40px' }}>
+                                <i className={`fas fa-table ${hasErrors ? 'text-warning' : 'text-success'}`}></i>
+                              </div>
+                              <div>
+                                <div className="fw-semibold text-dark">{tableName}</div>
+                                <small className="text-muted">{tableStats.total} רשומות כולל</small>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className="badge bg-info bg-opacity-15 text-info px-3 py-2 rounded-pill fw-bold">
+                              {tableStats.total}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className="badge bg-success bg-opacity-15 text-success px-3 py-2 rounded-pill fw-bold">
+                              {tableStats.imported}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${failed > 0 ? 'bg-danger bg-opacity-15 text-danger' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
+                              {failed}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${tableStats.skipped > 0 ? 'bg-warning bg-opacity-15 text-warning' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
+                              {tableStats.skipped}
+                            </span>
+                          </td>
+                          <td className="text-center py-3">
+                            {hasErrors ? (
+                              <span className="badge bg-danger bg-opacity-15 text-danger px-3 py-2 rounded-pill fw-bold">
+                                {tableStats.errors!.length} שגיאות
+                              </span>
+                            ) : (
+                              <span className="badge bg-secondary bg-opacity-15 text-secondary px-3 py-2 rounded-pill fw-bold">
+                                אין שגיאות
+                              </span>
+                            )}
+                          </td>
+                          <td className="text-center py-3">
+                            {hasErrors && (
+                              <button 
+                                className="btn btn-outline-warning btn-sm rounded-pill"
+                                type="button"
+                                data-bs-toggle="modal"
+                                data-bs-target={`#errorsModal${cleanTableName}`}
+                                title="הצג שגיאות"
+                              >
+                                <i className="fas fa-eye"></i>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    }) : (
+                      <tr>
+                        <td colSpan={7} className="text-center py-5">
+                          <div className="text-muted">
+                            <i className="fas fa-inbox fa-3x mb-3 opacity-25"></i>
+                            <p className="mb-0 fw-medium">אין נתונים להצגה</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  }
                 </tbody>
               </table>
             </div>
-            {importDetails?.totalStatistics && (
-              <div className="row g-3 mt-2 text-muted">
-                <div className="col-auto">רשומות בכלל: <strong>{importDetails.totalStatistics.totalRecords}</strong></div>
-                <div className="col-auto">הצליחו: <strong>{importDetails.totalStatistics.totalSuccess}</strong></div>
-                <div className="col-auto">קיימים: <strong>{importDetails.totalStatistics.totalExisting}</strong></div>
-                <div className="col-auto">נכשלו: <strong>{importDetails.totalStatistics.totalFailed}</strong></div>
-                <div className="col-auto">אחוז כולל: <strong>{importDetails.totalStatistics.overallPercentage}%</strong></div>
-              </div>
-            )}
+          </div>
+
+          <div className="card-footer bg-light border-0 py-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <small className="text-muted">
+                <i className="fas fa-info-circle me-1"></i>
+                {importResult.message || 'ייבוא הושלם בהצלחה'}
+              </small>
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => {
+                  const blob = new Blob([JSON.stringify(importResult.statistics, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'import-statistics.json';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <i className="fas fa-download me-1"></i>הורד סטטיסטיקות
+              </button>
+            </div>
           </div>
         </div>
-      ) : null}
+      )}
+
+      {/* Error Modals */}
+      {importResult?.statistics?.tableStats && Object.entries(importResult.statistics.tableStats).map(([tableName, stats]) => {
+        const tableStats = stats as { total: number; imported: number; skipped: number; errors?: string[] };
+        const hasErrors = tableStats.errors && tableStats.errors.length > 0;
+        const cleanTableName = tableName.replace(/[^a-zA-Z0-9]/g, '');
+        
+        if (!hasErrors) return null;
+        
+        return (
+          <div className="modal fade" id={`errorsModal${cleanTableName}`} key={`modal-${tableName}`} tabIndex={-1}>
+            <div className="modal-dialog modal-lg">
+              <div className="modal-content">
+                <div className="modal-header bg-warning bg-opacity-10">
+                  <h5 className="modal-title">
+                    <i className="fas fa-exclamation-triangle text-warning me-2"></i>
+                    שגיאות בטבלה: {tableName}
+                  </h5>
+                  <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div className="modal-body">
+                  <div className="alert alert-warning border-0 mb-3">
+                    <strong>נמצאו {tableStats.errors!.length} שגיאות בעת ייבוא הטבלה</strong>
+                  </div>
+                  <div className="list-group list-group-flush" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                    {tableStats.errors!.map((error, errorIndex) => (
+                      <div key={errorIndex} className="list-group-item border-0 bg-light bg-opacity-50 mb-2 rounded">
+                        <div className="d-flex align-items-start">
+                          <div className="badge bg-warning text-dark me-3 mt-1">{errorIndex + 1}</div>
+                          <div className="flex-grow-1">
+                            <div className="text-dark small font-monospace">{error}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-warning"
+                    onClick={() => {
+                      const blob = new Blob([tableStats.errors!.join('\n')], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `${tableName}-errors.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <i className="fas fa-download me-2"></i>
+                    הורד שגיאות
+                  </button>
+                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
 
       <Modal
         isOpen={isConfirmOpen}
