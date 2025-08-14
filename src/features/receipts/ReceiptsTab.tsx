@@ -6,7 +6,7 @@ import { paginate } from '../../utils';
 import { generateReceiptPDF } from '../../utils/pdfGenerator';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
-import { SmartPagination } from '../../shared/components';
+import { SmartPagination, TabNavigation } from '../../shared/components';
 import WithdrawForm from '../../components/receipts/ReturnForm';
 import CreateReceiptForm from './CreatePendingReceiptForm';
 import PendingReceiptsList from './PendingReceiptsList';
@@ -34,6 +34,25 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [modalType, setModalType] = useState<'create' | 'return' | 'update'>('create');
     const [activeTab, setActiveTab] = useState<'signed' | 'pending'>('signed');
+
+    // Tab configuration
+    const receiptTabs = [
+        { 
+            id: 'signed', 
+            label: isAdmin ? 'כל הקבלות החתומות' : 'קבלות המיקום שלי', 
+            icon: 'fas fa-receipt' 
+        },
+        { 
+            id: 'pending', 
+            label: isAdmin ? 'כל הקבלות הממתינות' : 'קבלות ממתינות במיקום שלי', 
+            icon: 'fas fa-clock' 
+        },
+    ];
+
+    const handleTabChange = (tabId: string) => {
+        setActiveTab(tabId as 'signed' | 'pending');
+        setCurrentPage(1);
+    };
 
     // New: search/sort for signed receipts
     const [searchTerm, setSearchTerm] = useState('');
@@ -161,11 +180,6 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         }
     }, [activeTab, isAdmin, fetchPendingReceipts, fetchMyPendingReceipts]);
 
-    const handleTabChange = (tab: 'signed' | 'pending') => {
-        setActiveTab(tab);
-        setCurrentPage(1);
-    };
-
     const handlePendingReceiptsRefresh = async () => {
         // Refresh both signed and pending lists so UI updates immediately after actions
         await fetchReceipts();
@@ -237,26 +251,6 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
             // You could add a toast notification here
         }
     };
-
-    const renderTabButtons = () => (
-        <div className="tab-nav" style={{ direction: 'rtl' }}>
-            <button
-                className={`tab-nav-item ${activeTab === 'signed' ? 'active' : ''}`}
-                onClick={() => handleTabChange('signed')}
-            >
-                <i className="fas fa-receipt me-2"></i>
-                {isAdmin ? 'כל הקבלות החתומות' : 'קבלות המיקום שלי'}
-            </button>
-            
-            <button
-                className={`tab-nav-item ${activeTab === 'pending' ? 'active' : ''}`}
-                onClick={() => handleTabChange('pending')}
-            >
-                <i className="fas fa-clock me-2"></i>
-                {isAdmin ? 'כל הקבלות הממתינות' : 'קבלות ממתינות במיקום שלי'}
-            </button>
-        </div>
-    );
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -432,7 +426,13 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
 
     return (
         <div className="surface receipts-tab-container">
-            {renderTabButtons()}
+            <TabNavigation
+                tabs={receiptTabs}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                variant="primary"
+                size="md"
+            />
             <div style={{ padding: '20px' }}>
                 {renderTabContent()}
             </div>

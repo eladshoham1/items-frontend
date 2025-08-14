@@ -6,3 +6,4 @@ export { default as ErrorNotificationModal } from './ErrorNotificationModal';
 export { SmartPagination } from './SmartPagination';
 export { default as ColdStartLoader } from './ColdStartLoader';
 export { default as ServerWarmupIndicator } from './ServerWarmupIndicator';
+export { default as TabNavigation } from './TabNavigation';

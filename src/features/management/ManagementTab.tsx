@@ -1,16 +1,21 @@
 import React, { useState } from 'react';
+import { TabNavigation } from '../../shared/components';
 import { UnitsTab, LocationsTab, ItemNamesTab, ManagementSettingsTab, BackupRestoreTab } from './index';
 
 const ManagementTab: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState('units');
 
   const subTabs = [
-    { key: 'units', label: 'יחידות', icon: '🏢' },
-    { key: 'locations', label: 'מיקומים', icon: '📍' },
-    { key: 'itemNames', label: 'שמות פריטים', icon: '📝' },
-    { key: 'backup', label: 'גיבוי ושחזור', icon: '💾' },
-    { key: 'settings', label: 'הגדרות', icon: '⚙️' },
+    { id: 'units', label: 'יחידות', icon: 'fas fa-building' },
+    { id: 'locations', label: 'מיקומים', icon: 'fas fa-map-marker-alt' },
+    { id: 'itemNames', label: 'שמות פריטים', icon: 'fas fa-tags' },
+    { id: 'backup', label: 'גיבוי ושחזור', icon: 'fas fa-database' },
+    { id: 'settings', label: 'הגדרות', icon: 'fas fa-cog' },
   ];
+
+  const handleTabChange = (tabId: string) => {
+    setActiveSubTab(tabId);
+  };
 
   const renderActiveTab = () => {
     switch (activeSubTab) {
@@ -30,36 +35,27 @@ const ManagementTab: React.FC = () => {
   };
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2 className="mb-0">ניהול מערכת</h2>
-        <p className="text-muted mb-3">
-          ניהול נתוני בסיס: יחידות, מיקומים ושמות פריטים
-        </p>
-        
-        {/* Sub-navigation */}
-        <div style={{ 
-          textAlign: 'right',
-          width: '100%',
-          direction: 'rtl'
-        }}>
-          {subTabs.map(({ key, label, icon }) => (
-            <button
-              key={key}
-              type="button"
-              className={`btn ${activeSubTab === key ? 'btn-primary' : 'btn-outline-primary'}`}
-              onClick={() => setActiveSubTab(key)}
-              style={{ marginLeft: '8px' }}
-            >
-              <span className="me-2">{icon}</span>
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+    <div>
+      {/* Tab Navigation */}
+      <TabNavigation
+        tabs={subTabs}
+        activeTab={activeSubTab}
+        onTabChange={handleTabChange}
+        variant="primary"
+        size="md"
+      />
       
-      <div className="card-body">
-        {renderActiveTab()}
+      <div className="card">
+        <div className="card-header">
+          <h2 className="mb-0">ניהול מערכת</h2>
+          <p className="text-muted mb-0">
+            ניהול נתוני בסיס: יחידות, מיקומים ושמות פריטים
+          </p>
+        </div>
+        
+        <div className="card-body">
+          {renderActiveTab()}
+        </div>
       </div>
     </div>
   );

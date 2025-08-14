@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ServerError, SmartPagination, ErrorNotificationModal } from '../../shared/components';
+import { ServerError, SmartPagination, ErrorNotificationModal, TabNavigation } from '../../shared/components';
 import { useDailyReports } from '../../hooks';
 import { getCurrentDate, paginate } from '../../utils';
 import { UpdateDailyReportItemRequest, User } from '../../types';
@@ -35,7 +35,18 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   });
 
   // If not admin, hide history tab
-  const availableReportTabs: ReportTab[] = isAdmin ? ['current', 'history'] : ['current'];
+  const availableReportTabs = isAdmin 
+    ? [
+        { id: 'current', label: 'דוח נוכחי', icon: 'fas fa-calendar-day' },
+        { id: 'history', label: 'היסטוריית דוחות', icon: 'fas fa-history' }
+      ]
+    : [
+        { id: 'current', label: 'דוח נוכחי', icon: 'fas fa-calendar-day' }
+      ];
+
+  const handleTabChange = (tabId: string) => {
+    setActiveReportTab(tabId as ReportTab);
+  };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -239,26 +250,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   if (activeReportTab === 'history') {
     return (
       <div>
-        {/* Sub-navigation */}
-        <div className="card">
-          <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
-              {availableReportTabs.map(tab => (
-                <button
-                  key={tab}
-                  className={`nav-link ${activeReportTab === tab ? 'active' : ''}`}
-                  onClick={() => setActiveReportTab(tab)}
-                  type="button"
-                  role="tab"
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
-                  {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
+        {/* Tab Navigation */}
+        <TabNavigation
+          tabs={availableReportTabs}
+          activeTab={activeReportTab}
+          onTabChange={handleTabChange}
+          variant="primary"
+          size="md"
+        />
         <DailyReportHistory userProfile={userProfile} isAdmin={isAdmin} />
       </div>
     );
@@ -284,26 +283,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   if (loading) {
     return (
       <div>
-        {/* Sub-navigation */}
-        <div className="card">
-          <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
-              {availableReportTabs.map(tab => (
-                <button
-                  key={tab}
-                  className={`nav-link ${activeReportTab === tab ? 'active' : ''}`}
-                  onClick={() => setActiveReportTab(tab)}
-                  type="button"
-                  role="tab"
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
-                  {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
+        {/* Tab Navigation */}
+        <TabNavigation
+          tabs={availableReportTabs}
+          activeTab={activeReportTab}
+          onTabChange={handleTabChange}
+          variant="primary"
+          size="md"
+        />
         
         <div className="card">
           <div className="card-header">
@@ -323,26 +310,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   if (error) {
     return (
       <div>
-        {/* Sub-navigation */}
-        <div className="card">
-          <div className="card-header">
-            <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
-              {availableReportTabs.map(tab => (
-                <button
-                  key={tab}
-                  className={`nav-link ${activeReportTab === tab ? 'active' : ''}`}
-                  onClick={() => setActiveReportTab(tab)}
-                  type="button"
-                  role="tab"
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
-                  {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
+        {/* Tab Navigation */}
+        <TabNavigation
+          tabs={availableReportTabs}
+          activeTab={activeReportTab}
+          onTabChange={handleTabChange}
+          variant="primary"
+          size="md"
+        />
         <ServerError />
       </div>
     );
@@ -350,26 +325,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
 
   return (
     <div>
-      {/* Sub-navigation */}
-      <div className="card">
-        <div className="card-header">
-          <nav className="nav nav-tabs card-header-tabs d-flex" role="tablist">
-            {availableReportTabs.map(tab => (
-              <button
-                key={tab}
-                className={`nav-link ${activeReportTab === tab ? 'active' : ''}`}
-                onClick={() => setActiveReportTab(tab)}
-                type="button"
-                role="tab"
-                style={{ whiteSpace: 'nowrap' }}
-              >
-                <i className={`fas ${tab === 'current' ? 'fa-calendar-day' : 'fa-history'} me-1`}></i>
-                {tab === 'current' ? 'דוח נוכחי' : 'היסטוריית דוחות'}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
+      {/* Tab Navigation */}
+      <TabNavigation
+        tabs={availableReportTabs}
+        activeTab={activeReportTab}
+        onTabChange={handleTabChange}
+        variant="primary"
+        size="md"
+      />
 
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
