@@ -68,13 +68,13 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
   const filteredAndSortedItems = (() => {
     let filtered = items.filter(item => {
       const statusText = !item.isOperational ? 'תקול' : (item.isAvailable ?? false) ? 'זמין' : 'לא זמין';
-      const isCipherText = item.requiresReporting ? 'כן' : 'לא';
+      const locationText = item.allocatedLocation?.name || 'לא מוקצה';
       
       return (item.itemName?.name && item.itemName.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
         statusText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        isCipherText.toLowerCase().includes(searchTerm.toLowerCase());
+        locationText.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
     if (sortConfig) {
@@ -87,14 +87,18 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
             aValue = a.itemName?.name || '';
             bValue = b.itemName?.name || '';
             break;
-          case 'isNeedReport':
-            // Sort by whether item requires reporting (צופן logic)
-            aValue = !!a.requiresReporting;
-            bValue = !!b.requiresReporting;
-            break;
           case 'idNumber':
             aValue = a.idNumber || '';
             bValue = b.idNumber || '';
+            break;
+          case 'allocatedLocation':
+            aValue = a.allocatedLocation?.name || '';
+            bValue = b.allocatedLocation?.name || '';
+            break;
+          case 'status':
+            // Status priority: תקול (0) < לא זמין (1) < זמין (2)
+            aValue = !a.isOperational ? 0 : (a.isAvailable ?? false) ? 2 : 1;
+            bValue = !b.isOperational ? 0 : (b.isAvailable ?? false) ? 2 : 1;
             break;
           case 'note':
             aValue = a.note || '';
@@ -103,11 +107,6 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
           case 'isOperational':
             aValue = a.isOperational;
             bValue = b.isOperational;
-            break;
-          case 'status':
-            // Status priority: תקול (0) < לא זמין (1) < זמין (2)
-            aValue = !a.isOperational ? 0 : (a.isAvailable ?? false) ? 2 : 1;
-            bValue = !b.isOperational ? 0 : (b.isAvailable ?? false) ? 2 : 1;
             break;
           case 'isAvailable':
             aValue = a.isAvailable ?? false;
@@ -288,7 +287,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
               <input
                 type="text"
                 className="form-control"
-                placeholder="חפש פריטים לפי שם, מספר צ' או הערה..."
+                placeholder="חפש פריטים לפי שם, מספר צ', הקצאה או הערה..."
                 value={searchTerm}
                 onChange={handleSearchChange}
                 style={{ direction: 'rtl' }}
@@ -340,19 +339,6 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                 </th>
                 <th 
                   className="sortable-header"
-                  onClick={() => handleSort('isNeedReport')}
-                  title="לחץ למיון לפי צופן"
-                  data-sorted={sortConfig?.key === 'isNeedReport' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>צופן</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('isNeedReport')}
-                    </div>
-                  </div>
-                </th>
-                <th 
-                  className="sortable-header"
                   onClick={() => handleSort('idNumber')}
                   title="לחץ למיון לפי מספר צ'"
                   data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
@@ -366,14 +352,14 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                 </th>
                 <th 
                   className="sortable-header"
-                  onClick={() => handleSort('note')}
-                  title="לחץ למיון לפי הערה"
-                  data-sorted={sortConfig?.key === 'note' ? 'true' : 'false'}
+                  onClick={() => handleSort('allocatedLocation')}
+                  title="לחץ למיון לפי הקצאה"
+                  data-sorted={sortConfig?.key === 'allocatedLocation' ? 'true' : 'false'}
                 >
                   <div className="d-flex align-items-center justify-content-between">
-                    <span>הערה</span>
+                    <span>הקצאה</span>
                     <div className="sort-indicator">
-                      {getSortIcon('note')}
+                      {getSortIcon('allocatedLocation')}
                     </div>
                   </div>
                 </th>
@@ -387,6 +373,19 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                     <span>סטטוס</span>
                     <div className="sort-indicator">
                       {getSortIcon('status')}
+                    </div>
+                  </div>
+                </th>
+                <th 
+                  className="sortable-header"
+                  onClick={() => handleSort('note')}
+                  title="לחץ למיון לפי הערה"
+                  data-sorted={sortConfig?.key === 'note' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center justify-content-between">
+                    <span>הערה</span>
+                    <div className="sort-indicator">
+                      {getSortIcon('note')}
                     </div>
                   </div>
                 </th>
@@ -405,9 +404,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                     />
                   </td>
                   <td>{item.itemName?.name || 'אין תערכה'}</td>
-                  <td>{item.requiresReporting ? 'כן' : 'לא'}</td>
                   <td>{item.idNumber || 'לא זמין'}</td>
-                  <td>{item.note || 'אין הערה'}</td>
+                  <td>{item.allocatedLocation?.name || 'לא מוקצה'}</td>
                   <td>
                     <span 
                       className={`badge status-badge ${
@@ -426,6 +424,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                       }
                     </span>
                   </td>
+                  <td>{item.note || 'אין הערה'}</td>
                   <td>
                     <button 
                       className="btn btn-sm btn-outline" 

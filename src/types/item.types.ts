@@ -6,6 +6,14 @@ export interface Item {
   itemName?: {
     name: string;
   };
+  allocatedLocationId?: string | null;
+  allocatedLocation?: {
+    id: string;
+    name: string;
+    unit: {
+      name: string;
+    };
+  };
   createdBy?: {
     id: string;
     name: string;
@@ -28,6 +36,7 @@ export interface Item {
 export type CreateItemRequest = {
   nameId?: string; // Reference to ItemName table
   name?: string; // Legacy support - will be converted to nameId
+  allocatedLocationId?: string | null; // Reference to Location table
   idNumber?: string | null;
   note?: string | null;
   isOperational?: boolean;
@@ -38,6 +47,7 @@ export type CreateItemRequest = {
 export type UpdateItemRequest = {
   nameId?: string;
   name?: string;
+  allocatedLocationId?: string | null;
   idNumber?: string | null;
   note?: string | null;
   isOperational?: boolean;

@@ -24,8 +24,10 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
   const { createItem, updateItem } = useItems();
   const { 
     itemNames, 
+    locations,
     loading: managementLoading,
-    loadItemNames
+    loadItemNames,
+    loadLocations
   } = useManagement();
   
   const [formData, setFormData] = useState<CreateItemRequest>({
@@ -34,6 +36,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
     note: '',
     isOperational: true,
     requiresReporting: false,
+    allocatedLocationId: '',
   });
   const [quantity, setQuantity] = useState<number>(1);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -48,10 +51,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
     itemName: ''
   });
 
-  // Load item names when component mounts
+  // Load item names and locations when component mounts
   useEffect(() => {
     loadItemNames();
-  }, [loadItemNames]);
+    loadLocations();
+  }, [loadItemNames, loadLocations]);
 
   useEffect(() => {
     if (item) {
@@ -61,6 +65,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
         note: item.note || '',
         isOperational: item.isOperational ?? true,
         requiresReporting: item.requiresReporting ?? false,
+        allocatedLocationId: item.allocatedLocationId || '',
       });
       // Reset quantity to 1 when editing existing item
       setQuantity(1);
@@ -72,6 +77,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
         note: '',
         isOperational: true,
         requiresReporting: false,
+        allocatedLocationId: '',
       });
       // Reset quantity when creating new item
       setQuantity(1);
@@ -96,7 +102,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
   const handleInputChange = (field: keyof CreateItemRequest, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: field === 'note' || field === 'name' ? value : sanitizeInput(value),
+      [field]: field === 'note' || field === 'name' || field === 'allocatedLocationId' ? value : sanitizeInput(value),
     }));
     
     if (errors[field as keyof FormErrors]) {
@@ -124,6 +130,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
         // If requiresReporting is false, remove idNumber entirely from the request body
         if (!updateData.requiresReporting) {
           delete updateData.idNumber;
+        }
+        
+        // Convert empty allocatedLocationId to null
+        if (updateData.allocatedLocationId === '') {
+          updateData.allocatedLocationId = null;
         }
         
         const result = await updateItem(item.id, updateData);
@@ -158,6 +169,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
         // If requiresReporting is false, remove idNumber entirely from the request body
         if (!requestData.requiresReporting) {
           delete requestData.idNumber;
+        }
+        
+        // Convert empty allocatedLocationId to null
+        if (requestData.allocatedLocationId === '') {
+          requestData.allocatedLocationId = null;
         }
         
         console.log('Sending item data:', requestData); // Debug log
@@ -214,6 +230,24 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
               ))}
             </select>
             {errors.name && <div className="form-error">{errors.name}</div>}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">מיקום מוקצה (אופציונלי)</label>
+            <select 
+              className="form-control"
+              name="allocatedLocationId" 
+              value={formData.allocatedLocationId || ''} 
+              onChange={e => handleInputChange('allocatedLocationId', e.target.value)} 
+              disabled={managementLoading}
+            >
+              <option value="">ללא מיקום מוקצה</option>
+              {locations.map(location => (
+                <option key={location.id} value={location.id}>
+                  {location.name}
+                </option>
+              ))}
+            </select>
           </div>
 
         <div className="form-group">
