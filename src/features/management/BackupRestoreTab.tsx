@@ -84,6 +84,10 @@ const BackupRestoreTab: React.FC = () => {
       setSuccess(null);
       setExportResult(null);
       setImportResult(null);
+      setIsConfirmOpen(false); // Close modal immediately to show progress
+      
+      // Show a message indicating the import is in progress
+      setSuccess('ייבוא החל - אנא המתן, פעולה זו עלולה לקחת זמן רב...');
       
       const resp = await managementService.importDatabase(pendingPayload, override);
       console.log('Import response:', resp); // Debug log
@@ -91,18 +95,23 @@ const BackupRestoreTab: React.FC = () => {
       if (!resp.success) {
         setBusy(false);
         setError(resp.error || 'שגיאה בייבוא');
+        setSuccess(null);
         return;
       }
       
       // Save import result for display
       setImportResult(resp.data); // Use resp.data instead of resp
-      setIsConfirmOpen(false);
       await loadAllData();
       setSuccess('ייבוא הושלם בהצלחה');
       setBusy(false);
     } catch (e: any) {
       setBusy(false);
-      setError(e?.message || 'שגיאה בייבוא');
+      setSuccess(null);
+      if (e?.name === 'AbortError') {
+        setError('הייבוא בוטל - זמן המתנה הסתיים');
+      } else {
+        setError(e?.message || 'שגיאה בייבוא - ייתכן שהפעולה לקחה זמן רב מדי');
+      }
     } finally {
       setPendingPayload(null);
       setSelectedFileName('');
@@ -150,7 +159,9 @@ const BackupRestoreTab: React.FC = () => {
       {busy && (
         <div className="saving-indicator" style={{ marginTop: 16 }}>
           <div className="saving-spinner"></div>
-          <span style={{ marginRight: 8 }}>מבצע פעולה...</span>
+          <span style={{ marginRight: 8 }}>
+            {importResult ? 'מבצע פעולה...' : success?.includes('ייבוא החל') ? 'מבצע ייבוא - פעולה זו עלולה לקחת מספר דקות...' : 'מבצע פעולה...'}
+          </span>
         </div>
       )}
 
@@ -323,9 +334,9 @@ const BackupRestoreTab: React.FC = () => {
                 </h4>
                 <small className="opacity-75">
                   {importResult.importedAt ? new Date(importResult.importedAt).toLocaleString('he-IL') : 'לא זמין'} • 
-                  {importResult.statistics?.importedRecords || 0} יובאו • 
-                  {importResult.statistics?.skippedRecords || 0} דולגו • 
-                  {importResult.statistics?.totalTables || 0} טבלאות
+                  {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.success || 0) + (tableStats?.updated || 0), 0)} יובאו • 
+                  {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.exist || 0), 0)} קיימים • 
+                  {Object.keys(importResult || {}).length} טבלאות
                 </small>
               </div>
               <div className="badge bg-light bg-opacity-20 text-white fs-6 px-3 py-2">
@@ -343,16 +354,16 @@ const BackupRestoreTab: React.FC = () => {
                       <i className="fas fa-table me-2 text-primary"></i>שם הטבלה
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      <i className="fas fa-database me-2 text-info"></i>קיימים ב-DB
+                      <i className="fas fa-database me-2 text-info"></i>קיימים
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      <i className="fas fa-check-circle me-2 text-success"></i>הצליחו
+                      <i className="fas fa-plus-circle me-2 text-success"></i>נוספו
+                    </th>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
+                      <i className="fas fa-edit me-2 text-primary"></i>עודכנו
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
                       <i className="fas fa-times-circle me-2 text-danger"></i>נכשלו
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      <i className="fas fa-skip-forward me-2 text-warning"></i>דולגו
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
                       <i className="fas fa-exclamation-triangle me-2 text-warning"></i>הודעות שגיאה
@@ -363,11 +374,11 @@ const BackupRestoreTab: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {importResult.statistics?.tableStats ? 
-                    Object.entries(importResult.statistics.tableStats).map(([tableName, stats]) => {
-                      const tableStats = stats as { total: number; imported: number; skipped: number; errors?: string[] };
-                      const hasErrors = tableStats.errors && tableStats.errors.length > 0;
-                      const failed = tableStats.total - tableStats.imported - tableStats.skipped;
+                  {importResult ? 
+                    Object.entries(importResult).map(([tableName, tableStats]) => {
+                      const stats = tableStats as { exist: number; success: number; updated: number; failed: number; errors: string[] };
+                      const total = stats.exist + stats.success + stats.updated + stats.failed;
+                      const hasErrors = stats.errors && stats.errors.length > 0;
                       const cleanTableName = tableName.replace(/[^a-zA-Z0-9]/g, '');
                       
                       return (
@@ -380,34 +391,34 @@ const BackupRestoreTab: React.FC = () => {
                               </div>
                               <div>
                                 <div className="fw-semibold text-dark">{tableName}</div>
-                                <small className="text-muted">{tableStats.total} רשומות כולל</small>
+                                <small className="text-muted">{total} רשומות כולל</small>
                               </div>
                             </div>
                           </td>
                           <td className="text-center py-3">
                             <span className="badge bg-info bg-opacity-15 text-info px-3 py-2 rounded-pill fw-bold">
-                              {tableStats.total}
+                              {stats.exist}
                             </span>
                           </td>
                           <td className="text-center py-3">
                             <span className="badge bg-success bg-opacity-15 text-success px-3 py-2 rounded-pill fw-bold">
-                              {tableStats.imported}
+                              {stats.success}
                             </span>
                           </td>
                           <td className="text-center py-3">
-                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${failed > 0 ? 'bg-danger bg-opacity-15 text-danger' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
-                              {failed}
+                            <span className="badge bg-primary bg-opacity-15 text-primary px-3 py-2 rounded-pill fw-bold">
+                              {stats.updated}
                             </span>
                           </td>
                           <td className="text-center py-3">
-                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${tableStats.skipped > 0 ? 'bg-warning bg-opacity-15 text-warning' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
-                              {tableStats.skipped}
+                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${stats.failed > 0 ? 'bg-danger bg-opacity-15 text-danger' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
+                              {stats.failed}
                             </span>
                           </td>
                           <td className="text-center py-3">
                             {hasErrors ? (
                               <span className="badge bg-danger bg-opacity-15 text-danger px-3 py-2 rounded-pill fw-bold">
-                                {tableStats.errors!.length} שגיאות
+                                {stats.errors!.length} שגיאות
                               </span>
                             ) : (
                               <span className="badge bg-secondary bg-opacity-15 text-secondary px-3 py-2 rounded-pill fw-bold">
@@ -455,7 +466,7 @@ const BackupRestoreTab: React.FC = () => {
               <button 
                 className="btn btn-outline-secondary btn-sm"
                 onClick={() => {
-                  const blob = new Blob([JSON.stringify(importResult.statistics, null, 2)], { type: 'application/json' });
+                  const blob = new Blob([JSON.stringify(importResult, null, 2)], { type: 'application/json' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
@@ -472,9 +483,9 @@ const BackupRestoreTab: React.FC = () => {
       )}
 
       {/* Error Modals */}
-      {importResult?.statistics?.tableStats && Object.entries(importResult.statistics.tableStats).map(([tableName, stats]) => {
-        const tableStats = stats as { total: number; imported: number; skipped: number; errors?: string[] };
-        const hasErrors = tableStats.errors && tableStats.errors.length > 0;
+      {importResult && Object.entries(importResult).map(([tableName, tableStats]) => {
+        const stats = tableStats as { exist: number; success: number; updated: number; failed: number; errors?: string[] };
+        const hasErrors = stats.errors && stats.errors.length > 0;
         const cleanTableName = tableName.replace(/[^a-zA-Z0-9]/g, '');
         
         if (!hasErrors) return null;
@@ -492,10 +503,10 @@ const BackupRestoreTab: React.FC = () => {
                 </div>
                 <div className="modal-body">
                   <div className="alert alert-warning border-0 mb-3">
-                    <strong>נמצאו {tableStats.errors!.length} שגיאות בעת ייבוא הטבלה</strong>
+                    <strong>נמצאו {stats.errors!.length} שגיאות בעת ייבוא הטבלה</strong>
                   </div>
                   <div className="list-group list-group-flush" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    {tableStats.errors!.map((error, errorIndex) => (
+                    {stats.errors!.map((error, errorIndex) => (
                       <div key={errorIndex} className="list-group-item border-0 bg-light bg-opacity-50 mb-2 rounded">
                         <div className="d-flex align-items-start">
                           <div className="badge bg-warning text-dark me-3 mt-1">{errorIndex + 1}</div>
@@ -512,7 +523,7 @@ const BackupRestoreTab: React.FC = () => {
                     type="button" 
                     className="btn btn-outline-warning"
                     onClick={() => {
-                      const blob = new Blob([tableStats.errors!.join('\n')], { type: 'text/plain' });
+                      const blob = new Blob([stats.errors!.join('\n')], { type: 'text/plain' });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       a.href = url;
@@ -553,6 +564,9 @@ const BackupRestoreTab: React.FC = () => {
               <p className="mb-0 mt-2" style={{ whiteSpace: 'pre-line' }}>
                 ייבוא לא ישכתב נתונים קיימים כברירת מחדל. ניתן לבחור לשכתב נתונים קיימים באמצעות הסימון הבא.
                 {selectedFileName ? `\nקובץ: ${selectedFileName}` : ''}
+              </p>
+              <p className="mb-0 mt-2 text-warning">
+                <strong>שים לב:</strong> ייבוא עלול לקחת זמן רב (מספר דקות) במיוחד עבור קבצים גדולים.
               </p>
             </div>
           </div>
