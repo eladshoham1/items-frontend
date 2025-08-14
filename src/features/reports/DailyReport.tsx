@@ -419,7 +419,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 padding: '8px 12px',
                 borderRadius: '20px'
               }}>
-                {reportingStats.reported} / {reportingStats.total}
+                {reportingStats.total} / {reportingStats.reported}
               </span>
             </div>
             
