@@ -48,9 +48,8 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
 
   // Helper: check if current user can sign this receipt
   const canUserSignReceipt = (receipt: Receipt) => {
-    if (isAdmin) return true; // Admins can always sign
     if (!currentUserId) return false; // No user ID provided
-    return receipt.signedById === currentUserId; // Only if user is the designated receiver
+    return receipt.signedById === currentUserId; // Only if user is the designated receiver (applies to both admin and non-admin)
   };
 
   // Search and sort logic
@@ -194,8 +193,8 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   };
 
   const handleSignClick = (receipt: Receipt) => {
-    // Additional security check
-    if (!isAdmin && !canUserSignReceipt(receipt)) {
+    // Security check - only allow if user is the designated receiver
+    if (!canUserSignReceipt(receipt)) {
       alert('אין לך הרשאה לחתום על קבלה זו. הקבלה מיועדת למשתמש אחר.');
       return;
     }
@@ -402,7 +401,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                       <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
                         {isAdmin && (
                           <button 
-                            className="btn btn-primary btn-sm" 
+                            className="btn btn-primary btn-sm me-2" 
                             onClick={() => handleUpdateClick(receipt)}
                             title="עדכן קבלה"
                           >
@@ -410,20 +409,18 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                             עדכן
                           </button>
                         )}
-                        {!isAdmin && (
+                        {canSign && (
                           <button
                             className="btn-sign btn-sm"
                             onClick={() => handleSignClick(receipt)}
-                            disabled={!canSign}
-                            title={canSign ? "חתום וקבל" : "קבלה זו מיועדת למשתמש אחר"}
-                            style={{
-                              opacity: canSign ? 1 : 0.5,
-                              cursor: canSign ? 'pointer' : 'not-allowed'
-                            }}
+                            title="חתום וקבל"
                           >
                             <i className="fas fa-signature"></i>
-                            {canSign ? 'חתום וקבל' : 'לא זמין'}
+                            חתום וקבל
                           </button>
+                        )}
+                        {!canSign && !isAdmin && (
+                          <span className="text-muted small">לא זמין לחתימה</span>
                         )}
                       </div>
                     </td>
