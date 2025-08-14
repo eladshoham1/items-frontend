@@ -5,6 +5,7 @@ export interface DailyReportItem {
   itemName: string;
   idNumber?: string;
   location: string;
+  signedByUserName?: string;
   isReported: boolean;
   reportedAt?: string;
   reportedBy?: {

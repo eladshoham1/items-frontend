@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ServerError, SmartPagination } from '../../shared/components';
+import { ServerError, SmartPagination, ErrorNotificationModal } from '../../shared/components';
 import { useDailyReports } from '../../hooks';
 import { getCurrentDate, paginate } from '../../utils';
 import { UpdateDailyReportItemRequest, User } from '../../types';
@@ -24,6 +24,15 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const [completing, setCompleting] = useState(false);
   const [creatingReport, setCreatingReport] = useState(false);
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
+  const [errorModal, setErrorModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    title: '',
+    message: ''
+  });
 
   // If not admin, hide history tab
   const availableReportTabs: ReportTab[] = isAdmin ? ['current', 'history'] : ['current'];
@@ -83,6 +92,10 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           aValue = a.reportedBy?.name || '';
           bValue = b.reportedBy?.name || '';
           break;
+        case 'signedBy':
+          aValue = a.signedByUserName || '';
+          bValue = b.signedByUserName || '';
+          break;
         default:
           return 0;
       }
@@ -134,10 +147,12 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
 
     const success = await updateDailyReport(dailyReportData.report.id, { reportItems: reportUpdates });
     
-    if (success) {
-      alert('דיווח עודכן בהצלחה');
-    } else {
-      alert('שגיאה בעדכון הדיווח');
+    if (!success) {
+      setErrorModal({
+        isOpen: true,
+        title: 'שגיאה בעדכון דיווח',
+        message: 'אירעה שגיאה בעת עדכון הדיווח. אנא נסה שוב.'
+      });
     }
   };
 
@@ -160,10 +175,12 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         reportId: dailyReportData.report.id,
       });
 
-      if (success) {
-        alert('הדוח הושלם בהצלחה! דוח חדש נוצר למחר');
-      } else {
-        alert('שגיאה בהשלמת הדוח');
+      if (!success) {
+        setErrorModal({
+          isOpen: true,
+          title: 'שגיאה בהשלמת הדוח',
+          message: 'אירעה שגיאה בעת השלמת הדוח. אנא נסה שוב.'
+        });
       }
     } finally {
       setCompleting(false);
@@ -177,14 +194,20 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     try {
       const success = await createDailyReport({});
 
-      if (success) {
-        alert('דוח חדש נוצר בהצלחה');
-      } else {
-        alert('שגיאה ביצירת דוח חדש');
+      if (!success) {
+        setErrorModal({
+          isOpen: true,
+          title: 'שגיאה ביצירת דוח חדש',
+          message: 'אירעה שגיאה בעת יצירת דוח חדש. אנא נסה שוב.'
+        });
       }
     } catch (error) {
       console.error('Error creating report:', error);
-      alert('שגיאה ביצירת דוח חדש');
+      setErrorModal({
+        isOpen: true,
+        title: 'שגיאה ביצירת דוח חדש',
+        message: 'אירעה שגיאה בעת יצירת דוח חדש. אנא נסה שוב.'
+      });
     } finally {
       setCreatingReport(false);
     }
@@ -208,6 +231,9 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   };
 
   const reportingStats = getReportingStats();
+
+  // Check if all items are reported (for completion validation)
+  const allItemsReported = sortedReportItems.length > 0 && sortedReportItems.every(item => item.isReported);
 
   // Render history tab
   if (activeReportTab === 'history') {
@@ -517,7 +543,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                     data-sorted={sortConfig?.key === 'itemName' ? 'true' : 'false'}
                   >
                     <div className="d-flex align-items-center justify-content-between">
-                      <span>שם פריט</span>
+                      <span>פריט</span>
                       <div className="sort-indicator">
                         {getSortIcon('itemName')}
                       </div>
@@ -533,6 +559,19 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                       <span>מספר צ'</span>
                       <div className="sort-indicator">
                         {getSortIcon('idNumber')}
+                      </div>
+                    </div>
+                  </th>
+                  <th 
+                    className="sortable-header"
+                    onClick={() => handleSort('signedBy')}
+                    title="לחץ למיון לפי מי חתם על הפריט"
+                    data-sorted={sortConfig?.key === 'signedBy' ? 'true' : 'false'}
+                  >
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span>חתום על ידי</span>
+                      <div className="sort-indicator">
+                        {getSortIcon('signedBy')}
                       </div>
                     </div>
                   </th>
@@ -569,7 +608,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                     data-sorted={sortConfig?.key === 'isReported' ? 'true' : 'false'}
                   >
                     <div className="d-flex align-items-center justify-content-between">
-                      <span>האם דיווח</span>
+                      <span>דיווח</span>
                       <div className="d-flex align-items-center gap-2">
                         <input
                           type="checkbox"
@@ -592,6 +631,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   <tr key={item.id}>
                     <td>{item.itemName}</td>
                     <td>{item.idNumber || '-'}</td>
+                    <td>{item.signedByUserName || '-'}</td>
                     <td>{item.reportedAt ? (() => {
                       const date = new Date(item.reportedAt);
                       return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL') : 'תאריך לא תקין';
@@ -649,23 +689,32 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 </button>
                 
                 {isAdmin && !dailyReportData?.report?.isCompleted && (
-                  <button 
-                    className="btn btn-success" 
-                    onClick={handleCompleteReport}
-                    disabled={completing}
-                  >
-                    {completing ? (
-                      <>
-                        <i className="fas fa-spinner fa-spin me-1"></i>
-                        מושלם...
-                      </>
-                    ) : (
-                      <>
-                        <i className="fas fa-check-circle me-1"></i>
-                        השלם דוח וצור דוח חדש למחר
-                      </>
+                  <div className="d-flex flex-column gap-2">
+                    <button 
+                      className="btn btn-success" 
+                      onClick={handleCompleteReport}
+                      disabled={completing || !allItemsReported}
+                      title={!allItemsReported ? "לא ניתן להשלים דוח כאשר יש פריטים שלא דווחו" : "השלם דוח וצור דוח חדש למחר"}
+                    >
+                      {completing ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin me-1"></i>
+                          מושלם...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-check-circle me-1"></i>
+                          השלם דוח וצור דוח חדש למחר
+                        </>
+                      )}
+                    </button>
+                    {!allItemsReported && (
+                      <small className="text-warning">
+                        <i className="fas fa-exclamation-triangle me-1"></i>
+                        יש לדווח על כל הפריטים לפני השלמת הדוח
+                      </small>
                     )}
-                  </button>
+                  </div>
                 )}
               </div>
               
@@ -689,6 +738,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           )}
         </div>
       </div>
+
+      {/* Error Notification Modal */}
+      <ErrorNotificationModal
+        isOpen={errorModal.isOpen}
+        onClose={() => setErrorModal({ isOpen: false, title: '', message: '' })}
+        title={errorModal.title}
+        message={errorModal.message}
+      />
     </div>
   );
 };
