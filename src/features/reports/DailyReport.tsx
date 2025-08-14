@@ -17,6 +17,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const [activeReportTab, setActiveReportTab] = useState<ReportTab>('current');
   const { dailyReportData, loading, error, createDailyReport, updateDailyReport, completeDailyReport, toggleReportStatus, setReportStatusBulk, updateItemNotes } = useDailyReports();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
@@ -76,6 +77,20 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       // For now, showing all items as the server should handle the filtering
     }
 
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filteredItems = filteredItems.filter(item => 
+        (item.itemName?.toLowerCase() || '').includes(searchLower) ||
+        (item.idNumber?.toLowerCase() || '').includes(searchLower) ||
+        (item.signedByUserName?.toLowerCase() || '').includes(searchLower) ||
+        (item.location?.toLowerCase() || '').includes(searchLower) ||
+        (item.reportedBy?.name?.toLowerCase() || '').includes(searchLower) ||
+        (item.reportedBy?.rank?.toLowerCase() || '').includes(searchLower) ||
+        (item.notes?.toLowerCase() || '').includes(searchLower)
+      );
+    }
+
     if (!sortConfig) return filteredItems;
 
     return [...filteredItems].sort((a, b) => {
@@ -106,6 +121,10 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         case 'signedBy':
           aValue = a.signedByUserName || '';
           bValue = b.signedByUserName || '';
+          break;
+        case 'location':
+          aValue = a.location || '';
+          bValue = b.location || '';
           break;
         default:
           return 0;
@@ -495,6 +514,48 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
             </div>
           </div>
           
+          {/* Search Bar */}
+          <div className="mb-4">
+            <div className="row">
+              <div className="col-md-6">
+                <div className="input-group">
+                  <span className="input-group-text">
+                    <i className="fas fa-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="חיפוש לפי שם פריט, מספר צ', חתימה, מיקום, מי דיווח או הערות..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1); // Reset to first page when searching
+                    }}
+                    style={{ direction: 'rtl' }}
+                  />
+                  {searchTerm && (
+                    <button
+                      className="btn btn-outline-secondary"
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setCurrentPage(1);
+                      }}
+                      title="נקה חיפוש"
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                </div>
+                {searchTerm && (
+                  <small className="text-muted mt-1 d-block">
+                    נמצאו {sortedReportItems.length} תוצאות עבור "{searchTerm}"
+                  </small>
+                )}
+              </div>
+            </div>
+          </div>
+          
           <div className="table-responsive">
             <table className="table table-striped">
               <thead>
@@ -535,6 +596,19 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                       <span>חתום על ידי</span>
                       <div className="sort-indicator">
                         {getSortIcon('signedBy')}
+                      </div>
+                    </div>
+                  </th>
+                  <th 
+                    className="sortable-header"
+                    onClick={() => handleSort('location')}
+                    title="לחץ למיון לפי מיקום"
+                    data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
+                  >
+                    <div className="d-flex align-items-center justify-content-between">
+                      <span>מיקום</span>
+                      <div className="sort-indicator">
+                        {getSortIcon('location')}
                       </div>
                     </div>
                   </th>
@@ -595,6 +669,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                     <td>{item.itemName}</td>
                     <td>{item.idNumber || '-'}</td>
                     <td>{item.signedByUserName || '-'}</td>
+                    <td>{item.location || '-'}</td>
                     <td>{item.reportedAt ? (() => {
                       const date = new Date(item.reportedAt);
                       return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL') : 'תאריך לא תקין';

@@ -524,7 +524,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     {(detailsReceipt.receiptItems || []).map((ri, idx) => {
                       const itemName = ri.item?.itemName?.name || '—';
                       const idNumber = ri.item?.idNumber || '';
-                      const isNeedReport = !!ri.item?.idNumber; // Changed to check idNumber
+                      const requiresReporting = !!ri.item?.requiresReporting;
                       const note = ri.item?.note || '';
                       return (
                         <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
@@ -534,7 +534,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                           <td style={{ padding: '10px 12px' }}>
                             <span
                               style={{
-                                backgroundColor: isNeedReport ? '#dc3545' : '#28a745',
+                                backgroundColor: requiresReporting ? '#dc3545' : '#28a745',
                                 color: 'white',
                                 padding: '2px 8px',
                                 borderRadius: '12px',
@@ -542,7 +542,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                                 fontWeight: 700,
                               }}
                             >
-                              {isNeedReport ? 'כן' : 'לא'}
+                              {requiresReporting ? 'כן' : 'לא'}
                             </span>
                           </td>
                           <td style={{ padding: '10px 12px', color: '#495057' }}>{note || '—'}</td>
@@ -634,21 +634,21 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     {selectedReceipt.receiptItems && selectedReceipt.receiptItems.length > 0 ? 
                       // Group items by name for better display
                       selectedReceipt.receiptItems
-                        .reduce((grouped: { name: string, items: any[], count: number, isNeedReport: boolean }[], receiptItem) => {
+                        .reduce((grouped: { name: string, items: any[], count: number, requiresReporting: boolean }[], receiptItem) => {
                           const itemName = receiptItem.item?.itemName?.name || 'פריט לא ידוע';
-                          const isNeedReport = !!receiptItem.item?.idNumber; // Changed to check idNumber
-                          
+                          const requiresReporting = !!receiptItem.item?.requiresReporting;
+
                           // For cipher items, always create separate entries
-                          if (isNeedReport) {
+                          if (requiresReporting) {
                             grouped.push({
                               name: itemName,
                               items: [receiptItem],
                               count: 1,
-                              isNeedReport: true
+                              requiresReporting: true
                             });
                           } else {
                             // For non-cipher items, group by name
-                            const existing = grouped.find(g => g.name === itemName && !g.isNeedReport);
+                            const existing = grouped.find(g => g.name === itemName && !g.requiresReporting);
                             if (existing) {
                               existing.items.push(receiptItem);
                               existing.count++;
@@ -657,7 +657,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                                 name: itemName,
                                 items: [receiptItem],
                                 count: 1,
-                                isNeedReport: false
+                                requiresReporting: false
                               });
                             }
                           }
@@ -707,7 +707,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                               
                               {/* Show ID numbers for cipher items or first item */}
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                {group.isNeedReport ? 
+                                {group.requiresReporting ? 
                                   // For cipher items, show each ID separately
                                   group.items.map((item, itemIndex) => (
                                     <div key={itemIndex} style={{ fontSize: '14px', color: '#6c757d' }}>
@@ -734,17 +734,17 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                             
                             <div style={{ textAlign: 'center' }}>
                               <span 
-                                className={`cipher-badge ${group.isNeedReport ? 'cipher-yes' : 'cipher-no'}`}
+                                className={`cipher-badge ${group.requiresReporting ? 'cipher-yes' : 'cipher-no'}`}
                                 style={{
                                   padding: '6px 12px',
                                   borderRadius: '20px',
                                   fontSize: '12px',
                                   fontWeight: 'bold',
-                                  backgroundColor: group.isNeedReport ? '#dc3545' : '#28a745',
+                                  backgroundColor: group.requiresReporting ? '#dc3545' : '#28a745',
                                   color: 'white'
                                 }}
                               >
-                                צופן: {group.isNeedReport ? 'כן' : 'לא'}
+                                צופן: {group.requiresReporting ? 'כן' : 'לא'}
                               </span>
                             </div>
                           </div>

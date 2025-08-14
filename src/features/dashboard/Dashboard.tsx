@@ -99,9 +99,13 @@ const Dashboard: React.FC = () => {
           aValue = getItemWaitingTotal(a);
           bValue = getItemWaitingTotal(b);
           break;
+        case 'nonOperational':
+          aValue = stats && stats[a] && typeof stats[a].nonOperationalQuantity === 'number' ? stats[a].nonOperationalQuantity : 0;
+          bValue = stats && stats[b] && typeof stats[b].nonOperationalQuantity === 'number' ? stats[b].nonOperationalQuantity : 0;
+          break;
         case 'available':
-          aValue = (stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0) - getItemSignedTotal(a) - getItemWaitingTotal(a);
-          bValue = (stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0) - getItemSignedTotal(b) - getItemWaitingTotal(b);
+          aValue = (stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0) - (stats && stats[a] && typeof stats[a].nonOperationalQuantity === 'number' ? stats[a].nonOperationalQuantity : 0) - getItemSignedTotal(a) - getItemWaitingTotal(a);
+          bValue = (stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0) - (stats && stats[b] && typeof stats[b].nonOperationalQuantity === 'number' ? stats[b].nonOperationalQuantity : 0) - getItemSignedTotal(b) - getItemWaitingTotal(b);
           break;
         case 'total':
           aValue = stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0;
@@ -390,6 +394,23 @@ const Dashboard: React.FC = () => {
                     className="text-center" 
                     style={{ 
                       minWidth: '120px', 
+                      background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
+                      color: 'white',
+                      padding: '16px 8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      borderBottom: '3px solid #e74c3c',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('nonOperational')}
+                  >
+                    תקולים
+                    {getSortIcon('nonOperational')}
+                  </th>
+                  <th 
+                    className="text-center" 
+                    style={{ 
+                      minWidth: '120px', 
                       background: 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)',
                       color: 'white',
                       padding: '16px 8px',
@@ -603,6 +624,30 @@ const Dashboard: React.FC = () => {
                       className="text-center" 
                       style={{ 
                         padding: '16px 8px',
+                        backgroundColor: '#fadbd8',
+                        borderLeft: '3px solid #e74c3c'
+                      }}
+                    >
+                      <span 
+                        className="badge" 
+                        style={{ 
+                          backgroundColor: '#e74c3c',
+                          color: 'white',
+                          fontSize: '13px',
+                          padding: '8px 12px',
+                          borderRadius: '20px',
+                          fontWeight: '600',
+                          boxShadow: '0 2px 4px rgba(231, 76, 60, 0.3)',
+                          border: '2px solid #ec7063'
+                        }}
+                      >
+                        {stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0}
+                      </span>
+                    </td>
+                    <td 
+                      className="text-center" 
+                      style={{ 
+                        padding: '16px 8px',
                         backgroundColor: '#f3e5f5',
                         borderLeft: '3px solid #9b59b6'
                       }}
@@ -620,7 +665,7 @@ const Dashboard: React.FC = () => {
                           border: '2px solid #af7ac5'
                         }}
                       >
-                        {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - getItemSignedTotal(item) - getItemWaitingTotal(item)}
+                        {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - (stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0) - getItemSignedTotal(item) - getItemWaitingTotal(item)}
                       </span>
                     </td>
                     <td 

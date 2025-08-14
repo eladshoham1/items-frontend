@@ -19,7 +19,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
   // Process items to merge quantities for items with same names
   const processedItems: Array<{
     name: string;
-    isNeedReport: boolean;
+    requiresReporting: boolean;
     idNumber: string;
     note: string;
     quantity: number;
@@ -31,7 +31,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
     const itemIdNumber = receiptItem.item?.idNumber || '';
     const itemNote = receiptItem.item?.note || '';
     // Check if item is cipher based on idNumber
-    const itemIsNeedReport = !!receiptItem.item?.idNumber;
+    const itemRequiresReporting = !!receiptItem.item?.requiresReporting;
 
     // Check if we already have an item with the same name for quantity grouping
     const existingItem = processedItems.find(
@@ -53,7 +53,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
       // Add new item
       processedItems.push({
         name: itemName,
-        isNeedReport: itemIsNeedReport,
+        requiresReporting: itemRequiresReporting,
         idNumber: itemIdNumber,
         note: itemNote,
         quantity: 1
@@ -65,7 +65,7 @@ const createReceiptHTML = (receipt: Receipt): string => {
     <tr>
       <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
       <td style="text-align: right; padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.isNeedReport ? 'כן' : 'לא'}</td>
+      <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.requiresReporting ? 'כן' : 'לא'}</td>
       <td style="text-align: center; padding: 8px; border: 1px solid #ddd;">${item.idNumber}</td>
       <td style="text-align: center; padding: 8px; border: 1px solid #ddd; font-weight: 600;">${item.quantity}</td>
     </tr>

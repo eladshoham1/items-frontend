@@ -13,20 +13,34 @@ interface ReceiptFormProps {
 interface ItemCardProps {
   item: ReceiptItem;
   onRemove: (id: string) => void;
+  onUpdateQuantity?: (itemName: string, newQuantity: number) => void;
+  groupedItems?: ReceiptItem[];
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ 
   item, 
-  onRemove 
+  onRemove,
+  onUpdateQuantity,
+  groupedItems = []
 }) => {
+  const isCipherItem = Boolean(item.requiresReporting);
+  const currentQuantity = item.quantity || 1;
+  
+  const handleQuantityChange = (delta: number) => {
+    const newQuantity = Math.max(1, currentQuantity + delta);
+    if (onUpdateQuantity) {
+      onUpdateQuantity(item.name, newQuantity);
+    }
+  };
+
   return (
     <div className="item-card">
       <div className="item-info">
         <div className="item-name">
           {item.name}
-          {item.quantity && item.quantity > 1 && (
+          {currentQuantity > 1 && (
             <span className="item-badge item-badge-quantity ms-2">
-              כמות: {item.quantity}
+              כמות: {currentQuantity}
             </span>
           )}
         </div>
@@ -37,19 +51,46 @@ const ItemCard: React.FC<ItemCardProps> = ({
             </span>
           )}
           <span className="item-badge item-badge-origin">
-            צופן: {item.idNumber ? 'כן' : 'לא'}
+            צופן: {isCipherItem ? 'כן' : 'לא'}
           </span>
         </div>
       </div>
-      <button 
-        type="button" 
-        className="btn btn-outline-danger btn-sm item-remove-btn"
-        onClick={() => onRemove(item.id)}
-        title="הסר פריט"
-      >
-        <i className="fas fa-times"></i>
-        <span className="remove-text">הסר</span>
-      </button>
+      
+      <div className="item-actions">
+        {/* Show quantity controls only for non-cipher items (items with requiresReporting = false) */}
+        {!isCipherItem && onUpdateQuantity && (
+          <div className="quantity-controls me-2">
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => handleQuantityChange(-1)}
+              disabled={currentQuantity <= 1}
+              title="הקטן כמות"
+            >
+              -
+            </button>
+            <span className="quantity-display mx-2">{currentQuantity}</span>
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => handleQuantityChange(1)}
+              title="הגדל כמות"
+            >
+              +
+            </button>
+          </div>
+        )}
+        
+        <button 
+          type="button" 
+          className="btn btn-outline-danger btn-sm item-remove-btn"
+          onClick={() => onRemove(item.id)}
+          title="הסר פריט"
+        >
+          <i className="fas fa-times"></i>
+          <span className="remove-text">הסר</span>
+        </button>
+      </div>
     </div>
   );
 };
@@ -81,7 +122,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
       const convertedItems: ReceiptItem[] = receipt.items?.map(item => ({
         id: item.id,
         name: item.item?.itemName?.name || 'פריט לא ידוע',
-        isNeedReport: false, // Default to false since this info is not available
+        requiresReporting: item.item?.requiresReporting || false,
         quantity: 1, // Default quantity since Receipt items don't have quantity
         note: item.item?.note
       })) || [];
@@ -90,9 +131,15 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
     }
   }, [receipt]);
   const availableItems = useMemo(() => {
-    return serverAvailableItems.filter(item => 
-      !receiptItems.some(receiptItem => receiptItem.id === item.id)
-    );
+    return serverAvailableItems.filter(item => {
+      // For cipher items (with requiresReporting = true), exclude if already used
+      if (item.requiresReporting) {
+        return !receiptItems.some(receiptItem => receiptItem.id === item.id);
+      }
+      // For non-cipher items (with requiresReporting = false), always allow them to be available
+      // The quantity logic will be handled in maxAvailableQuantity
+      return true;
+    });
   }, [serverAvailableItems, receiptItems]);
 
   // Filter available items based on search query
@@ -119,16 +166,32 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
       return 1;
     }
     
-    // Count how many items with the same name are available
-    const sameNameItems = availableItems.filter(item =>
-      item.itemName?.name === selectedItem.itemName?.name
-    );    // Subtract quantities already taken for the same item name
-    const alreadyTaken = receiptItems
-      .filter(receiptItem => receiptItem.name === selectedItem.itemName?.name)
+    // For cipher items (requiresReporting = true), each one is unique
+    if (selectedItem.requiresReporting) {
+      const sameNameItems = availableItems.filter(item =>
+        item.itemName?.name === selectedItem.itemName?.name && 
+        item.requiresReporting && // Only cipher items
+        !receiptItems.some(receiptItem => receiptItem.id === item.id)
+      );
+      return sameNameItems.length;
+    }
+    
+    // For non-cipher items (requiresReporting = false), count total available minus current quantity in receipt
+    const sameNameItems = serverAvailableItems.filter(item =>
+      item.itemName?.name === selectedItem.itemName?.name && 
+      !item.requiresReporting // Only non-cipher items
+    );
+    
+    // Get current quantity already in receipt for this item name
+    const currentQuantityInReceipt = receiptItems
+      .filter(receiptItem => 
+        receiptItem.name === selectedItem.itemName?.name && 
+        !receiptItem.requiresReporting
+      )
       .reduce((sum, receiptItem) => sum + (receiptItem.quantity || 1), 0);
     
-    return Math.max(1, sameNameItems.length - alreadyTaken);
-  }, [selectedItem, availableItems, receiptItems]);
+    return Math.max(1, sameNameItems.length - currentQuantityInReceipt);
+  }, [selectedItem, availableItems, serverAvailableItems, receiptItems]);
 
   // Update quantity when item changes
   React.useEffect(() => {
@@ -146,32 +209,79 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
     const item = filteredAvailableItems.find(i => i.id === selectedItemId);
     if (!item) return;
 
-    // Find multiple items with the same name for quantity handling
-    const sameNameItems = availableItems.filter(availableItem => 
-      availableItem.itemName?.name === item.itemName?.name && 
-      !receiptItems.some(receiptItem => receiptItem.id === availableItem.id)
-    );
+    // Check if item requires reporting (cipher item)
+    const isCipherItem = Boolean(item.requiresReporting);
     
-    // Add the selected quantity as individual items
-    const newReceiptItems: ReceiptItem[] = [];
-    for (let i = 0; i < selectedQuantity && i < sameNameItems.length; i++) {
-      const itemToAdd = sameNameItems[i];
-      newReceiptItems.push({
-        id: itemToAdd.id,
-        name: itemToAdd.itemName?.name || '',
-        idNumber: itemToAdd.idNumber || '',
-        quantity: 1 // Each item has quantity 1, but we track it for display
-      });
+    if (isCipherItem) {
+      // For cipher items, add each as individual item
+      const sameNameItems = availableItems.filter(availableItem => 
+        availableItem.itemName?.name === item.itemName?.name && 
+        availableItem.requiresReporting &&
+        !receiptItems.some(receiptItem => receiptItem.id === availableItem.id)
+      );
+      
+      const newReceiptItems: ReceiptItem[] = [];
+      for (let i = 0; i < selectedQuantity && i < sameNameItems.length; i++) {
+        const itemToAdd = sameNameItems[i];
+        newReceiptItems.push({
+          id: itemToAdd.id,
+          name: itemToAdd.itemName?.name || '',
+          requiresReporting: itemToAdd.requiresReporting || false,
+          idNumber: itemToAdd.idNumber || '',
+          quantity: 1
+        });
+      }
+      setReceiptItems([...receiptItems, ...newReceiptItems]);
+    } else {
+      // For non-cipher items, check if item with same name already exists
+      const existingItemIndex = receiptItems.findIndex(receiptItem => 
+        receiptItem.name === item.itemName?.name && !receiptItem.requiresReporting
+      );
+      
+      if (existingItemIndex >= 0) {
+        // Update quantity of existing item
+        const updatedItems = [...receiptItems];
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: (updatedItems[existingItemIndex].quantity || 1) + selectedQuantity
+        };
+        setReceiptItems(updatedItems);
+      } else {
+        // Add new item with quantity - use any available item of the same name
+        const availableItemOfSameName = serverAvailableItems.find(availableItem => 
+          availableItem.itemName?.name === item.itemName?.name && 
+          !availableItem.requiresReporting
+        );
+        
+        if (availableItemOfSameName) {
+          const newReceiptItem: ReceiptItem = {
+            id: availableItemOfSameName.id,
+            name: availableItemOfSameName.itemName?.name || '',
+            requiresReporting: availableItemOfSameName.requiresReporting || false,
+            idNumber: availableItemOfSameName.idNumber || '',
+            quantity: selectedQuantity
+          };
+          setReceiptItems([...receiptItems, newReceiptItem]);
+        }
+      }
     }
-    
-    setReceiptItems([...receiptItems, ...newReceiptItems]);
     
     setSelectedItemId('');
     setSelectedQuantity(1);
-    setItemSearchQuery(''); // Clear search when item is added
+    setItemSearchQuery('');
     
     // Refresh available items to ensure real-time updates
     refetchAvailableItems();
+  };
+
+  const handleUpdateQuantity = (itemName: string, newQuantity: number) => {
+    setReceiptItems(items => 
+      items.map(item => 
+        item.name === itemName && !item.requiresReporting
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -196,10 +306,32 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
     setIsSubmitting(true);
 
     try {
+      // Convert receipt items to server format
+      const serverItems: string[] = [];
+      
+      receiptItems.forEach(item => {
+        if (item.requiresReporting) {
+          // Cipher items: add each item individually
+          serverItems.push(item.id);
+        } else {
+          // Non-cipher items: find available items of the same name and add multiple instances
+          const quantity = item.quantity || 1;
+          const availableItemsOfSameName = serverAvailableItems.filter(availableItem =>
+            availableItem.itemName?.name === item.name && 
+            !availableItem.requiresReporting
+          );
+          
+          // Add item IDs up to the quantity needed
+          for (let i = 0; i < quantity && i < availableItemsOfSameName.length; i++) {
+            serverItems.push(availableItemsOfSameName[i].id);
+          }
+        }
+      });
+
       const receiptData = {
         createdById: '', // Will be set by backend based on current user
         signedById: selectedUser,
-        items: receiptItems.map(item => item.id), // Convert to array of item IDs
+        items: serverItems,
         signature: signature,
         date: new Date().toISOString()
       };
@@ -394,7 +526,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
                       )}
                       {filteredAvailableItems.map(item => (
                         <option key={item.id} value={item.id}>
-                          {item.itemName?.name || 'ללא שם'} {item.idNumber ? '(צופן)' : ''} {item.idNumber && `- ${item.idNumber}`}
+                          {item.itemName?.name || 'ללא שם'} {item.requiresReporting ? '(צופן)' : ''} {item.idNumber && `- ${item.idNumber}`}
                         </option>
                       ))}
                     </select>
@@ -468,34 +600,47 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({ receipt, onSuccess, onCancel 
                 <div className="section-content">
                   <div className="items-list">
                     {receiptItems
-                      .reduce((grouped: { item: ReceiptItem, count: number }[], item) => {
-                        // Group all items by name for quantity handling
-                        const existing = grouped.find(g => g.item.name === item.name);
-                        if (existing) {
-                          existing.count++;
+                      .reduce((grouped: ReceiptItem[], item) => {
+                        // For cipher items (with requiresReporting = true), show each separately
+                        if (item.requiresReporting) {
+                          grouped.push(item);
                         } else {
-                          grouped.push({ item: { ...item, quantity: 1 }, count: 1 });
+                          // For non-cipher items (requiresReporting = false), group by name
+                          const existingIndex = grouped.findIndex(g => 
+                            g.name === item.name && !g.requiresReporting
+                          );
+                          if (existingIndex >= 0) {
+                            // Update quantity of existing grouped item
+                            grouped[existingIndex] = {
+                              ...grouped[existingIndex],
+                              quantity: (grouped[existingIndex].quantity || 1) + (item.quantity || 1)
+                            };
+                          } else {
+                            // Add new grouped item
+                            grouped.push({ ...item });
+                          }
                         }
                         return grouped;
                       }, [])
                       .map((groupedItem, index) => (
                         <ItemCard
-                          key={`${groupedItem.item.name}-${index}`}
-                          item={{
-                            ...groupedItem.item,
-                            quantity: groupedItem.count
-                          }}
+                          key={groupedItem.requiresReporting ? `${groupedItem.id}-${index}` : `${groupedItem.name}-grouped`}
+                          item={groupedItem}
+                          onUpdateQuantity={!groupedItem.requiresReporting ? handleUpdateQuantity : undefined}
                           onRemove={(id) => {
-                            // Remove all items with the same name
-                            const itemsToRemove = receiptItems
-                              .filter(receiptItem => 
-                                receiptItem.name === groupedItem.item.name
-                              )
-                              .map(item => item.id);
-                            
-                            setReceiptItems(items => 
-                              items.filter(item => !itemsToRemove.includes(item.id))
-                            );
+                            if (groupedItem.requiresReporting) {
+                              // Remove specific cipher item
+                              setReceiptItems(items => 
+                                items.filter(item => item.id !== groupedItem.id)
+                              );
+                            } else {
+                              // Remove all items with the same name (non-cipher)
+                              setReceiptItems(items => 
+                                items.filter(item => 
+                                  !(item.name === groupedItem.name && !item.requiresReporting)
+                                )
+                              );
+                            }
                             refetchAvailableItems();
                           }}
                         />

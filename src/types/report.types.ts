@@ -164,6 +164,8 @@ export interface UnitData {
 
 export interface ItemData {
   quantity: number;
+  operationalQuantity: number;
+  nonOperationalQuantity: number;
   units: Record<string, UnitData>;
 }
 

@@ -7,7 +7,6 @@ import { generateReceiptPDF } from '../../utils/pdfGenerator';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
 import { SmartPagination, TabNavigation } from '../../shared/components';
-import WithdrawForm from '../../components/receipts/ReturnForm';
 import CreateReceiptForm from './CreatePendingReceiptForm';
 import PendingReceiptsList from './PendingReceiptsList';
 import DeleteReceiptModal from './DeleteReceiptModal';
@@ -32,7 +31,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [modalType, setModalType] = useState<'create' | 'return' | 'update'>('create');
+    const [modalType, setModalType] = useState<'create' | 'update'>('create');
     const [activeTab, setActiveTab] = useState<'signed' | 'pending'>('signed');
 
     // Tab configuration
@@ -521,7 +520,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                         {(detailsReceipt.receiptItems || []).map((ri, idx) => {
                                             const itemName = ri.item?.itemName?.name || '—';
                                             const idNumber = ri.item?.idNumber || '';
-                                            const isNeedReport = !!ri.item?.idNumber; // Changed to check idNumber instead
+                                            const requiresReporting = !!ri.item?.requiresReporting;
                                             const note = ri.item?.note || '';
                                             return (
                                                 <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
@@ -533,7 +532,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                                     <td style={{ padding: '10px 12px' }}>
                                                         <span
                                                             style={{
-                                                                backgroundColor: isNeedReport ? '#dc3545' : '#28a745',
+                                                                backgroundColor: requiresReporting ? '#dc3545' : '#28a745',
                                                                 color: 'white',
                                                                 padding: '2px 8px',
                                                                 borderRadius: '12px',
@@ -541,7 +540,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                                                 fontWeight: 700
                                                             }}
                                                         >
-                                                            {isNeedReport ? 'כן' : 'לא'}
+                                                            {requiresReporting ? 'כן' : 'לא'}
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: '10px 12px', color: '#495057' }}>{note || '—'}</td>
@@ -564,16 +563,10 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 </Modal>
             )}
 
-            {/* Create/Return Modal */}
+            {/* Create Modal */}
             {isModalOpen && (
                 <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
-                    {modalType === 'return' && selectedReceipt ? (
-                        <WithdrawForm
-                            receipt={selectedReceipt}
-                            onSuccess={handleCloseModal}
-                            onCancel={handleCloseModal}
-                        />
-                    ) : modalType === 'create' ? (
+                    {modalType === 'create' ? (
                         <CreateReceiptForm
                             onSuccess={handleCreateSuccess}
                             onCancel={handleCloseModal}
