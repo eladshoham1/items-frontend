@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ServerError, SmartPagination, ErrorNotificationModal, TabNavigation } from '../../shared/components';
 import { useDailyReports } from '../../hooks';
 import { getCurrentDate, paginate } from '../../utils';
-import { UpdateDailyReportItemRequest, User } from '../../types';
+import { User } from '../../types';
 import { UI_CONFIG } from '../../config/app.config';
 import DailyReportHistory from './DailyReportHistory';
 
@@ -15,7 +15,7 @@ type ReportTab = 'current' | 'history';
 
 const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const [activeReportTab, setActiveReportTab] = useState<ReportTab>('current');
-  const { dailyReportData, loading, error, createDailyReport, updateDailyReport, completeDailyReport, toggleReportStatus, setReportStatusBulk, updateItemNotes } = useDailyReports();
+  const { dailyReportData, loading, error, updateDailyReport, completeDailyReport, toggleReportStatus, setReportStatusBulk, updateItemNotes } = useDailyReports();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{
@@ -23,7 +23,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     direction: 'asc' | 'desc';
   } | null>(null);
   const [completing, setCompleting] = useState(false);
-  const [creatingReport, setCreatingReport] = useState(false);
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
   const [errorModal, setErrorModal] = useState<{
     isOpen: boolean;
@@ -169,13 +168,15 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const handleSubmitReport = async () => {
     if (!dailyReportData) return;
 
-    const reportUpdates: UpdateDailyReportItemRequest[] = sortedReportItems.map(item => ({
-      itemId: item.id,
-      isReported: item.isReported || false,
-      notes: item.notes || undefined,
-    }));
+    // Convert current state to new API format
+    const reportItems = sortedReportItems
+      .filter(item => item.isReported) // Only send reported items
+      .map(item => ({
+        itemId: item.itemId,
+        notes: item.notes || undefined,
+      }));
 
-    const success = await updateDailyReport(dailyReportData.report.id, { reportItems: reportUpdates });
+    const success = await updateDailyReport('', { reportItems }); // ID not needed in new API
     
     if (!success) {
       setErrorModal({
@@ -192,18 +193,17 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     setCompleting(true);
     try {
       // First save current changes
-      const reportUpdates: UpdateDailyReportItemRequest[] = sortedReportItems.map(item => ({
-        itemId: item.id,
-        isReported: item.isReported || false,
-        notes: item.notes || undefined,
-      }));
+      const reportItems = sortedReportItems
+        .filter(item => item.isReported) // Only send reported items
+        .map(item => ({
+          itemId: item.itemId,
+          notes: item.notes || undefined,
+        }));
 
-      await updateDailyReport(dailyReportData.report.id, { reportItems: reportUpdates });
+      await updateDailyReport('', { reportItems }); // Save current state
 
-      // Then complete the report
-      const success = await completeDailyReport({
-        reportId: dailyReportData.report.id,
-      });
+      // Then complete the report cycle
+      const success = await completeDailyReport();
 
       if (!success) {
         setErrorModal({
@@ -214,32 +214,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       }
     } finally {
       setCompleting(false);
-    }
-  };
-
-  const handleCreateReport = async () => {
-    if (!isAdmin) return;
-
-    setCreatingReport(true);
-    try {
-      const success = await createDailyReport({});
-
-      if (!success) {
-        setErrorModal({
-          isOpen: true,
-          title: 'שגיאה ביצירת דוח חדש',
-          message: 'אירעה שגיאה בעת יצירת דוח חדש. אנא נסה שוב.'
-        });
-      }
-    } catch (error) {
-      console.error('Error creating report:', error);
-      setErrorModal({
-        isOpen: true,
-        title: 'שגיאה ביצירת דוח חדש',
-        message: 'אירעה שגיאה בעת יצירת דוח חדש. אנא נסה שוב.'
-      });
-    } finally {
-      setCreatingReport(false);
     }
   };
 
@@ -356,64 +330,16 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       <div className="card">
         <div className="card-header d-flex justify-content-between align-items-center">
           <h2 className="mb-0">דוח יומי - {getCurrentDate()}</h2>
-          {dailyReportData?.report?.isCompleted && (
-            <span className="badge bg-success fs-6">
-              <i className="fas fa-check-circle me-1"></i>
-              דוח הושלם
-            </span>
-          )}
         </div>
         <div className="card-body">
           {/* Handle case when no daily report exists or report has no items */}
           {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) && (
             <div>
-              {isAdmin ? (
-                /* Admin can create a new report */
-                <div className="text-center">
-                  <div className="alert alert-info">
-                    <h4><i className="fas fa-plus-circle me-2"></i>אין דוח יומי פעיל</h4>
-                    <p>לא קיים דוח יומי פעיל כרגע או שהדוח ריק. בתור מנהל, אתה יכול ליצור דוח חדש עבור היום.</p>
-                  </div>
-                  
-                  <div className="card">
-                    <div className="card-header">
-                      <h5 className="mb-0"><i className="fas fa-file-plus me-2"></i>יצירת דוח יומי חדש</h5>
-                    </div>
-                    <div className="card-body">
-                      <div className="row justify-content-center">
-                        <div className="col-md-6">
-                          <p className="text-center mb-4">לחץ על הכפתור למטה כדי ליצור דוח יומי חדש עבור היום.</p>
-                          
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-lg w-100"
-                            onClick={handleCreateReport}
-                            disabled={creatingReport}
-                          >
-                            {creatingReport ? (
-                              <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                יוצר דוח...
-                              </>
-                            ) : (
-                              <>
-                                <i className="fas fa-plus me-2"></i>
-                                צור דוח יומי חדש
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Regular users see a message */
-                <div className="alert alert-warning text-center">
-                  <h4><i className="fas fa-clock me-2"></i>אין דוח יומי פעיל</h4>
-                  <p>כרגע אין דוח יומי פעיל. אנא חכה שהמנהל יתחיל דוח חדש.</p>
-                </div>
-              )}
+              <div className="alert alert-info text-center">
+                <h4><i className="fas fa-clock me-2"></i>אין פריטים לדיווח</h4>
+                <p>כרגע אין פריטים הדורשים דיווח או שהם כבר דווחו.</p>
+                <p>הפריטים מתעדכנים אוטומטית כאשר יש צורך בדיווח.</p>
+              </div>
             </div>
           )}
 
@@ -654,7 +580,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                           title="סמן/נקה הכל בכל הדפים"
                           className="form-check-input"
                           onClick={(e) => e.stopPropagation()}
-                          disabled={dailyReportData?.report?.isCompleted}
                         />
                         <div className="sort-indicator">{getSortIcon('isReported')}</div>
                       </div>
@@ -681,7 +606,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                         checked={item.isReported || false}
                         onChange={() => handleCheckboxChange(item.id)}
                         className="form-check-input"
-                        disabled={dailyReportData?.report?.isCompleted}
                       />
                     </td>
                     <td>
@@ -689,13 +613,10 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                         type="text"
                         value={item.notes || ''}
                         onChange={(e) => {
-                          if (!dailyReportData?.report?.isCompleted) {
-                            updateItemNotes(item.id, e.target.value);
-                          }
+                          updateItemNotes(item.id, e.target.value);
                         }}
                         className="form-control form-control-sm"
                         placeholder="הערות..."
-                        disabled={dailyReportData?.report?.isCompleted}
                         style={{ minWidth: '150px' }}
                       />
                     </td>
@@ -720,19 +641,18 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 <button 
                   className="btn btn-primary" 
                   onClick={handleSubmitReport}
-                  disabled={dailyReportData?.report?.isCompleted}
                 >
                   <i className="fas fa-save me-1"></i>
                   שמור דיווח
                 </button>
                 
-                {isAdmin && !dailyReportData?.report?.isCompleted && (
+                {isAdmin && (
                   <div className="d-flex flex-column gap-2">
                     <button 
                       className="btn btn-success" 
                       onClick={handleCompleteReport}
                       disabled={completing || !allItemsReported}
-                      title={!allItemsReported ? "לא ניתן להשלים דוח כאשר יש פריטים שלא דווחו" : "השלם דוח וצור דוח חדש למחר"}
+                      title={!allItemsReported ? "לא ניתן להשלים דוח כאשר יש פריטים שלא דווחו" : "השלם מחזור דיווח נוכחי"}
                     >
                       {completing ? (
                         <>
@@ -742,26 +662,19 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                       ) : (
                         <>
                           <i className="fas fa-check-circle me-1"></i>
-                          השלם דוח וצור דוח חדש למחר
+                          השלם מחזור דיווח
                         </>
                       )}
                     </button>
                     {!allItemsReported && (
                       <small className="text-warning">
                         <i className="fas fa-exclamation-triangle me-1"></i>
-                        יש לדווח על כל הפריטים לפני השלמת הדוח
+                        יש לדווח על כל הפריטים לפני השלמת המחזור
                       </small>
                     )}
                   </div>
                 )}
               </div>
-              
-              {dailyReportData?.report?.isCompleted && (
-                <div className="alert alert-success d-inline-flex align-items-center mb-0">
-                  <i className="fas fa-check-circle me-2"></i>
-                  הדוח הושלם
-                </div>
-              )}
             </div>
           )}
           

@@ -4,6 +4,86 @@
   direction: rtl;
 }
 
+/* Selected Items Table Styling */
+.selected-items-table-container {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 16px;
+}
+
+.selected-items-table-container .table-header {
+  background-color: #f8f9fa;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+  color: #495057;
+}
+
+.selected-items-table-container .table {
+  margin-bottom: 0;
+}
+
+.selected-items-table-container .table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+  padding: 12px 8px;
+  vertical-align: middle;
+}
+
+.selected-items-table-container .table td {
+  padding: 12px 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.selected-items-table-container .table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.selected-items-table-container .table-footer {
+  background-color: #f8f9fa;
+  padding: 12px 16px;
+  border-top: 1px solid #e9ecef;
+  font-size: 14px;
+}
+
+.selected-items-table-container .btn-sm {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.selected-items-table-container .badge {
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+/* Form Enhancements */
+.receipt-form-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.receipt-form-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label.required:after {
+  content: " *";
+  color: #dc3545;
+  font-weight: bold;
+}
+
 .tab-nav {
   display: flex;
   border-bottom: 2px solid #e0e0e0;

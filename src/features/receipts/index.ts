@@ -1,5 +1,6 @@
 export { default as ReceiptsTab } from './ReceiptsTab';
-export { default as ReturnItemsModal } from './ReturnItemsModal';
+export { default as CreateReceiptForm } from './CreateReceiptForm';
 export { default as PendingReceiptsList } from './PendingReceiptsList';
-export { default as CreatePendingReceiptForm } from './CreatePendingReceiptForm';
-export { default as DeleteReceiptModal } from './DeleteReceiptModal';
+export { default as ReceiptDetailsModal } from './ReceiptDetailsModal';
+export { ReceiptFormValidation } from './utils/ReceiptFormValidation';
+export * from './types/receipt-form.types';

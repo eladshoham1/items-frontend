@@ -1,48 +1,34 @@
 import { apiService } from './api.service';
 import { 
   DashboardStatistics, 
-  DailyReport,
-  DailyReportResponse,
-  CreateDailyReportRequest,
-  UpdateDailyReportRequest,
-  CompleteDailyReportRequest,
-  DailyReportHistoryResponse,
-  DetailedDailyReportResponse
+  CurrentReportingStatusResponse,
+  UpdateReportItemsRequest,
+  ReportCompletionHistoryResponse
 } from '../types';
 
 export const reportService = {
-  // Get dashboard statistics (admin only)
+  // Get dashboard statistics
   async getStatistics(): Promise<DashboardStatistics> {
     return apiService.get<DashboardStatistics>('/reports/statistics');
   },
 
-  // Create a new daily report (admin only)
-  async createDailyReport(data: CreateDailyReportRequest): Promise<DailyReportResponse> {
-    return apiService.post<DailyReportResponse>('/reports/create', data);
+  // Get current reporting status
+  async getCurrentReportingStatus(): Promise<CurrentReportingStatusResponse> {
+    return apiService.get<CurrentReportingStatusResponse>('/reports/current');
   },
 
-  // Get current daily report
-  async getCurrentDailyReport(): Promise<DailyReportResponse> {
-    return apiService.get<DailyReportResponse>('/reports/current');
+  // Update multiple items reporting status
+  async updateReportItems(data: UpdateReportItemsRequest): Promise<void> {
+    return apiService.patch<void>('/reports/reportItems', data);
   },
 
-  // Get daily report history (admin only)
-  async getDailyReportHistory(page: number = 1, limit: number = 10): Promise<DailyReportHistoryResponse> {
-    return apiService.get<DailyReportHistoryResponse>(`/reports/history?page=${page}&limit=${limit}`);
+  // Complete current report cycle (admin only)
+  async completeReportCycle(): Promise<void> {
+    return apiService.post<void>('/reports/complete', {});
   },
 
-  // Get daily report by ID (admin only)
-  async getDailyReportById(id: string): Promise<DetailedDailyReportResponse> {
-    return apiService.get<DetailedDailyReportResponse>(`/reports/${id}`);
-  },
-
-  // Update daily report items
-  async updateDailyReport(id: string, data: UpdateDailyReportRequest): Promise<DailyReport> {
-    return apiService.patch<DailyReport>('/reports/items', data);
-  },
-
-  // Complete daily report (admin only)
-  async completeDailyReport(data: CompleteDailyReportRequest): Promise<DailyReport> {
-    return apiService.post<DailyReport>('/reports/complete', data);
+  // Get report completion history (admin only)
+  async getCompletionHistory(page: number = 1, limit: number = 10): Promise<ReportCompletionHistoryResponse> {
+    return apiService.get<ReportCompletionHistoryResponse>(`/reports/history?page=${page}&limit=${limit}`);
   },
 };

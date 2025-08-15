@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { ServerError, SmartPagination } from '../../shared/components';
 import { useDailyReportHistory } from '../../hooks';
 import { DailyReportHistoryItem } from '../../types';
-import { generateDailyReportPDF } from '../../utils/pdfGenerator';
 
 interface DailyReportHistoryProps {
   userProfile: any;
@@ -10,7 +9,7 @@ interface DailyReportHistoryProps {
 }
 
 const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
-  const { history, loading, error, fetchHistory, getDailyReportById } = useDailyReportHistory();
+  const { history, loading, error, fetchHistory } = useDailyReportHistory();
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<{
@@ -64,42 +63,15 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     try {
       setDownloadingId(reportItem.id);
       
-      // Fetch the full report data
-      const fullReport = await getDailyReportById(reportItem.id);
-      
-      if (!fullReport) {
-        alert('שגיאה בטעינת נתוני הדוח');
+      // Check if the report has a downloadUrl (new API)
+      if (reportItem.downloadUrl) {
+        // Open the download URL
+        window.open(reportItem.downloadUrl, '_blank');
         return;
       }
 
-      // Generate PDF
-      const reportData = {
-        reportDate: reportItem.createdAt, // Use createdAt from the report
-        totalItems: fullReport.totalItems,
-        reportedItems: fullReport.reportedItems,
-        completedAt: reportItem.completedAt, // Use completedAt from history item
-        items: fullReport.reportItems.map((item: any) => ({ // Updated to use reportItems
-          name: item.item.itemName.name, // Updated path to item name
-          idNumber: item.item.idNumber || '',
-          isReported: item.isReported,
-          reportedAt: item.reportedAt ? (() => {
-            const date = new Date(item.reportedAt);
-            return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL', {
-              day: '2-digit',
-              month: '2-digit',
-              year: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            }).replace(',', '') : '';
-          })() : '',
-          reportedBy: item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '',
-          notes: item.notes || '',
-          unit: item.item.receiptItems?.receipt?.signedBy?.location?.unit?.name || '',
-          location: item.item.receiptItems?.receipt?.signedBy?.location?.name || ''
-        }))
-      };
-
-      generateDailyReportPDF(reportData);
+      // Fallback: Report doesn't have a downloadUrl
+      alert('קובץ הדוח אינו זמין להורדה');
       
     } catch (error) {
       console.error('Error downloading PDF:', error);
@@ -180,7 +152,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     return <ServerError />;
   }
 
-  if (!history || !history.reports.length) {
+  if (!history || !history.reports?.length) {
     return (
       <div className="card">
         <div className="card-header">
@@ -202,7 +174,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
       <div className="card-header">
         <h2 className="mb-0">היסטוריית דוחות יומיים</h2>
         <small className="text-muted">
-          סה"כ {history.pagination.total} דוחות
+          סה"כ {history.pagination?.total || 0} דוחות
         </small>
       </div>
       <div className="card-body">
@@ -360,10 +332,10 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
           </table>
         </div>
 
-        {history.pagination.pages > 1 && (
+        {(history.pagination?.pages || 0) > 1 && (
           <SmartPagination
             currentPage={currentPage}
-            totalPages={history.pagination.pages}
+            totalPages={history.pagination?.pages || 1}
             onPageChange={setCurrentPage}
           />
         )}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useUsers } from '../../hooks/useUsers';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useAvailableItems } from '../../hooks/useAvailableItems';
@@ -6,6 +6,15 @@ import { useReceipts } from '../../hooks/useReceipts';
 import { receiptService } from '../../services';
 import { User, Receipt } from '../../types';
 import './ReceiptsTab.css';
+import './CreatePendingReceiptForm.css';
+
+type SortField = 'name' | 'idNumber' | 'location';
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
 
 interface CreateReceiptFormProps {
   onSuccess: () => void;
@@ -26,113 +35,190 @@ interface ReceiptItem {
   };
 }
 
-interface ItemCardProps {
-  item: ReceiptItem;
+interface SelectedItemsTableProps {
+  items: ReceiptItem[];
   onRemove: (id: string) => void;
-  onUpdateQuantity?: (itemName: string, newQuantity: number, allocatedLocationId?: string) => void;
-  maxAvailable?: number;
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({ 
-  item, 
-  onRemove,
-  onUpdateQuantity,
-  maxAvailable = 0
+const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({ 
+  items, 
+  onRemove
 }) => {
-  const isCipherItem = Boolean(item.requiresReporting);
-  const currentQuantity = item.quantity || 1;
-  
-  const handleQuantityChange = (delta: number) => {
-    const newQuantity = Math.max(1, Math.min(maxAvailable, currentQuantity + delta));
-    if (onUpdateQuantity && newQuantity !== currentQuantity) {
-      onUpdateQuantity(item.name, newQuantity, item.allocatedLocation?.id);
-    }
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+
+  // Handle sorting
+  const handleSort = (field: SortField) => {
+    setSortConfig(prev => {
+      if (prev?.field === field) {
+        // If clicking the same field, toggle direction
+        return {
+          field,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc'
+        };
+      } else {
+        // If clicking a new field, start with ascending
+        return {
+          field,
+          direction: 'asc'
+        };
+      }
+    });
   };
 
-  return (
-    <div className="item-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div className="item-info" style={{ flex: 1 }}>
-        <div className="item-name">
-          {item.name}
-          {item.quantity && item.quantity > 1 && (
-            <span className="item-badge item-badge-quantity ms-2">
-              כמות: {item.quantity}
-            </span>
-          )}
+  // Sort items based on current sort config
+  const sortedItems = useMemo(() => {
+    if (!sortConfig) return items;
+
+    return [...items].sort((a, b) => {
+      let aValue: string;
+      let bValue: string;
+
+      switch (sortConfig.field) {
+        case 'name':
+          aValue = a.name || '';
+          bValue = b.name || '';
+          break;
+        case 'idNumber':
+          aValue = a.idNumber || '';
+          bValue = b.idNumber || '';
+          break;
+        case 'location':
+          aValue = a.allocatedLocation?.name || '';
+          bValue = b.allocatedLocation?.name || '';
+          break;
+        default:
+          return 0;
+      }
+
+      const comparison = aValue.localeCompare(bValue, 'he');
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
+    });
+  }, [items, sortConfig]);
+
+  // Get sort icon for a field
+  const getSortIcon = (field: SortField) => {
+    if (sortConfig?.field !== field) {
+      return <i className="fas fa-sort text-muted"></i>;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up text-primary"></i>
+      : <i className="fas fa-sort-down text-primary"></i>;
+  };
+
+  if (items.length === 0) {
+    return (
+      <div className="selected-items-empty-state">
+        <div className="empty-state-content">
+          <i className="fas fa-inbox fa-3x text-muted mb-3"></i>
+          <h5 className="text-muted mb-2">לא נבחרו פריטים</h5>
+          <p className="text-muted mb-0">השתמש בחיפוש למעלה כדי להוסיף פריטים לקבלה</p>
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="item-badge item-badge-origin">
-            צופן: {item.requiresReporting ? 'כן' : 'לא'}
-          </span>
-          {item.allocatedLocation && (
-            <span className="item-badge" style={{ backgroundColor: '#28a745', color: 'white' }}>
-              מיקום: {item.allocatedLocation.name}
-            </span>
-          )}
-          {item.idNumber && (
-            <span className="item-badge item-badge-id">
-              מספר צ': {item.idNumber}
-            </span>
-          )}
-        </div>
-        
-        {/* Quantity controls for non-cipher items */}
-        {!isCipherItem && onUpdateQuantity && maxAvailable > 1 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => handleQuantityChange(-1)}
-              disabled={currentQuantity <= 1}
-              style={{ 
-                padding: '4px 8px', 
-                minWidth: '30px',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}
-              title="הקטן כמות"
-            >
-              −
-            </button>
-            <span style={{ 
-              minWidth: '25px', 
-              textAlign: 'center', 
-              fontSize: '14px',
-              fontWeight: 'bold',
-              color: '#495057'
-            }}>
-              {currentQuantity}
-            </span>
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => handleQuantityChange(1)}
-              disabled={currentQuantity >= maxAvailable}
-              style={{ 
-                padding: '4px 8px', 
-                minWidth: '30px',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}
-              title="הגדל כמות"
-            >
-              +
-            </button>
-          </div>
-        )}
-        
-        <button 
-          type="button" 
-          className="btn btn-outline-danger btn-sm item-remove-btn"
-          onClick={() => onRemove(item.id)}
-          title="הסר פריט"
-          style={{ minWidth: 'auto', padding: '2px 8px' }}
-        >
-          <i className="fas fa-times"></i>
-          <span className="remove-text">הסר</span>
-        </button>
+    );
+  }
+
+  return (
+    <div className="selected-items-table-container">
+      <div className="table-header">
+        <i className="fas fa-list-ul me-2"></i>
+        פריטים נבחרים ({items.length})
+      </div>
+      
+      <div className="table-responsive">
+        <table className="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th scope="col" style={{ width: '8%' }} className="text-center">#</th>
+              <th 
+                scope="col" 
+                style={{ width: '42%', cursor: 'pointer' }} 
+                className="sortable-header"
+                onClick={() => handleSort('name')}
+                data-sorted={sortConfig?.field === 'name'}
+              >
+                <div className="d-flex align-items-center justify-content-between">
+                  <span>פריט</span>
+                  <div className="sort-indicator">{getSortIcon('name')}</div>
+                </div>
+              </th>
+              <th 
+                scope="col" 
+                style={{ width: '18%', cursor: 'pointer' }} 
+                className="text-center sortable-header"
+                onClick={() => handleSort('idNumber')}
+                data-sorted={sortConfig?.field === 'idNumber'}
+              >
+                <div className="d-flex align-items-center justify-content-center">
+                  <span>מספר צ'</span>
+                  <div className="sort-indicator ms-1">{getSortIcon('idNumber')}</div>
+                </div>
+              </th>
+              <th 
+                scope="col" 
+                style={{ width: '22%', cursor: 'pointer' }} 
+                className="text-center sortable-header"
+                onClick={() => handleSort('location')}
+                data-sorted={sortConfig?.field === 'location'}
+              >
+                <div className="d-flex align-items-center justify-content-center">
+                  <span>הקצאה</span>
+                  <div className="sort-indicator ms-1">{getSortIcon('location')}</div>
+                </div>
+              </th>
+              <th scope="col" style={{ width: '10%' }} className="text-center">פעולות</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedItems.map((item, index) => (
+              <tr key={`${item.id}-${index}`} className="selected-item-row">
+                <td className="text-center">
+                  <span className="row-number">{index + 1}</span>
+                </td>
+                <td>
+                  <div className="item-name-cell">
+                    <span className="item-name">{item.name}</span>
+                    {item.requiresReporting && (
+                      <span className="cipher-indicator ms-2">
+                        <i className="fas fa-shield-alt text-danger" title="פריט צופן"></i>
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="text-center">
+                  {item.idNumber ? (
+                    <span className="id-number-badge">{item.idNumber}</span>
+                  ) : (
+                    <span className="text-muted">ללא</span>
+                  )}
+                </td>
+                <td className="text-center">
+                  {item.allocatedLocation?.name ? (
+                    <span className="location-badge">{item.allocatedLocation.name}</span>
+                  ) : (
+                    <span className="text-muted">ללא הקצאה</span>
+                  )}
+                </td>
+                <td className="text-center">
+                  <button 
+                    type="button" 
+                    className="btn btn-outline-danger btn-sm remove-btn-icon"
+                    onClick={() => onRemove(item.id)}
+                    title="הסר פריט"
+                  >
+                    ×
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      <div className="table-footer">
+        <small className="text-muted">
+          <i className="fas fa-info-circle me-1"></i>
+          סה"כ {items.length} פריטים נבחרו
+        </small>
       </div>
     </div>
   );
@@ -159,7 +245,7 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   const { users } = useUsers();
   const { userProfile } = useUserProfile();
   const { availableItems: serverAvailableItems, loading: itemsLoading, error: itemsError } = useAvailableItems();
-  const { updateReceipt } = useReceipts();
+  const { updateReceipt, receipts } = useReceipts();
   const [selectedUserId, setSelectedUserId] = useState<string>(originalReceipt?.signedById || '');
 
   // Item selection state
@@ -182,11 +268,37 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
 
   const isUpdateMode = !!originalReceipt;
 
-  // Calculate available items (include original items for update mode)
+  // Get items that are already used in other receipts (excluding current receipt in update mode)
+  const itemsInOtherReceipts = useMemo(() => {
+    if (!Array.isArray(receipts)) return new Set<string>();
+    
+    const usedItemIds = new Set<string>();
+    receipts.forEach(receipt => {
+      // Skip current receipt in update mode
+      if (isUpdateMode && originalReceipt && receipt.id === originalReceipt.id) {
+        return;
+      }
+      
+      receipt.receiptItems?.forEach(receiptItem => {
+        if (receiptItem.itemId) {
+          usedItemIds.add(receiptItem.itemId);
+        }
+      });
+    });
+    
+    return usedItemIds;
+  }, [receipts, isUpdateMode, originalReceipt]);
+
+  // Calculate available items (include original items for update mode, exclude items in other receipts)
   const availableItems = useMemo((): AvailableItemForForm[] => {
     if (!Array.isArray(serverAvailableItems)) {
       return [];
     }
+
+    // Filter out items that are already in other receipts
+    const filteredServerItems = serverAvailableItems.filter((item: any) => 
+      !itemsInOtherReceipts.has(item.id)
+    );
 
     if (isUpdateMode && originalReceipt) {
       const originalItems: AvailableItemForForm[] = originalReceipt.receiptItems?.map(receiptItem => ({
@@ -197,9 +309,9 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
         allocatedLocation: undefined, // Will be populated from server data if available
       })) || [];
       
-      // Merge original items with available items, avoiding duplicates
+      // Merge original items with filtered available items, avoiding duplicates
       const mergedItems: AvailableItemForForm[] = [...originalItems];
-      serverAvailableItems.forEach((item: any) => {
+      filteredServerItems.forEach((item: any) => {
         if (!mergedItems.find(existing => existing.id === item.id)) {
           mergedItems.push({
             id: item.id,
@@ -213,7 +325,7 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       
       return mergedItems;
     } else {
-      return serverAvailableItems.map((item: any) => ({
+      return filteredServerItems.map((item: any) => ({
         id: item.id,
         idNumber: item.idNumber || undefined,
         itemName: item.itemName || { name: 'Unknown Item' },
@@ -221,10 +333,10 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
         allocatedLocation: item.allocatedLocation || undefined,
       }));
     }
-  }, [serverAvailableItems, isUpdateMode, originalReceipt]);
+  }, [serverAvailableItems, isUpdateMode, originalReceipt, itemsInOtherReceipts]);
 
   // Helper function to get current used quantity for an item
-  const getUsedQuantity = (itemName: string, locationId?: string) => {
+  const getUsedQuantity = useCallback((itemName: string, locationId?: string) => {
     const locationKey = locationId || 'no-location';
     return receiptItems
       .filter(receiptItem => 
@@ -233,31 +345,13 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
         (receiptItem.allocatedLocation?.id || 'no-location') === locationKey
       )
       .reduce((sum, receiptItem) => sum + (receiptItem.quantity || 1), 0);
-  };
+  }, [receiptItems]);
 
-  // Helper function to get total available quantity for an item
-  const getTotalAvailable = (itemName: string, locationId?: string) => {
-    const locationKey = locationId || 'no-location';
-    return availableItems.filter(item =>
-      item.itemName?.name === itemName &&
-      !item.requiresReporting &&
-      (item.allocatedLocation?.id || 'no-location') === locationKey
-    ).length;
-  };
-
-  // Filter available items based on search query and exclude already selected items
   const filteredAvailableItems = useMemo(() => {
-    // First, get items that are not already selected
+    // Filter out items that are already used in this receipt
     const unselectedItems = availableItems.filter(item => {
-      // For cipher items (requiresReporting = true), exclude if already used
-      if (item.requiresReporting) {
-        return !receiptItems.some(receiptItem => receiptItem.id === item.id);
-      }
-      // For non-cipher items, only filter out if ALL quantities are used
-      const usedQuantity = getUsedQuantity(item.itemName?.name || '', item.allocatedLocation?.id);
-      const totalAvailable = getTotalAvailable(item.itemName?.name || '', item.allocatedLocation?.id);
-      // Show the item if there are still available quantities OR if no items have been used yet
-      return usedQuantity < totalAvailable;
+      // For ALL items (both cipher and non-cipher), exclude if THIS SPECIFIC item ID is already used
+      return !receiptItems.some(receiptItem => receiptItem.id === item.id);
     });
 
     // Then apply search filter - search in item name, ID number, and location name
@@ -302,22 +396,11 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
     return filteredAvailableItems.find(item => item.id === selectedItemId);
   }, [filteredAvailableItems, selectedItemId]);
 
-  // Calculate max available quantity for items
+  // Calculate max available quantity for items - not needed anymore since we track individual items
   const maxAvailableQuantity = useMemo(() => {
-    if (!selectedItem) return 0;
-    
-    // For cipher items (requiresReporting = true), quantity is always 1
-    if (selectedItem.requiresReporting) return 1;
-    
-    // For non-cipher items, calculate remaining available quantity
-    const totalAvailable = getTotalAvailable(selectedItem.itemName?.name || '', selectedItem.allocatedLocation?.id);
-    const usedQuantity = getUsedQuantity(selectedItem.itemName?.name || '', selectedItem.allocatedLocation?.id);
-    
-    const remaining = totalAvailable - usedQuantity;
-    // If this item appears in the filtered list, it means there should be at least 1 available
-    const isInFilteredList = filteredAvailableItems.some(item => item.id === selectedItem.id);
-    return isInFilteredList ? Math.max(1, remaining) : Math.max(0, remaining);
-  }, [selectedItem, availableItems, receiptItems, filteredAvailableItems]);
+    // Always return 1 since each item is tracked individually
+    return 1;
+  }, []);
 
   // Reset selected quantity when item changes or max available changes
   React.useEffect(() => {
@@ -328,23 +411,67 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
     }
   }, [selectedItem, maxAvailableQuantity]);
 
+  // Add item directly to receipt (used when clicking from dropdown)
+  const addItemDirectly = (itemToAdd: AvailableItemForForm, quantity: number = 1) => {
+    // Double-check that the item is not in another receipt
+    if (itemsInOtherReceipts.has(itemToAdd.id)) {
+      setError(`הפריט "${itemToAdd.itemName?.name}" כבר נמצא בקבלה אחרת ולא ניתן להוסיף אותו שוב`);
+      return;
+    }
+    
+    // Check if this specific item is already in the receipt
+    if (receiptItems.some(receiptItem => receiptItem.id === itemToAdd.id)) {
+      setError(`הפריט "${itemToAdd.itemName?.name}" כבר נבחר`);
+      return;
+    }
+    
+    // Add the exact item that was clicked (always quantity 1 since each item has unique ID)
+    const newReceiptItem: ReceiptItem = {
+      id: itemToAdd.id, // Use the exact item ID that was clicked
+      name: itemToAdd.itemName?.name || 'פריט לא ידוע',
+      requiresReporting: itemToAdd.requiresReporting || false,
+      idNumber: itemToAdd.idNumber || undefined,
+      allocatedLocation: itemToAdd.allocatedLocation,
+      quantity: 1 // Always 1 since each item is unique
+    };
+    setReceiptItems(prev => [...prev, newReceiptItem]);
+    
+    // Reset selection and clear any previous errors
+    setSelectedItemId('');
+    setSelectedQuantity(1);
+    setItemSearchQuery('');
+    setError(null); // Clear error on successful add
+  };
+
   // Add item to receipt
   const addItem = () => {
     if (!selectedItem) return;
     
+    // Double-check that the item is not in another receipt
+    if (itemsInOtherReceipts.has(selectedItem.id)) {
+      setError(`הפריט "${selectedItem.itemName?.name}" כבר נמצא בקבלה אחרת ולא ניתן להוסיף אותו שוב`);
+      return;
+    }
+    
     const isCipherItem = Boolean(selectedItem.requiresReporting);
     
     if (isCipherItem) {
-      // For cipher items, add each as individual item
+      // For cipher items, add each as individual item but check availability
       const sameNameItems = availableItems.filter(availableItem => 
         availableItem.itemName?.name === selectedItem.itemName?.name && 
         availableItem.requiresReporting &&
-        !receiptItems.some(receiptItem => receiptItem.id === availableItem.id)
+        !receiptItems.some(receiptItem => receiptItem.id === availableItem.id) &&
+        !itemsInOtherReceipts.has(availableItem.id) // Additional check for items in other receipts
       );
       
       const newReceiptItems: ReceiptItem[] = [];
       for (let i = 0; i < selectedQuantity && i < sameNameItems.length; i++) {
         const itemToAdd = sameNameItems[i];
+        // Final validation before adding
+        if (itemsInOtherReceipts.has(itemToAdd.id)) {
+          setError(`הפריט "${itemToAdd.itemName?.name}" (${itemToAdd.idNumber}) כבר נמצא בקבלה אחרת`);
+          return;
+        }
         newReceiptItems.push({
           id: itemToAdd.id,
           name: itemToAdd.itemName?.name || 'פריט לא ידוע',
@@ -364,7 +491,23 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       );
       
       if (existingItemIndex >= 0) {
-        // Update quantity of existing item
+        // Update quantity of existing item, but validate individual items first
+        const locationKey = selectedItem.allocatedLocation?.id || 'no-location';
+        const availableItemsOfSameName = availableItems.filter(availableItem =>
+          availableItem.itemName?.name === selectedItem.itemName?.name && 
+          !availableItem.requiresReporting &&
+          (availableItem.allocatedLocation?.id || 'no-location') === locationKey &&
+          !itemsInOtherReceipts.has(availableItem.id) // Check items not in other receipts
+        );
+        
+        const currentUsed = getUsedQuantity(selectedItem.itemName?.name || '', selectedItem.allocatedLocation?.id);
+        const requestedTotal = currentUsed + selectedQuantity;
+        
+        if (requestedTotal > availableItemsOfSameName.length) {
+          setError(`לא ניתן להוסיף ${selectedQuantity} פריטים. זמין: ${availableItemsOfSameName.length - currentUsed}`);
+          return;
+        }
+        
         const updatedItems = [...receiptItems];
         updatedItems[existingItemIndex] = {
           ...updatedItems[existingItemIndex],
@@ -372,7 +515,26 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
         };
         setReceiptItems(updatedItems);
       } else {
-        // Add new item with quantity - use the specific selected item
+        // Add new item with quantity - validate availability first
+        const locationKey = selectedItem.allocatedLocation?.id || 'no-location';
+        const availableItemsOfSameName = availableItems.filter(availableItem =>
+          availableItem.itemName?.name === selectedItem.itemName?.name && 
+          !availableItem.requiresReporting &&
+          (availableItem.allocatedLocation?.id || 'no-location') === locationKey &&
+          !itemsInOtherReceipts.has(availableItem.id) // Check items not in other receipts
+        );
+        
+        if (selectedQuantity > availableItemsOfSameName.length) {
+          setError(`לא ניתן להוסיף ${selectedQuantity} פריטים. זמין: ${availableItemsOfSameName.length}`);
+          return;
+        }
+        
+        // Final validation - make sure the specific selected item is not in another receipt
+        if (itemsInOtherReceipts.has(selectedItem.id)) {
+          setError(`הפריט "${selectedItem.itemName?.name}" כבר נמצא בקבלה אחרת`);
+          return;
+        }
+        
         const newReceiptItem: ReceiptItem = {
           id: selectedItem.id,
           name: selectedItem.itemName?.name || 'פריט לא ידוע',
@@ -385,49 +547,15 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       }
     }
     
-    // Reset selection
+    // Reset selection and clear any previous errors
     setSelectedItemId('');
     setSelectedQuantity(1);
+    setError(null); // Clear error on successful add
   };
 
   // Remove item from receipt
   const removeItem = (itemId: string) => {
     setReceiptItems(prev => prev.filter(item => item.id !== itemId));
-  };
-
-  // Handle quantity update for non-cipher items
-  const handleUpdateQuantity = (itemName: string, newQuantity: number, allocatedLocationId?: string) => {
-    const locationKey = allocatedLocationId || 'no-location';
-    setReceiptItems(items => 
-      items.map(item => 
-        item.name === itemName && 
-        !item.requiresReporting &&
-        (item.allocatedLocation?.id || 'no-location') === locationKey
-          ? { ...item, quantity: newQuantity }
-          : item
-      )
-    );
-    // Reset selected item to force dropdown refresh
-    setSelectedItemId('');
-    setSelectedQuantity(1);
-  };
-
-  const getMaxAvailableForItem = (itemName: string, allocatedLocationId?: string): number => {
-    // Find the first item with this name and location to check if it's a cipher item
-    const locationKey = allocatedLocationId || 'no-location';
-    const sampleItem = receiptItems.find(item => 
-      item.name === itemName && 
-      (item.allocatedLocation?.id || 'no-location') === locationKey
-    );
-    if (!sampleItem) return 0;
-    
-    if (sampleItem.requiresReporting) {
-      // For cipher items, max is always 1
-      return 1;
-    }
-    
-    // For non-cipher items, return total available for this name and location
-    return getTotalAvailable(itemName, allocatedLocationId);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -456,24 +584,9 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
       const serverItems: string[] = [];
       
       receiptItems.forEach(item => {
-        if (item.requiresReporting) {
-          // Cipher items: add each item individually
-          serverItems.push(item.id);
-        } else {
-          // Non-cipher items: find available items of the same name and location and add multiple instances
-          const quantity = item.quantity || 1;
-          const locationKey = item.allocatedLocation?.id || 'no-location';
-          const availableItemsOfSameName = availableItems.filter(availableItem =>
-            availableItem.itemName?.name === item.name && 
-            !availableItem.requiresReporting &&
-            (availableItem.allocatedLocation?.id || 'no-location') === locationKey
-          );
-          
-          // Add item IDs up to the quantity needed
-          for (let i = 0; i < quantity && i < availableItemsOfSameName.length; i++) {
-            serverItems.push(availableItemsOfSameName[i].id);
-          }
-        }
+        // For ALL items (both cipher and non-cipher), just add the item ID
+        // Since we're now tracking individual items by their unique IDs
+        serverItems.push(item.id);
       });
 
       if (isUpdateMode && originalReceipt) {
@@ -551,165 +664,176 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
         <div className="form-group">
           <label className="form-label required">הוסף פריטים:</label>
           
-          {/* Search Input */}
-          <div className="item-search-row mb-3">
+          {/* Warning about items in other receipts */}
+          {!itemsLoading && itemsInOtherReceipts.size > 0 && (
+            <div className="alert alert-warning" style={{ fontSize: '14px', marginBottom: '15px' }}>
+              <i className="fas fa-exclamation-triangle me-2"></i>
+              <strong>שים לב:</strong> חלק מהפריטים אינם זמינים כיוון שהם כבר נמצאים בקבלות אחרות. 
+              כל פריט יכול להיות רק בקבלה אחת בכל זמן נתון.
+            </div>
+          )}
+          
+          {/* Searchable Item Selection */}
+          <div className="item-select-row">
             <div className="input-group">
               <span className="input-group-text">
-                <i className="fas fa-search"></i>
+                <i className={`fas ${selectedItemId ? 'fa-check text-success' : 'fa-search'}`}></i>
               </span>
               <input
                 type="text"
-                className="form-control"
-                placeholder="חפש פריטים לפי שם או מספר צ'..."
+                className={`form-control ${selectedItemId ? 'border-success' : ''}`}
+                placeholder="חפש ובחר פריט לפי שם או מספר צ'..."
                 value={itemSearchQuery}
                 onChange={(e) => setItemSearchQuery(e.target.value)}
                 disabled={itemsLoading}
+                onFocus={() => {
+                  // Clear selection when focusing on search to show all filtered results
+                  if (selectedItemId) {
+                    setSelectedItemId('');
+                  }
+                }}
               />
-              {itemSearchQuery && (
+              {(itemSearchQuery || selectedItemId) && (
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
-                  onClick={() => setItemSearchQuery('')}
-                  title="נקה חיפוש"
+                  onClick={() => {
+                    setItemSearchQuery('');
+                    setSelectedItemId('');
+                  }}
+                  title={selectedItemId ? "נקה בחירה" : "נקה חיפוש"}
                 >
                   <i className="fas fa-times"></i>
                 </button>
               )}
             </div>
-            {itemSearchQuery && (
-              <small className="text-muted mt-1 d-block">
-                נמצאו {filteredAvailableItems.length} פריטים מתוך {availableItems.length}
-              </small>
+            
+            {/* Show dropdown results only when there's a search query and no item is selected */}
+            {itemSearchQuery && !selectedItemId && (
+              <div className="dropdown-results mt-2" style={{
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                backgroundColor: 'white',
+                maxHeight: '300px',
+                overflowY: 'auto',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                {itemsLoading && (
+                  <div className="dropdown-item text-center" style={{ padding: '12px', color: '#666' }}>
+                    טוען פריטים...
+                  </div>
+                )}
+                
+                {!itemsLoading && filteredAvailableItems.length === 0 && itemSearchQuery && (
+                  <div className="dropdown-item text-center" style={{ padding: '12px', color: '#e74c3c' }}>
+                    לא נמצאו פריטים התואמים לחיפוש "{itemSearchQuery}"
+                  </div>
+                )}
+                
+                {!itemsLoading && availableItems.length === 0 && !itemSearchQuery && (
+                  <div className="dropdown-item text-center" style={{ padding: '12px', color: '#e74c3c' }}>
+                    אין פריטים זמינים
+                  </div>
+                )}
+                
+                {!itemsLoading && filteredAvailableItems.length > 0 && (
+                  <>
+                    <div className="dropdown-header" style={{ 
+                      padding: '8px 12px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderBottom: '1px solid #ddd',
+                      fontSize: '12px',
+                      color: '#666'
+                    }}>
+                      {itemSearchQuery ? 
+                        `נמצאו ${filteredAvailableItems.length} פריטים מתוך ${availableItems.length}` :
+                        `${availableItems.length} פריטים זמינים`
+                      }
+                    </div>
+                    {filteredAvailableItems.map(item => {
+                      const itemName = item.itemName?.name || 'ללא שם';
+                      const cipherSuffix = item.requiresReporting ? ' (צופן)' : '';
+                      const idSuffix = item.idNumber ? ` - ${item.idNumber}` : '';
+                      const locationSuffix = item.allocatedLocation?.name ? ` | ${item.allocatedLocation.name}` : '';
+                      
+                      return (
+                        <div
+                          key={item.id}
+                          className={`dropdown-item ${selectedItemId === item.id ? 'active' : ''}`}
+                          style={{
+                            padding: '12px',
+                            cursor: 'pointer',
+                            borderBottom: '1px solid #f0f0f0',
+                            backgroundColor: selectedItemId === item.id ? '#007bff' : 'transparent',
+                            color: selectedItemId === item.id ? 'white' : 'black'
+                          }}
+                          onClick={() => {
+                            // Immediately add the item to the receipt
+                            const quantityToAdd = item.requiresReporting ? 1 : selectedQuantity;
+                            addItemDirectly(item, quantityToAdd);
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedItemId !== item.id) {
+                              e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedItemId !== item.id) {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }
+                          }}
+                        >
+                          <div style={{ fontWeight: 'bold' }}>
+                            {itemName}{cipherSuffix}
+                          </div>
+                          {idSuffix && (
+                            <div style={{ fontSize: '12px', opacity: '0.8' }}>
+                              מספר צ': {item.idNumber}
+                            </div>
+                          )}
+                          {locationSuffix && (
+                            <div style={{ fontSize: '12px', opacity: '0.8' }}>
+                              הקצאה: {item.allocatedLocation?.name}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
             )}
           </div>
           
-          <div className="item-select-row">
-            <select 
-              className="form-control"
-              value={selectedItemId}
-              onChange={(e) => setSelectedItemId(e.target.value)}
-              disabled={itemsLoading}
-            >
-              <option value="">
-                {itemsLoading ? 'טוען פריטים...' : 
-                 itemSearchQuery ? `בחר מתוך ${filteredAvailableItems.length} פריטים שנמצאו...` :
-                 'בחר פריט להוספה...'}
-              </option>
-              {!itemsLoading && filteredAvailableItems.length === 0 && itemSearchQuery && (
-                <option value="" disabled>לא נמצאו פריטים התואמים לחיפוש</option>
-              )}
-              {!itemsLoading && availableItems.length === 0 && !itemSearchQuery && (
-                <option value="" disabled>אין פריטים זמינים</option>
-              )}
-              {filteredAvailableItems.map(item => {
-                const itemName = item.itemName?.name || 'ללא שם';
-                const cipherSuffix = item.requiresReporting ? ' (צופן)' : '';
-                const idSuffix = item.idNumber ? ` - ${item.idNumber}` : '';
-                
-                return (
-                  <option key={item.id} value={item.id}>
-                    {itemName}{cipherSuffix}{idSuffix}
-                  </option>
-                );
-              })}
-            </select>
-          </div>
-          
-          {/* Quantity selector for items */}
-          {selectedItem && !selectedItem.requiresReporting && maxAvailableQuantity > 1 && (
-            <div className="quantity-select-row mt-3">
-              <label htmlFor="quantity-select" className="form-label">
-                <i className="fas fa-sort-numeric-up me-2"></i>
-                כמות (זמין: {maxAvailableQuantity})
-              </label>
-              <select
-                id="quantity-select"
-                className="form-control"
-                value={Math.min(selectedQuantity, maxAvailableQuantity)}
-                onChange={(e) => setSelectedQuantity(parseInt(e.target.value))}
-                disabled={itemsLoading}
+          {/* Add button - only show if an item is selected but not immediately added */}
+          {selectedItem && (
+            <div className="add-item-actions mt-3">
+              <div className="alert alert-info d-flex align-items-center" style={{ fontSize: '14px' }}>
+                <i className="fas fa-info-circle me-2"></i>
+                <span>פריט נבחר: <strong>{selectedItem.itemName?.name}</strong></span>
+                {selectedItem.requiresReporting && <span className="me-2 badge bg-warning">צופן</span>}
+              </div>
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={addItem}
+                disabled={!selectedItem || itemsLoading}
               >
-                {Array.from({ length: maxAvailableQuantity }, (_, i) => i + 1).map(num => (
-                  <option key={num} value={num}>{num}</option>
-                ))}
-              </select>
+                <i className="fas fa-plus me-2"></i>
+                הוסף פריט
+              </button>
             </div>
           )}
 
-          {/* Add button */}
-          <div className="add-item-actions mt-3">
-            <button 
-              type="button" 
-              className="btn btn-primary"
-              onClick={addItem}
-              disabled={!selectedItem || itemsLoading}
-            >
-              <i className="fas fa-plus me-2"></i>
-              הוסף פריט
-            </button>
-          </div>
-
-          {/* Selected items list */}
-          <div className="selected-items-list mt-3">
-            {receiptItems.length === 0 ? (
-              <div className="alert alert-info">
-                לא נבחרו פריטים
-              </div>
-            ) : (
-              receiptItems
-                .reduce((grouped: ReceiptItem[], item) => {
-                  // For cipher items (with requiresReporting = true), show each separately
-                  if (item.requiresReporting) {
-                    grouped.push(item);
-                  } else {
-                    // For non-cipher items (requiresReporting = false), group by name AND location
-                    const locationKey = item.allocatedLocation?.id || 'no-location';
-                    const existingIndex = grouped.findIndex(g => 
-                      g.name === item.name && 
-                      !g.requiresReporting &&
-                      (g.allocatedLocation?.id || 'no-location') === locationKey
-                    );
-                    if (existingIndex >= 0) {
-                      // Update quantity of existing grouped item
-                      grouped[existingIndex] = {
-                        ...grouped[existingIndex],
-                        quantity: (grouped[existingIndex].quantity || 1) + (item.quantity || 1)
-                      };
-                    } else {
-                      // Add new grouped item
-                      grouped.push({ ...item });
-                    }
-                  }
-                  return grouped;
-                }, [])
-                .map((groupedItem, index) => (
-                  <ItemCard 
-                    key={groupedItem.requiresReporting ? `${groupedItem.id}-${index}` : `${groupedItem.name}-${groupedItem.allocatedLocation?.id || 'no-location'}-grouped`}
-                    item={groupedItem} 
-                    onRemove={(id) => {
-                      if (groupedItem.requiresReporting) {
-                        // Remove specific cipher item
-                        removeItem(groupedItem.id);
-                      } else {
-                        // Remove all items with the same name and location (non-cipher)
-                        const locationKey = groupedItem.allocatedLocation?.id || 'no-location';
-                        setReceiptItems(items => 
-                          items.filter(item => 
-                            !(item.name === groupedItem.name && 
-                              !item.requiresReporting &&
-                              (item.allocatedLocation?.id || 'no-location') === locationKey)
-                          )
-                        );
-                      }
-                    }}
-                    onUpdateQuantity={!groupedItem.requiresReporting ? 
-                      (itemName: string, newQuantity: number, allocatedLocationId?: string) => {
-                        handleUpdateQuantity(itemName, newQuantity, allocatedLocationId);
-                      } : undefined}
-                    maxAvailable={getMaxAvailableForItem(groupedItem.name, groupedItem.allocatedLocation?.id)}
-                  />
-                ))
-            )}
+          {/* Selected items table */}
+          <div className="selected-items-section mt-4">
+            <SelectedItemsTable 
+              items={receiptItems}
+              onRemove={(id) => {
+                // Remove the specific item by ID
+                removeItem(id);
+              }}
+            />
           </div>
         </div>
 
