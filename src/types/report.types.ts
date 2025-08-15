@@ -152,6 +152,12 @@ export interface SignUser {
   quantity: number;
   isSigned: boolean;
   location?: string; // Added for location information in user details
+  items?: Array<{
+    itemId: string;
+    idNumber: string | null;
+    note: string;
+    allocatedLocationName: string | null;
+  }>;
 }
 
 export interface LocationData {

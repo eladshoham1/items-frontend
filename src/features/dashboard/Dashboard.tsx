@@ -577,7 +577,32 @@ const Dashboard: React.FC = () => {
                       style={{ 
                         padding: '16px 8px',
                         backgroundColor: '#e8f4fd',
-                        borderLeft: '3px solid #3498db'
+                        borderLeft: '3px solid #3498db',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onClick={(e) => {
+                        // Collect all signed users from all units for this item
+                        const allSignedUsers: SignUser[] = [];
+                        units.forEach(unit => {
+                          const { users } = getCellData(item, unit);
+                          if (users && Array.isArray(users)) {
+                            const signedUsers = users.filter(user => user.isSigned === true);
+                            allSignedUsers.push(...signedUsers);
+                          }
+                        });
+                        handleCellClick(e, allSignedUsers, item, 'כל היחידות - חתומים');
+                      }}
+                      title="לחץ לפרטי כל המשתמשים החתומים"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#d4edda';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(52, 152, 219, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#e8f4fd';
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       <span 
@@ -601,7 +626,32 @@ const Dashboard: React.FC = () => {
                       style={{ 
                         padding: '16px 8px',
                         backgroundColor: '#fef4e3',
-                        borderLeft: '3px solid #f39c12'
+                        borderLeft: '3px solid #f39c12',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onClick={(e) => {
+                        // Collect all waiting users from all units for this item
+                        const allWaitingUsers: SignUser[] = [];
+                        units.forEach(unit => {
+                          const { users } = getCellData(item, unit);
+                          if (users && Array.isArray(users)) {
+                            const waitingUsers = users.filter(user => user.isSigned !== true);
+                            allWaitingUsers.push(...waitingUsers);
+                          }
+                        });
+                        handleCellClick(e, allWaitingUsers, item, 'כל היחידות - ממתינים');
+                      }}
+                      title="לחץ לפרטי כל המשתמשים הממתינים"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8d7da';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 156, 18, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#fef4e3';
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       <span 
@@ -625,7 +675,30 @@ const Dashboard: React.FC = () => {
                       style={{ 
                         padding: '16px 8px',
                         backgroundColor: '#fadbd8',
-                        borderLeft: '3px solid #e74c3c'
+                        borderLeft: '3px solid #e74c3c',
+                        cursor: stats && stats[item] && stats[item].nonOperationalQuantity > 0 ? 'pointer' : 'default',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onClick={(e) => {
+                        const nonOpCount = stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0;
+                        if (nonOpCount > 0) {
+                          // For non-operational, we'll show a summary info instead of user details
+                          // since non-operational items might not have specific users assigned
+                          handleCellClick(e, [], item, `תקולים - ${nonOpCount} יחידות`);
+                        }
+                      }}
+                      title={stats && stats[item] && stats[item].nonOperationalQuantity > 0 ? "לחץ לפרטי הפריטים התקולים" : "אין פריטים תקולים"}
+                      onMouseEnter={(e) => {
+                        if (stats && stats[item] && stats[item].nonOperationalQuantity > 0) {
+                          e.currentTarget.style.backgroundColor = '#f5c6cb';
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(231, 76, 60, 0.3)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#fadbd8';
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       <span 
@@ -649,7 +722,31 @@ const Dashboard: React.FC = () => {
                       style={{ 
                         padding: '16px 8px',
                         backgroundColor: '#f3e5f5',
-                        borderLeft: '3px solid #9b59b6'
+                        borderLeft: '3px solid #9b59b6',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onClick={(e) => {
+                        // For available items, show all users who are not assigned or not signed
+                        const allUsers: SignUser[] = [];
+                        units.forEach(unit => {
+                          const { users } = getCellData(item, unit);
+                          if (users && Array.isArray(users)) {
+                            allUsers.push(...users);
+                          }
+                        });
+                        handleCellClick(e, allUsers, item, 'כל היחידות - סטטוס זמינות');
+                      }}
+                      title="לחץ לפרטי זמינות הפריט"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#e8daef';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(155, 89, 182, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f3e5f5';
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       <span 
@@ -673,7 +770,31 @@ const Dashboard: React.FC = () => {
                       style={{ 
                         padding: '16px 8px',
                         backgroundColor: '#fef5e7',
-                        borderLeft: '3px solid #f39c12'
+                        borderLeft: '3px solid #f39c12',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onClick={(e) => {
+                        // For total, show all users from all units for this item
+                        const allUsers: SignUser[] = [];
+                        units.forEach(unit => {
+                          const { users } = getCellData(item, unit);
+                          if (users && Array.isArray(users)) {
+                            allUsers.push(...users);
+                          }
+                        });
+                        handleCellClick(e, allUsers, item, 'כל היחידות - סיכום כללי');
+                      }}
+                      title="לחץ לפרטי כל המשתמשים הרשומים לפריט"
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8e8cd';
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 156, 18, 0.3)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#fef5e7';
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       <span 
@@ -780,31 +901,7 @@ const Dashboard: React.FC = () => {
                       borderBottom: '3px solid #3498db',
                       textAlign: 'right'
                     }}>
-                      שם
-                    </th>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
-                      color: 'white',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '3px solid #3498db',
-                      textAlign: 'center'
-                    }}>
-                      מספר אישי
-                    </th>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
-                      color: 'white',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '3px solid #3498db',
-                      textAlign: 'center'
-                    }}>
-                      טלפון
+                      שם החותם
                     </th>
                     <th style={{ 
                       background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
@@ -828,6 +925,18 @@ const Dashboard: React.FC = () => {
                       borderBottom: '3px solid #3498db',
                       textAlign: 'center'
                     }}>
+                      מספר צ'
+                    </th>
+                    <th style={{ 
+                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                      color: 'white',
+                      padding: '16px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #3498db',
+                      textAlign: 'center'
+                    }}>
                       האם חתום
                     </th>
                     <th style={{ 
@@ -840,110 +949,261 @@ const Dashboard: React.FC = () => {
                       borderBottom: '3px solid #2ecc71',
                       textAlign: 'center'
                     }}>
-                      כמות
+                      הקצאה
+                    </th>
+                    <th style={{ 
+                      background: 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)', 
+                      color: 'white',
+                      padding: '16px 20px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      border: 'none',
+                      borderBottom: '3px solid #af7ac5',
+                      textAlign: 'center'
+                    }}>
+                      הערות
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tooltipData.users.map((user, index) => (
-                    <tr 
-                      key={user.id || index}
-                      style={{ 
-                        backgroundColor: index % 2 === 0 ? '#f8fafc' : 'white',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#e3f2fd';
-                        e.currentTarget.style.transform = 'scale(1.01)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = index % 2 === 0 ? '#f8fafc' : 'white';
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    >
-                      <td style={{ 
-                        padding: '16px 20px', 
-                        fontSize: '14px', 
-                        color: '#2c3e50',
-                        fontWeight: '600',
-                        textAlign: 'right'
-                      }}>
-                        {user.name}
-                      </td>
-                      <td style={{ 
-                        padding: '16px 20px', 
-                        fontSize: '14px', 
-                        color: '#495057',
-                        textAlign: 'center',
-                        fontFamily: 'monospace'
-                      }}>
-                        {user.personalNumber}
-                      </td>
-                      <td style={{ 
-                        padding: '16px 20px', 
-                        fontSize: '14px', 
-                        color: '#495057',
-                        textAlign: 'center',
-                        fontFamily: 'monospace'
-                      }}>
-                        {user.phoneNumber}
-                      </td>
-                      <td style={{ 
-                        padding: '16px 20px', 
-                        fontSize: '14px', 
-                        color: '#495057',
-                        textAlign: 'center',
-                        fontWeight: '500'
-                      }}>
-                        {(user as any).location || 'N/A'}
-                      </td>
-                      <td style={{ 
-                        padding: '16px 20px', 
-                        textAlign: 'center'
-                      }}>
-                        <span 
-                          className="badge" 
-                          style={{ 
-                            backgroundColor: user.isSigned ? '#27ae60' : '#e74c3c',
-                            color: 'white',
-                            fontSize: '12px',
-                            padding: '6px 12px',
-                            borderRadius: '15px',
-                            fontWeight: '600',
-                            boxShadow: user.isSigned 
-                              ? '0 2px 4px rgba(39, 174, 96, 0.3)' 
-                              : '0 2px 4px rgba(231, 76, 60, 0.3)',
-                            border: user.isSigned 
-                              ? '2px solid #2ecc71' 
-                              : '2px solid #ec7063'
-                          }}
-                        >
-                          {user.isSigned ? 'כן' : 'לא'}
-                        </span>
-                      </td>
-                      <td style={{ 
-                        padding: '16px 20px', 
-                        textAlign: 'center',
-                        backgroundColor: '#e8f5e8'
-                      }}>
-                        <span 
-                          className="badge" 
-                          style={{ 
-                            backgroundColor: '#27ae60',
-                            color: 'white',
-                            fontSize: '13px',
-                            padding: '8px 12px',
-                            borderRadius: '20px',
-                            fontWeight: '600',
-                            boxShadow: '0 2px 4px rgba(39, 174, 96, 0.3)',
-                            border: '2px solid #2ecc71'
-                          }}
-                        >
-                          {user.quantity}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {tooltipData.users.map((user, userIndex) => 
+                    user.items && Array.isArray(user.items) ? user.items.map((item: { itemId: string; idNumber: string | null; note: string; allocatedLocationName: string | null }, itemIndex: number) => (
+                      <tr 
+                        key={`${user.id || userIndex}-${item.itemId || itemIndex}`}
+                        style={{ 
+                          backgroundColor: (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 ? '#f8fafc' : 'white',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#e3f2fd';
+                          e.currentTarget.style.transform = 'scale(1.01)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 ? '#f8fafc' : 'white';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#2c3e50',
+                          fontWeight: '600',
+                          textAlign: 'right'
+                        }}>
+                          {user.name}
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#495057',
+                          textAlign: 'center',
+                          fontWeight: '500'
+                        }}>
+                          {(user as any).location || 'N/A'}
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#495057',
+                          textAlign: 'center',
+                          fontFamily: 'monospace',
+                          fontWeight: '600'
+                        }}>
+                          <span 
+                            className="badge" 
+                            style={{ 
+                              backgroundColor: item.idNumber ? '#17a2b8' : '#6c757d',
+                              color: 'white',
+                              fontSize: '12px',
+                              padding: '6px 10px',
+                              borderRadius: '12px',
+                              fontWeight: '600',
+                              fontFamily: 'monospace',
+                              boxShadow: item.idNumber 
+                                ? '0 2px 4px rgba(23, 162, 184, 0.3)' 
+                                : '0 2px 4px rgba(108, 117, 125, 0.3)',
+                              border: item.idNumber 
+                                ? '1px solid #20c997' 
+                                : '1px solid #adb5bd'
+                            }}
+                          >
+                            {item.idNumber || 'ללא מספר'}
+                          </span>
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          textAlign: 'center'
+                        }}>
+                          <span 
+                            className="badge" 
+                            style={{ 
+                              backgroundColor: user.isSigned ? '#27ae60' : '#e74c3c',
+                              color: 'white',
+                              fontSize: '12px',
+                              padding: '6px 12px',
+                              borderRadius: '15px',
+                              fontWeight: '600',
+                              boxShadow: user.isSigned 
+                                ? '0 2px 4px rgba(39, 174, 96, 0.3)' 
+                                : '0 2px 4px rgba(231, 76, 60, 0.3)',
+                              border: user.isSigned 
+                                ? '2px solid #2ecc71' 
+                                : '2px solid #ec7063'
+                            }}
+                          >
+                            {user.isSigned ? 'כן' : 'לא'}
+                          </span>
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          textAlign: 'center',
+                          backgroundColor: '#e8f5e8'
+                        }}>
+                          <span 
+                            className="badge" 
+                            style={{ 
+                              backgroundColor: item.allocatedLocationName ? '#3498db' : '#6c757d',
+                              color: 'white',
+                              fontSize: '12px',
+                              padding: '6px 12px',
+                              borderRadius: '15px',
+                              fontWeight: '600',
+                              boxShadow: item.allocatedLocationName 
+                                ? '0 2px 4px rgba(52, 152, 219, 0.3)' 
+                                : '0 2px 4px rgba(108, 117, 125, 0.3)',
+                              border: item.allocatedLocationName 
+                                ? '2px solid #5dade2' 
+                                : '2px solid #adb5bd'
+                            }}
+                          >
+                            {item.allocatedLocationName || 'לא הוקצה'}
+                          </span>
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#495057',
+                          textAlign: 'center',
+                          fontStyle: 'italic'
+                        }}>
+                          {item.note || '-'}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr 
+                        key={user.id || userIndex}
+                        style={{ 
+                          backgroundColor: userIndex % 2 === 0 ? '#f8fafc' : 'white',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#e3f2fd';
+                          e.currentTarget.style.transform = 'scale(1.01)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = userIndex % 2 === 0 ? '#f8fafc' : 'white';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#2c3e50',
+                          fontWeight: '600',
+                          textAlign: 'right'
+                        }}>
+                          {user.name}
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#495057',
+                          textAlign: 'center',
+                          fontWeight: '500'
+                        }}>
+                          {(user as any).location || 'N/A'}
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#495057',
+                          textAlign: 'center',
+                          fontFamily: 'monospace'
+                        }}>
+                          <span 
+                            className="badge" 
+                            style={{ 
+                              backgroundColor: '#6c757d',
+                              color: 'white',
+                              fontSize: '12px',
+                              padding: '6px 10px',
+                              borderRadius: '12px',
+                              fontWeight: '600',
+                              fontFamily: 'monospace',
+                              boxShadow: '0 2px 4px rgba(108, 117, 125, 0.3)',
+                              border: '1px solid #adb5bd'
+                            }}
+                          >
+                            ללא מספר
+                          </span>
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          textAlign: 'center'
+                        }}>
+                          <span 
+                            className="badge" 
+                            style={{ 
+                              backgroundColor: user.isSigned ? '#27ae60' : '#e74c3c',
+                              color: 'white',
+                              fontSize: '12px',
+                              padding: '6px 12px',
+                              borderRadius: '15px',
+                              fontWeight: '600',
+                              boxShadow: user.isSigned 
+                                ? '0 2px 4px rgba(39, 174, 96, 0.3)' 
+                                : '0 2px 4px rgba(231, 76, 60, 0.3)',
+                              border: user.isSigned 
+                                ? '2px solid #2ecc71' 
+                                : '2px solid #ec7063'
+                            }}
+                          >
+                            {user.isSigned ? 'כן' : 'לא'}
+                          </span>
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          textAlign: 'center',
+                          backgroundColor: '#e8f5e8'
+                        }}>
+                          <span 
+                            className="badge" 
+                            style={{ 
+                              backgroundColor: '#6c757d',
+                              color: 'white',
+                              fontSize: '12px',
+                              padding: '6px 12px',
+                              borderRadius: '15px',
+                              fontWeight: '600',
+                              boxShadow: '0 2px 4px rgba(108, 117, 125, 0.3)',
+                              border: '2px solid #adb5bd'
+                            }}
+                          >
+                            לא הוקצה
+                          </span>
+                        </td>
+                        <td style={{ 
+                          padding: '16px 20px', 
+                          fontSize: '14px', 
+                          color: '#495057',
+                          textAlign: 'center',
+                          fontStyle: 'italic'
+                        }}>
+                          -
+                        </td>
+                      </tr>
+                    )
+                  ).flat()}
                 </tbody>
               </table>
             </div>
@@ -958,7 +1218,9 @@ const Dashboard: React.FC = () => {
                 fontWeight: '600'
               }}
             >
-              סה"כ כמות חתומה: <span style={{ fontSize: '18px', fontWeight: '700' }}>{tooltipData.users.reduce((sum, user) => sum + user.quantity, 0)}</span>
+              סה"כ פריטים מוקצים: <span style={{ fontSize: '18px', fontWeight: '700' }}>
+                {tooltipData.users.reduce((sum, user) => sum + (user.items?.length || 1), 0)}
+              </span>
             </div>
           </div>
         </div>
