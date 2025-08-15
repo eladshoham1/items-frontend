@@ -23,7 +23,7 @@ interface ReceiptsTabProps {
 }
 
 const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
-    const { receipts, pendingReceipts, fetchPendingReceipts, fetchMyPendingReceipts, deleteReceipt, fetchReceipts } = useReceipts();
+    const { receipts, pendingReceipts, deleteReceipt, fetchReceipts, signPendingReceipt } = useReceipts();
     
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
@@ -168,16 +168,8 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         setCurrentPage(1);
     };
 
-    // Load pending receipts when tab changes
-    useEffect(() => {
-        if (activeTab === 'pending') {
-            if (isAdmin) {
-                fetchPendingReceipts();
-            } else {
-                fetchMyPendingReceipts();
-            }
-        }
-    }, [activeTab, isAdmin, fetchPendingReceipts, fetchMyPendingReceipts]);
+    // Remove the useEffect that was causing unnecessary API calls on tab changes
+    // The useReceipts hook already fetches all receipts on mount and separates them into signed/pending
 
     const handlePendingReceiptsRefresh = async () => {
         // Refresh both signed and pending lists so UI updates immediately after actions
@@ -400,6 +392,8 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                             onRefresh={handlePendingReceiptsRefresh}
                             isAdmin={isAdmin}
                             currentUserId={userProfile?.id}
+                            signPendingReceipt={signPendingReceipt}
+                            deleteReceipt={deleteReceipt}
                         />
                     </div>
                 );

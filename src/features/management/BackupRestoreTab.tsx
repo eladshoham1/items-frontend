@@ -196,7 +196,7 @@ const BackupRestoreTab: React.FC = () => {
                       <i className="fas fa-table me-2 text-primary"></i>שם הטבלה
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
-                      <i className="fas fa-database me-2 text-info"></i>קיימים ב-DB
+                      <i className="fas fa-database me-2 text-info"></i>כולל
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
                       <i className="fas fa-check-circle me-2 text-success"></i>הצליחו
@@ -204,10 +204,7 @@ const BackupRestoreTab: React.FC = () => {
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
                       <i className="fas fa-times-circle me-2 text-danger"></i>נכשלו
                     </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
-                      <i className="fas fa-exclamation-triangle me-2 text-warning"></i>שגיאות
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
+                    <th className="border-0 fw-bold text-center py-3" style={{ width: '30%' }}>
                       פעולות
                     </th>
                   </tr>
@@ -246,11 +243,6 @@ const BackupRestoreTab: React.FC = () => {
                             </span>
                           </td>
                           <td className="text-center py-3">
-                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${stats.errors && stats.errors.length > 0 ? 'bg-warning bg-opacity-15 text-warning' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
-                              {stats.errors ? stats.errors.length : 0}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
                             <button 
                               className="btn btn-outline-primary btn-sm rounded-pill"
                               onClick={() => {
@@ -283,7 +275,7 @@ const BackupRestoreTab: React.FC = () => {
                       );
                     }) : (
                       <tr>
-                        <td colSpan={6} className="text-center py-5">
+                        <td colSpan={5} className="text-center py-5">
                           <div className="text-muted">
                             <i className="fas fa-inbox fa-3x mb-3 opacity-25"></i>
                             <p className="mb-0 fw-medium">אין נתונים להצגה</p>
@@ -334,7 +326,7 @@ const BackupRestoreTab: React.FC = () => {
                 </h4>
                 <small className="opacity-75">
                   {importResult.importedAt ? new Date(importResult.importedAt).toLocaleString('he-IL') : 'לא זמין'} • 
-                  {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.success || 0) + (tableStats?.updated || 0), 0)} יובאו • 
+                  {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.success || 0), 0)} יובאו • 
                   {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.exist || 0), 0)} קיימים • 
                   {Object.keys(importResult || {}).length} טבלאות
                 </small>
@@ -366,7 +358,7 @@ const BackupRestoreTab: React.FC = () => {
                       <i className="fas fa-times-circle me-2 text-danger"></i>נכשלו
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
-                      <i className="fas fa-exclamation-triangle me-2 text-warning"></i>הודעות שגיאה
+                      <i className="fas fa-exclamation-triangle me-2 text-warning"></i>שגיאות
                     </th>
                     <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
                       פעולות

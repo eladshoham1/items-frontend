@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Receipt } from '../../types';
-import { useReceipts } from '../../hooks/useReceipts';
+import { Receipt, SignPendingReceiptRequest } from '../../types';
 import { SignaturePad } from './SignaturePad';
 import { Modal, BulkDeleteErrorModal, SmartPagination } from '../../shared/components';
 import CreateReceiptForm from './CreatePendingReceiptForm';
@@ -12,7 +11,9 @@ interface PendingReceiptsListProps {
   pendingReceipts: Receipt[];
   onRefresh: () => void;
   isAdmin: boolean;
-  currentUserId?: string; // Add current user ID prop
+  currentUserId?: string;
+  signPendingReceipt: (receiptId: string, data: SignPendingReceiptRequest) => Promise<any>;
+  deleteReceipt: (id: string) => Promise<any>;
 }
 
 const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
@@ -20,8 +21,9 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   onRefresh,
   isAdmin,
   currentUserId,
+  signPendingReceipt,
+  deleteReceipt,
 }) => {
-  const { signPendingReceipt, deleteReceipt } = useReceipts();
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
