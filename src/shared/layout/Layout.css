@@ -76,31 +76,4 @@
   font-weight: 400;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .header-container {
-    min-height: 80px;
-    padding: 16px;
-  }
-  
-  .app-title {
-    font-size: 1.4rem;
-    margin-bottom: 6px;
-  }
-  
-  .app-subtitle {
-    font-size: 0.9rem;
-  }
-  
-  .main-container {
-    padding: 16px;
-  }
-  
-  .footer-container {
-    padding: 0 16px;
-  }
-  
-  .footer-text {
-    font-size: 0.8rem;
-  }
-}
+/* Mobile responsive styles removed - keeping desktop view only */

@@ -238,46 +238,7 @@
   }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .tab-navigation {
-    padding: 0 4px;
-    gap: 1px;
-  }
-  
-  .tab-navigation__content {
-    padding: 10px 12px;
-    gap: 6px;
-  }
-  
-  .tab-navigation__label {
-    font-size: 0.85rem;
-  }
-  
-  .tab-navigation__icon {
-    font-size: 0.9em;
-  }
-}
-
-@media (max-width: 576px) {
-  .tab-navigation__content {
-    padding: 8px 10px;
-    gap: 4px;
-  }
-  
-  .tab-navigation__label {
-    font-size: 0.8rem;
-  }
-  
-  /* Hide labels on very small screens if there are icons */
-  .tab-navigation__item .tab-navigation__label {
-    display: none;
-  }
-  
-  .tab-navigation__item:not(:has(.tab-navigation__icon)) .tab-navigation__label {
-    display: block;
-  }
-}
+/* Responsive Design removed - keeping desktop view only */
 
 /* Dark mode support (if needed in the future) */
 @media (prefers-color-scheme: dark) {

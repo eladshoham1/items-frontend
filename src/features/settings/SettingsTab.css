@@ -229,40 +229,7 @@
   display: block;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .settings-tab {
-    padding: 16px;
-  }
-  
-  .settings-title {
-    font-size: 2rem;
-  }
-  
-  .profile-card-header {
-    padding: 24px 16px;
-    flex-direction: column;
-    text-align: center;
-    gap: 16px;
-  }
-  
-  .profile-name {
-    font-size: 1.5rem;
-  }
-  
-  .profile-details {
-    padding: 24px 16px;
-  }
-  
-  .details-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  .detail-item {
-    padding: 16px;
-  }
-}
+/* Responsive Design removed - keeping desktop view only */
 
 /* Animation for smooth transitions */
 * {

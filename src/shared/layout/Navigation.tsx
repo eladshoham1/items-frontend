@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { User } from '../../types';
 import './Navigation.css';
@@ -22,7 +22,7 @@ const Navigation: React.FC<NavigationProps> = ({
   isAdmin,
   onLogout 
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // Mobile menu state removed - desktop only view
 
   const allTabs = [
     { key: 'dashboard', label: 'לוח בקרה', icon: '📊' },
@@ -39,25 +39,15 @@ const Navigation: React.FC<NavigationProps> = ({
 
   const handleTabClick = (tab: string) => {
     onTabChange(tab);
-    setIsMenuOpen(false);
+    // Mobile menu close removed - desktop only view
   };
 
   return (
     <nav className="navigation">
       <div className="nav-container">
-        <button
-          className="mobile-menu-button"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          <span className="hamburger">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
+        {/* Mobile menu button removed - desktop only view */}
         
-        <ul className={`nav-menu ${isMenuOpen ? 'nav-menu-open' : ''}`}>
+        <ul className="nav-menu">
           {visibleTabs.map(({ key, label, icon }) => (
             <li key={key} className="nav-item">
               <button

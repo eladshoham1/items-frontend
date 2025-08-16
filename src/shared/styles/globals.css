@@ -160,14 +160,9 @@ a:hover {
 .mt-4 { margin-top: var(--spacing-lg); }
 .mt-5 { margin-top: var(--spacing-xl); }
 
-/* Responsive helpers */
-@media (max-width: 640px) {
-  .hidden-mobile { display: none; }
-}
-
-@media (min-width: 641px) {
-  .mobile-only { display: none; }
-}
+/* Responsive helpers removed - keeping desktop view only */
+.hidden-mobile { display: block; }
+.mobile-only { display: none; }
 
 /* Focus styles for accessibility */
 *:focus {

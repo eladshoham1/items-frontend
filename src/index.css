@@ -1,8 +1,18 @@
-/* Global reset and basic styles */
+/* Global reset and basic styles - Desktop Only */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+/* Force desktop layout on all screen sizes */
+html {
+  min-width: 1200px;
+  overflow-x: auto;
+}
+
+#root {
+  min-width: 1200px;
 }
 
 body {
@@ -12,6 +22,7 @@ body {
   direction: rtl;
   padding: 0 20px;
   line-height: 1.6;
+  min-width: 1200px; /* Force desktop minimum width */
 }
 
 /* Global UI font unification */

@@ -548,17 +548,11 @@
   font-weight: 500;
 }
 
-/* Responsive Grid for Pending Receipts */
+/* Responsive Grid for Pending Receipts - desktop view only */
 .pending-receipts-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 768px) {
-  .pending-receipts-grid {
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  }
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
 }
 
 /* Enhanced Button Hover Effects */

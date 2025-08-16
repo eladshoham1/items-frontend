@@ -246,40 +246,7 @@
   margin-left: 4px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .selected-items-table-container .table-header {
-    padding: 12px 16px;
-    font-size: 14px;
-  }
-  
-  .selected-items-table-container .table thead th {
-    padding: 12px 8px;
-    font-size: 12px;
-  }
-  
-  .selected-items-table-container .table tbody td {
-    padding: 12px 8px;
-  }
-  
-  .item-name {
-    font-size: 13px;
-  }
-  
-  .id-number-badge,
-  .type-badge,
-  .location-badge {
-    font-size: 11px;
-    padding: 4px 8px;
-    min-width: auto;
-  }
-  
-  .remove-btn {
-    padding: 6px 8px;
-    min-width: 36px;
-    height: 32px;
-  }
-}
+/* Responsive Design removed - keeping desktop view only */
 
 /* Animation for adding new items */
 @keyframes slideInDown {
