@@ -69,6 +69,11 @@ export const receiptService = {
     return this.signReceipt(receiptId, { signature: data.signature });
   },
 
+  // Download receipt PDF
+  async downloadReceiptPDF(receiptId: string): Promise<Blob> {
+    return apiService.getBlob(`/receipts/${receiptId}`);
+  },
+
   // Legacy methods for backward compatibility
   async returnItems(returnData: ReturnReceiptRequest): Promise<void> {
     // This functionality might need to be implemented differently

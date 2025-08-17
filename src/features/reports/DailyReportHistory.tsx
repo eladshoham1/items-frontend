@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ServerError, SmartPagination } from '../../shared/components';
 import { useDailyReportHistory } from '../../hooks';
 import { DailyReportHistoryItem } from '../../types';
+import { reportService } from '../../services';
 
 interface DailyReportHistoryProps {
   userProfile: any;
@@ -63,19 +64,50 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     try {
       setDownloadingId(reportItem.id);
       
-      // Check if the report has a downloadUrl (new API)
-      if (reportItem.downloadUrl) {
-        // Open the download URL
-        window.open(reportItem.downloadUrl, '_blank');
-        return;
-      }
-
-      // Fallback: Report doesn't have a downloadUrl
-      alert('קובץ הדוח אינו זמין להורדה');
+      // Use the report service to download the PDF
+      const blob = await reportService.downloadReportPDF(reportItem.id);
       
-    } catch (error) {
+      // Create download link with a more descriptive filename
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Create a more descriptive filename with date
+      const reportDate = new Date(reportItem.createdAt);
+      const dateStr = reportDate.toLocaleDateString('he-IL').replace(/\//g, '-');
+      link.download = `דוח-צ'-${dateStr}.pdf`;
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+    } catch (error: any) {
       console.error('Error downloading PDF:', error);
-      alert('שגיאה בהורדת הקובץ');
+      
+      // Handle axios error responses
+      if (error.response) {
+        const status = error.response.status;
+        let errorMessage = 'שגיאה בהורדת הדוח';
+        
+        if (status === 404) {
+          errorMessage = 'דוח לא נמצא במערכת';
+        } else if (status === 401 || status === 403) {
+          errorMessage = 'אין הרשאה להורדת הדוח - נדרשות הרשאות מנהל';
+        } else if (status === 500) {
+          errorMessage = 'שגיאה פנימית בשרת בעת יצירת הדוח';
+        }
+        
+        alert(errorMessage);
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        alert('פג הזמן הקצוב לחיבור - הדוח עשוי להיות גדול מדי');
+      } else if (error.message?.includes('Network Error')) {
+        alert('שגיאה בחיבור לשרת - אנא בדוק את החיבור לאינטרנט');
+      } else {
+        alert('שגיאה לא צפויה בהורדת הקובץ');
+      }
     } finally {
       setDownloadingId(null);
     }

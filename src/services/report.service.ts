@@ -31,4 +31,9 @@ export const reportService = {
   async getCompletionHistory(page: number = 1, limit: number = 10): Promise<ReportCompletionHistoryResponse> {
     return apiService.get<ReportCompletionHistoryResponse>(`/reports/history?page=${page}&limit=${limit}`);
   },
+
+  // Download report PDF by ID (admin only)
+  async downloadReportPDF(reportId: string): Promise<Blob> {
+    return apiService.getBlob(`/reports/download/${reportId}`);
+  },
 };

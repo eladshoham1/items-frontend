@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { Receipt, User } from '../../types';
 import { useReceipts } from '../../hooks';
 import { paginate } from '../../utils';
-import { generateReceiptPDF } from '../../utils/pdfGenerator';
+import { receiptService } from '../../services';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
 import { SmartPagination, TabNavigation } from '../../shared/components';
@@ -31,6 +31,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'create' | 'update'>('create');
     const [activeTab, setActiveTab] = useState<'signed' | 'pending'>('signed');
 
@@ -235,11 +236,59 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         handlePendingReceiptsRefresh();
     };
 
-    const handleDownloadPDF = (receipt: Receipt) => {
+    const handleDownloadPDF = async (receipt: Receipt) => {
         try {
-            generateReceiptPDF(receipt);
-        } catch (error) {
-            // You could add a toast notification here
+            setDownloadingReceiptId(receipt.id);
+            
+            // Use the receipt service to download the PDF from server
+            const blob = await receiptService.downloadReceiptPDF(receipt.id);
+            
+            // Create download link with a descriptive filename
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Create a descriptive filename
+            const receiptDate = new Date(receipt.createdAt);
+            const dateStr = receiptDate.toLocaleDateString('he-IL').replace(/\//g, '-');
+            const issuer = receipt.createdBy?.name?.replace(/\s+/g, '-') || 'לא-ידוע';
+            const receiver = receipt.signedBy?.name?.replace(/\s+/g, '-') || 'לא-ידוע';
+            
+            link.download = `קבלה-${dateStr}-${issuer}-אל-${receiver}.pdf`;
+            
+            document.body.appendChild(link);
+            link.click();
+            
+            // Clean up
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            
+        } catch (error: any) {
+            console.error('Error downloading receipt PDF:', error);
+            
+            // Handle axios error responses
+            if (error.response) {
+                const status = error.response.status;
+                let errorMessage = 'שגיאה בהורדת הקבלה';
+                
+                if (status === 404) {
+                    errorMessage = 'קבלה לא נמצאה במערכת';
+                } else if (status === 401 || status === 403) {
+                    errorMessage = 'אין הרשאה להורדת הקבלה';
+                } else if (status === 500) {
+                    errorMessage = 'שגיאה פנימית בשרת בעת יצירת הקבלה';
+                }
+                
+                alert(errorMessage);
+            } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+                alert('פג הזמן הקצוב לחיבור - הקבלה עשויה להיות גדולה מדי');
+            } else if (error.message?.includes('Network Error')) {
+                alert('שגיאה בחיבור לשרת - אנא בדוק את החיבור לאינטרנט');
+            } else {
+                alert('שגיאה לא צפויה בהורדת הקבלה');
+            }
+        } finally {
+            setDownloadingReceiptId(null);
         }
     };
 
@@ -360,10 +409,20 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                                         <button 
                                                             className="btn btn-info" 
                                                             onClick={() => handleDownloadPDF(receipt)}
+                                                            disabled={downloadingReceiptId === receipt.id}
                                                             title="הורד קבלה"
                                                         >
-                                                            <i className="fas fa-download"></i>
-                                                            הורד PDF
+                                                            {downloadingReceiptId === receipt.id ? (
+                                                                <>
+                                                                    <i className="fas fa-spinner fa-spin"></i>
+                                                                    מוריד...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <i className="fas fa-download"></i>
+                                                                    הורד PDF
+                                                                </>
+                                                            )}
                                                         </button>
                                                     </div>
                                                 </td>

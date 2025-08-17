@@ -117,6 +117,15 @@ class ApiService {
     const response = await this.api.delete<T>(url, config);
     return response.data;
   }
+
+  // Special method for blob responses (PDFs, images, etc.)
+  async getBlob(url: string, config?: AxiosRequestConfig): Promise<Blob> {
+    const response = await this.api.get(url, { 
+      ...config, 
+      responseType: 'blob' 
+    });
+    return response.data;
+  }
 }
 
 // Export singleton instance
