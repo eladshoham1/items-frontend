@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useDashboardStats } from '../../hooks';
 import { useUserProfile } from '../../hooks/useUserProfile';
+import { reportService, managementService } from '../../services';
 import ServerError from '../../shared/components/ServerError';
 import { SmartPagination } from '../../shared/components';
-import { SignUser } from '../../types';
+import { SignUser, UnitEntity } from '../../types';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
@@ -27,6 +28,25 @@ const Dashboard: React.FC = () => {
     key: string;
     direction: 'asc' | 'desc';
   } | null>(null);
+
+  // State for unified dashboard data  
+  const [dashboardData, setDashboardData] = useState<any[]>([]);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+  
+  // State for units mapping
+  const [allUnits, setAllUnits] = useState<UnitEntity[]>([]);
+  const [unitsLoading, setUnitsLoading] = useState(false);
+
+  // State for locations table sorting and search
+  const [locationsSortConfig, setLocationsSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+  const [locationsSearchTerm, setLocationsSearchTerm] = useState('');
+
+  // State for units table sorting and search
+  const [unitsSearchTerm, setUnitsSearchTerm] = useState('');
 
   // Extract unique units and items from the data
   const { items, units } = useMemo(() => {
@@ -170,8 +190,10 @@ const Dashboard: React.FC = () => {
   };
 
   // Get paginated items for display
-  const sortedItems = getSortedItems();
-  const { paginatedItems, totalPages } = paginate(sortedItems || [], currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
+  const filteredAndSortedItems = useMemo(() => {
+    return getFilteredAndSortedUnitsData();
+  }, [items, unitsSearchTerm, sortConfig]);
+  const { paginatedItems, totalPages } = paginate(filteredAndSortedItems || [], currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
 
   const getSortIcon = (key: string) => {
     if (!sortConfig || sortConfig.key !== key) {
@@ -226,48 +248,6 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Get location data for a specific item and location within the selected unit
-  const getLocationData = (itemName: string, locationName: string) => {
-    try {
-      if (!stats || !stats[itemName] || !stats[itemName].units || !stats[itemName].units[selectedUnit] || 
-          !stats[itemName].units[selectedUnit].locations || !stats[itemName].units[selectedUnit].locations[locationName]) {
-        return { signedQuantity: 0, waitingQuantity: 0, totalQuantity: 0, users: [], totalAllocated: 0 };
-      }
-      
-      const locationData = stats[itemName].units[selectedUnit].locations[locationName];
-      if (!locationData || !locationData.signUsers || !Array.isArray(locationData.signUsers)) {
-        return { signedQuantity: 0, waitingQuantity: 0, totalQuantity: 0, users: [], totalAllocated: 0 };
-      }
-      
-      let totalSignedQuantity = 0;
-      let totalWaitingQuantity = 0;
-      let totalAllocated = 0;
-      const allUsers: SignUser[] = [];
-      
-      locationData.signUsers.forEach((user: any) => {
-        if (user && typeof user.quantity === 'number') {
-          allUsers.push({ ...user, location: locationName });
-          totalAllocated += user.quantity;
-          
-          // Only count as signed if isSigned is true
-          if (user.isSigned === true) {
-            totalSignedQuantity += user.quantity;
-          } else {
-            // Count as waiting if isSigned is false or undefined
-            totalWaitingQuantity += user.quantity;
-          }
-        }
-      });
-      
-      const totalQuantity = stats[itemName] && typeof stats[itemName].quantity === 'number' ? stats[itemName].quantity : 0;
-      
-      return { signedQuantity: totalSignedQuantity, waitingQuantity: totalWaitingQuantity, totalQuantity, users: allUsers, totalAllocated };
-    } catch (error) {
-      console.error('Error getting location data:', error, { itemName, locationName });
-      return { signedQuantity: 0, waitingQuantity: 0, totalQuantity: 0, users: [], totalAllocated: 0 };
-    }
-  };
-
   // Calculate total signed quantities per item (across all units)
   const getItemSignedTotal = (itemName: string) => {
     try {
@@ -303,6 +283,322 @@ const Dashboard: React.FC = () => {
       return 0;
     }
   };
+
+  // Calculate non-operational quantities per item
+  const getItemNonOperationalTotal = (itemName: string) => {
+    try {
+      if (!stats || !stats[itemName]) return 0;
+      return stats[itemName].nonOperationalQuantity || 0;
+    } catch (error) {
+      console.error('Error calculating item non-operational total:', error, { itemName });
+      return 0;
+    }
+  };
+
+  // Calculate available quantities per item (total - non-operational - signed - waiting)
+  const getItemAvailableTotal = (itemName: string) => {
+    try {
+      if (!stats || !stats[itemName]) return 0;
+      const total = stats[itemName].quantity || 0;
+      const nonOperational = stats[itemName].nonOperationalQuantity || 0;
+      const signed = getItemSignedTotal(itemName);
+      const waiting = getItemWaitingTotal(itemName);
+      return total - nonOperational - signed - waiting;
+    } catch (error) {
+      console.error('Error calculating item available total:', error, { itemName });
+      return 0;
+    }
+  };
+
+  // Calculate total quantities per item
+  const getItemTotal = (itemName: string) => {
+    try {
+      if (!stats || !stats[itemName]) return 0;
+      return stats[itemName].quantity || 0;
+    } catch (error) {
+      console.error('Error calculating item total:', error, { itemName });
+      return 0;
+    }
+  };
+
+  // Units table helper functions
+  const getFilteredAndSortedUnitsData = () => {
+    let filteredItems = items;
+    
+    // Filter by search term
+    if (unitsSearchTerm.trim()) {
+      filteredItems = items.filter(item =>
+        item.toLowerCase().includes(unitsSearchTerm.toLowerCase())
+      );
+    }
+
+    // Sort items if sortConfig is set (use existing sortConfig for units table)
+    if (sortConfig) {
+      filteredItems = [...filteredItems].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (sortConfig.key) {
+          case 'name':
+            aValue = a;
+            bValue = b;
+            break;
+          case 'signed':
+            aValue = getItemSignedTotal(a);
+            bValue = getItemSignedTotal(b);
+            break;
+          case 'waiting':
+            aValue = getItemWaitingTotal(a);
+            bValue = getItemWaitingTotal(b);
+            break;
+          case 'nonOperational':
+            aValue = getItemNonOperationalTotal(a);
+            bValue = getItemNonOperationalTotal(b);
+            break;
+          case 'available':
+            aValue = getItemAvailableTotal(a);
+            bValue = getItemAvailableTotal(b);
+            break;
+          case 'total':
+            aValue = getItemTotal(a);
+            bValue = getItemTotal(b);
+            break;
+          default:
+            // For unit columns
+            if (sortConfig.key.startsWith('unit_')) {
+              const unitName = sortConfig.key.replace('unit_', '');
+              const { signedQuantity: aSignedQuantity, waitingQuantity: aWaitingQuantity } = getCellData(a, unitName);
+              const { signedQuantity: bSignedQuantity, waitingQuantity: bWaitingQuantity } = getCellData(b, unitName);
+              
+              // Sort by total activity (signed + waiting)
+              aValue = aSignedQuantity + aWaitingQuantity;
+              bValue = bSignedQuantity + bWaitingQuantity;
+            } else {
+              return 0;
+            }
+        }
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return sortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue, 'he') 
+            : bValue.localeCompare(aValue, 'he');
+        }
+
+        if (sortConfig.direction === 'asc') {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+      });
+    }
+
+    return filteredItems;
+  };
+
+  // Locations table helper functions
+  const handleLocationsSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (locationsSortConfig && locationsSortConfig.key === key && locationsSortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setLocationsSortConfig({ key, direction });
+  };
+
+  const getLocationsSortIcon = (key: string) => {
+    if (!locationsSortConfig || locationsSortConfig.key !== key) {
+      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
+    }
+    return locationsSortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
+  };
+
+  const getFilteredAndSortedLocationsData = () => {
+    const tableData = getUnifiedLocationsTableData();
+    
+    // Filter by search term
+    let filteredItems = tableData.items;
+    if (locationsSearchTerm.trim()) {
+      filteredItems = tableData.items.filter(item =>
+        item.itemName.toLowerCase().includes(locationsSearchTerm.toLowerCase())
+      );
+    }
+
+    // Sort items
+    if (locationsSortConfig) {
+      filteredItems = [...filteredItems].sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (locationsSortConfig.key) {
+          case 'itemName':
+            aValue = a.itemName;
+            bValue = b.itemName;
+            break;
+          default:
+            // For location columns
+            if (locationsSortConfig.key.startsWith('location_')) {
+              const locationName = locationsSortConfig.key.replace('location_', '');
+              const aLocationData = a.locations[locationName];
+              const bLocationData = b.locations[locationName];
+              
+              // Sort by total activity (signed + pending + allocation)
+              aValue = (aLocationData?.signed || 0) + (aLocationData?.pending || 0) + (aLocationData?.allocation || 0);
+              bValue = (bLocationData?.signed || 0) + (bLocationData?.pending || 0) + (bLocationData?.allocation || 0);
+            } else {
+              return 0;
+            }
+        }
+
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          return locationsSortConfig.direction === 'asc' 
+            ? aValue.localeCompare(bValue, 'he') 
+            : bValue.localeCompare(aValue, 'he');
+        }
+
+        if (locationsSortConfig.direction === 'asc') {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+      });
+    }
+
+    return { ...tableData, items: filteredItems };
+  };
+
+  // Unified table helper functions for new API
+  const getUnifiedLocationsTableData = () => {
+    if (!dashboardData || !Array.isArray(dashboardData)) {
+      return { items: [], locations: [] };
+    }
+
+    // Extract all unique locations from all items
+    const locationSet = new Set<string>();
+    dashboardData.forEach(item => {
+      if (item.locations && Array.isArray(item.locations)) {
+        item.locations.forEach((loc: any) => {
+          if (loc.locationName) {
+            locationSet.add(loc.locationName);
+          }
+        });
+      }
+    });
+
+    const locations = Array.from(locationSet).sort();
+
+    // Transform data to table format
+    const items = dashboardData.map(item => {
+      const locationData: { [key: string]: any } = {};
+      
+      if (item.locations && Array.isArray(item.locations)) {
+        item.locations.forEach((loc: any) => {
+          // Use server allocation value if available, otherwise count all receipts for this location
+          let actualAllocation = loc.allocation || 0;
+          if (actualAllocation === 0 && loc.receipts && Array.isArray(loc.receipts)) {
+            // Fallback: count all receipts in this location
+            actualAllocation = loc.receipts.length;
+          }
+
+          locationData[loc.locationName] = {
+            signed: loc.signed || 0,
+            pending: loc.pending || 0,
+            allocation: actualAllocation, // Use server value or count all receipts
+            receipts: loc.receipts || []
+          };
+        });
+      }
+
+      return {
+        itemName: item.itemName,
+        locations: locationData
+      };
+    });
+
+    return { items, locations };
+  };
+
+  const handleUnifiedLocationsCellClick = (e: React.MouseEvent, cellData: any, itemName: string, locationName: string) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const allUsers: SignUser[] = [];
+
+    // Process receipts to create user list
+    if (cellData.receipts && Array.isArray(cellData.receipts)) {
+      cellData.receipts.forEach((receipt: any) => {
+        allUsers.push({
+          id: receipt.idNumber?.toString() || Math.random().toString(),
+          name: receipt.signBy || 'Unknown',
+          phoneNumber: '', // Not available in receipt data
+          personalNumber: receipt.idNumber || 0,
+          quantity: 1, // Default quantity since it's not in the receipt
+          isSigned: receipt.isSigned || false,
+          location: receipt.allocatedLocation || locationName
+        });
+      });
+    }
+
+    setTooltipData({
+      show: true,
+      users: allUsers,
+      position: { x: rect.left + window.scrollX, y: rect.bottom + window.scrollY }
+    });
+  };
+
+  // Load all units for ID mapping
+  useEffect(() => {
+    const loadUnits = async () => {
+      if (userProfile?.isAdmin) {
+        setUnitsLoading(true);
+        try {
+          const response = await managementService.getAllUnits();
+          if (response.success && response.data) {
+            setAllUnits(response.data);
+          }
+        } catch (error) {
+          console.error('Error loading units:', error);
+        } finally {
+          setUnitsLoading(false);
+        }
+      }
+    };
+
+    loadUnits();
+  }, [userProfile?.isAdmin]);
+
+  // Load dashboard data when unit changes
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (selectedUnit && userProfile?.isAdmin) {
+        // Find unit ID from unit name
+        const unit = allUnits.find(u => u.name === selectedUnit);
+        const unitId = unit ? unit.id : null;
+        
+        if (!unitId) {
+          setDashboardError(`Unit ID not found for unit: ${selectedUnit}`);
+          setDashboardData([]);
+          return;
+        }
+
+        setDashboardLoading(true);
+        setDashboardError(null);
+        try {
+          const data = await reportService.getDashboardByUnit(unitId);
+          // The API returns an array of items directly
+          setDashboardData(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error('Error loading dashboard data:', error);
+          setDashboardError('Failed to load dashboard data');
+          setDashboardData([]);
+        } finally {
+          setDashboardLoading(false);
+        }
+      } else {
+        setDashboardData([]);
+      }
+    };
+
+    loadDashboardData();
+  }, [selectedUnit, userProfile?.isAdmin, allUnits]); // Added allUnits dependency
 
   // Check if user has a location assigned
   if (userProfile && !userProfile.location) {
@@ -498,14 +794,69 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
-          {/* Spacer for Units Tab */}
+          {/* Search Input for Units Tab */}
           {activeTab === 'units' && (
             <div style={{ 
-              padding: '40px 24px',
+              padding: '20px 24px',
               backgroundColor: 'white',
               borderBottom: '1px solid #e9ecef',
               direction: 'rtl'
             }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <label htmlFor="unitsSearch" style={{ 
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#495057',
+                  marginBottom: 0
+                }}>
+                  חיפוש פריטים:
+                </label>
+                <input
+                  id="unitsSearch"
+                  type="text"
+                  value={unitsSearchTerm}
+                  onChange={(e) => setUnitsSearchTerm(e.target.value)}
+                  placeholder="הקלד שם פריט לחיפוש..."
+                  style={{
+                    padding: '10px 16px',
+                    borderRadius: '8px',
+                    border: '2px solid #e9ecef',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    backgroundColor: 'white',
+                    color: '#495057',
+                    minWidth: '300px',
+                    direction: 'rtl'
+                  }}
+                />
+                {unitsSearchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setUnitsSearchTerm('')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#6c757d',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      padding: '5px'
+                    }}
+                    title="נקה חיפוש"
+                  >
+                    ×
+                  </button>
+                )}
+                <span style={{
+                  backgroundColor: '#e3f2fd',
+                  color: '#1976d2',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}>
+                  {filteredAndSortedItems.length} פריטים
+                </span>
+              </div>
             </div>
           )}
 
@@ -1028,403 +1379,307 @@ const Dashboard: React.FC = () => {
             />
           )}
 
-        {/* Locations Tab Content */}
+        {/* Locations Tab Content - Unified Table */}
         {activeTab === 'locations' && selectedUnit && (
-          <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px' }}>
-            <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
-              <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
-                <tr>
-                  <th 
-                    style={{ 
-                      position: 'sticky', 
-                      right: 0, 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
-                      color: 'white',
-                      zIndex: 10, 
-                      minWidth: '180px',
-                      padding: '16px 12px',
-                      fontSize: '14px',
+          <>
+            {dashboardLoading || unitsLoading ? (
+              <div style={{ 
+                padding: '60px 24px',
+                textAlign: 'center',
+                backgroundColor: '#f8f9fa',
+                color: '#6c757d',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>
+                <div style={{ marginBottom: '16px', fontSize: '48px' }}>⏳</div>
+                {unitsLoading ? 'טוען רשימת יחידות...' : 'טוען נתוני יחידה...'}
+              </div>
+            ) : dashboardError ? (
+              <div style={{ 
+                padding: '60px 24px',
+                textAlign: 'center',
+                backgroundColor: '#f8f9fa',
+                color: '#dc3545',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>
+                <div style={{ marginBottom: '16px', fontSize: '48px' }}>❌</div>
+                שגיאה בטעינת נתונים: {dashboardError}
+              </div>
+            ) : dashboardData && dashboardData.length > 0 ? (
+              <>
+                {/* Search Input */}
+                <div style={{ 
+                  padding: '20px 24px',
+                  backgroundColor: 'white',
+                  borderBottom: '1px solid #e9ecef',
+                  direction: 'rtl'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <label htmlFor="locationsSearch" style={{ 
+                      fontSize: '16px',
                       fontWeight: '600',
-                      borderBottom: '3px solid #3498db',
-                      textAlign: 'center',
-                      boxShadow: '2px 0 4px rgba(0,0,0,0.1)'
-                    }}
-                  >
-                    פריט
-                  </th>
-                  {locations.map(location => (
-                    <th 
-                      key={location} 
-                      className="text-center" 
-                      style={{ 
-                        minWidth: '150px', 
-                        background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
-                        color: 'white',
-                        padding: '16px 8px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        borderBottom: '3px solid #3498db'
-                      }}
-                    >
-                      {location}
-                    </th>
-                  ))}
-                  <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #16a085 0%, #1abc9c 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #2ecc71'
-                    }}
-                  >
-                    חתומים
-                  </th>
-                  <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #f39c12 0%, #e67e22 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #f39c12'
-                    }}
-                  >
-                    ממתינים לחתימה
-                  </th>
-                  <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #e74c3c'
-                    }}
-                  >
-                    תקולים
-                  </th>
-                  <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #af7ac5'
-                    }}
-                  >
-                    זמינים
-                  </th>
-                  <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #d35400 0%, #e67e22 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #f39c12'
-                    }}
-                  >
-                    סה"כ
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedItems && Array.isArray(paginatedItems) ? paginatedItems.map((item, itemIndex) => {
-                  if (!item || typeof item !== 'string') return null;
-                  
-                  return (
-                  <tr 
-                    key={`${item}-locations`} 
-                    style={{
-                      backgroundColor: itemIndex % 2 === 0 ? '#f8fafc' : 'white',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#e3f2fd';
-                      e.currentTarget.style.transform = 'scale(1.01)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = itemIndex % 2 === 0 ? '#f8fafc' : 'white';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                  >
-                    <td 
-                      style={{ 
-                        position: 'sticky', 
-                        right: 0, 
-                        background: itemIndex % 2 === 0 ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' : 'linear-gradient(135deg, white 0%, #f1f5f9 100%)',
-                        fontWeight: '700',
-                        borderRight: '3px solid #3498db',
-                        padding: '16px 12px',
+                      color: '#495057',
+                      marginBottom: 0
+                    }}>
+                      חיפוש פריטים:
+                    </label>
+                    <input
+                      id="locationsSearch"
+                      type="text"
+                      value={locationsSearchTerm}
+                      onChange={(e) => setLocationsSearchTerm(e.target.value)}
+                      placeholder="הקלד שם פריט לחיפוש..."
+                      style={{
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        border: '2px solid #e9ecef',
                         fontSize: '14px',
-                        color: '#2c3e50',
-                        boxShadow: '2px 0 4px rgba(0,0,0,0.05)',
-                        textAlign: 'center'
+                        fontWeight: '500',
+                        backgroundColor: 'white',
+                        color: '#495057',
+                        minWidth: '300px',
+                        direction: 'rtl'
                       }}
-                    >
-                      {item}
-                    </td>
-                    {locations.map(location => {
-                      const { signedQuantity, waitingQuantity, users, totalAllocated } = getLocationData(item, location);
-                      const hasUsers = users && Array.isArray(users) && users.length > 0;
-                      const hasSignedUsers = signedQuantity > 0;
-                      const hasWaitingUsers = waitingQuantity > 0;
-                      
-                      return (
-                        <td 
-                          key={`${item}-${location}`}
-                          className="text-center"
+                    />
+                    {locationsSearchTerm && (
+                      <button
+                        type="button"
+                        onClick={() => setLocationsSearchTerm('')}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#6c757d',
+                          fontSize: '16px',
+                          cursor: 'pointer',
+                          padding: '5px'
+                        }}
+                        title="נקה חיפוש"
+                      >
+                        ×
+                      </button>
+                    )}
+                    <span style={{
+                      backgroundColor: '#e3f2fd',
+                      color: '#1976d2',
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      {getFilteredAndSortedLocationsData().items.length} פריטים
+                    </span>
+                  </div>
+                </div>
+
+                <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px' }}>
+                <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+                  <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
+                    <tr>
+                      <th 
+                        style={{ 
+                          position: 'sticky', 
+                          right: 0, 
+                          background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                          color: 'white',
+                          zIndex: 10, 
+                          minWidth: '180px',
+                          padding: '16px 12px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          borderBottom: '3px solid #3498db',
+                          textAlign: 'center',
+                          boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleLocationsSort('itemName')}
+                      >
+                        פריט
+                        {getLocationsSortIcon('itemName')}
+                      </th>
+                      {getFilteredAndSortedLocationsData().locations.map(location => (
+                        <th 
+                          key={location} 
+                          className="text-center" 
                           style={{ 
-                            cursor: hasUsers ? 'pointer' : 'default',
-                            position: 'relative',
+                            minWidth: '150px', 
+                            background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
+                            color: 'white',
                             padding: '16px 8px',
-                            transition: 'all 0.3s ease',
-                            backgroundColor: hasUsers ? '#e8f5e8' : '#f8f9fa',
-                            borderLeft: hasUsers ? '3px solid #27ae60' : '1px solid #dee2e6'
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            borderBottom: '3px solid #3498db',
+                            cursor: 'pointer'
                           }}
-                          onClick={(e) => handleCellClick(e, users || [], item, `${selectedUnit} - ${location}`)}
-                          title={hasUsers ? `לחץ לפרטים נוספים (${totalAllocated} מוקצה)` : 'אין משתמשים רשומים'}
-                          onMouseEnter={(e) => {
-                            if (hasUsers) {
-                              e.currentTarget.style.backgroundColor = '#d4edda';
-                              e.currentTarget.style.transform = 'scale(1.05)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(39, 174, 96, 0.3)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = hasUsers ? '#e8f5e8' : '#f8f9fa';
-                            e.currentTarget.style.transform = 'scale(1)';
-                            e.currentTarget.style.boxShadow = 'none';
+                          onClick={() => handleLocationsSort(`location_${location}`)}
+                        >
+                          {location}
+                          {getLocationsSortIcon(`location_${location}`)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getFilteredAndSortedLocationsData().items.map((item, itemIndex) => (
+                      <tr 
+                        key={`${item.itemName}-locations`} 
+                        style={{
+                          backgroundColor: itemIndex % 2 === 0 ? '#f8fafc' : 'white',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#e3f2fd';
+                          e.currentTarget.style.transform = 'scale(1.01)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = itemIndex % 2 === 0 ? '#f8fafc' : 'white';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        <td 
+                          style={{ 
+                            position: 'sticky', 
+                            right: 0, 
+                            background: itemIndex % 2 === 0 ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' : 'linear-gradient(135deg, white 0%, #f1f5f9 100%)',
+                            fontWeight: '700',
+                            borderRight: '3px solid #3498db',
+                            padding: '16px 12px',
+                            fontSize: '14px',
+                            color: '#2c3e50',
+                            boxShadow: '2px 0 4px rgba(0,0,0,0.05)',
+                            textAlign: 'center'
                           }}
                         >
-                          {hasUsers ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
-                              {hasSignedUsers && (
-                                <span 
-                                  className="badge" 
-                                  style={{ 
-                                    backgroundColor: '#27ae60',
-                                    color: 'white',
-                                    fontSize: '11px',
-                                    padding: '4px 8px',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    boxShadow: '0 1px 3px rgba(39, 174, 96, 0.3)',
-                                    border: '1px solid #2ecc71'
-                                  }}
-                                  title={`חתומים: ${signedQuantity} / ${totalAllocated}`}
-                                >
-                                  ✓ {signedQuantity} / {totalAllocated}
-                                </span>
-                              )}
-                              {hasWaitingUsers && (
-                                <span 
-                                  className="badge" 
-                                  style={{ 
-                                    backgroundColor: '#f39c12',
-                                    color: 'white',
-                                    fontSize: '11px',
-                                    padding: '4px 8px',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    boxShadow: '0 1px 3px rgba(243, 156, 18, 0.3)',
-                                    border: '1px solid #f5b041'
-                                  }}
-                                  title={`ממתינים: ${waitingQuantity} / ${totalAllocated}`}
-                                >
-                                  ⏳ {waitingQuantity} / {totalAllocated}
-                                </span>
-                              )}
-                              {!hasSignedUsers && !hasWaitingUsers && (
-                                <span 
-                                  className="badge" 
-                                  style={{ 
-                                    backgroundColor: '#6c757d',
-                                    color: 'white',
-                                    fontSize: '11px',
-                                    padding: '4px 8px',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    boxShadow: '0 1px 3px rgba(108, 117, 125, 0.3)',
-                                    border: '1px solid #adb5bd'
-                                  }}
-                                  title={`מוקצה: 0 / ${totalAllocated}`}
-                                >
-                                  0 / {totalAllocated}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span 
-                              className="badge" 
+                          {item.itemName}
+                        </td>
+                        {getFilteredAndSortedLocationsData().locations.map(location => {
+                          const locationData = item.locations[location];
+                          const hasUserData = locationData && (locationData.signed > 0 || locationData.pending > 0);
+                          const hasAnyData = locationData && (locationData.signed > 0 || locationData.pending > 0 || locationData.allocation > 0);
+                          
+                          return (
+                            <td 
+                              key={`${item.itemName}-${location}`}
+                              className="text-center"
                               style={{ 
-                                backgroundColor: '#e9ecef',
-                                color: '#6c757d',
-                                fontSize: '12px',
-                                padding: '6px 10px',
-                                borderRadius: '15px',
-                                fontWeight: '500',
-                                border: '1px solid #dee2e6'
+                                cursor: hasUserData ? 'pointer' : 'default',
+                                position: 'relative',
+                                padding: '16px 8px',
+                                transition: 'all 0.3s ease',
+                                backgroundColor: hasAnyData ? '#e8f5e8' : '#f8f9fa',
+                                borderLeft: hasAnyData ? '3px solid #27ae60' : '1px solid #dee2e6'
+                              }}
+                              onClick={(e) => hasUserData && handleUnifiedLocationsCellClick(e, locationData, item.itemName, location)}
+                              title={hasUserData ? `לחץ לפרטים נוספים` : hasAnyData ? 'יש הקצאות אך אין נתוני משתמשים' : 'אין נתונים'}
+                              onMouseEnter={(e) => {
+                                if (hasUserData) {
+                                  e.currentTarget.style.backgroundColor = '#d4edda';
+                                  e.currentTarget.style.transform = 'scale(1.05)';
+                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(39, 174, 96, 0.3)';
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = hasAnyData ? '#e8f5e8' : '#f8f9fa';
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.boxShadow = 'none';
                               }}
                             >
-                              0 / 0
-                            </span>
-                          )}
-                        </td>
-                      );
-                    })}
-                    
-                    {/* Summary columns for locations view */}
-                    <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#e8f4fd',
-                        borderLeft: '3px solid #3498db'
-                      }}
-                    >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#3498db',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(52, 152, 219, 0.3)',
-                          border: '2px solid #5dade2'
-                        }}
-                      >
-                        {locations.reduce((total, location) => {
-                          const { signedQuantity } = getLocationData(item, location);
-                          return total + signedQuantity;
-                        }, 0)}
-                      </span>
-                    </td>
-                    <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#fef4e3',
-                        borderLeft: '3px solid #f39c12'
-                      }}
-                    >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#f39c12',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(243, 156, 18, 0.3)',
-                          border: '2px solid #f5b041'
-                        }}
-                      >
-                        {locations.reduce((total, location) => {
-                          const { waitingQuantity } = getLocationData(item, location);
-                          return total + waitingQuantity;
-                        }, 0)}
-                      </span>
-                    </td>
-                    <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#fadbd8',
-                        borderLeft: '3px solid #e74c3c'
-                      }}
-                    >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#e74c3c',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(231, 76, 60, 0.3)',
-                          border: '2px solid #ec7063'
-                        }}
-                      >
-                        {stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0}
-                      </span>
-                    </td>
-                    <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#f3e5f5',
-                        borderLeft: '3px solid #9b59b6'
-                      }}
-                    >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#9b59b6',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(155, 89, 182, 0.3)',
-                          border: '2px solid #af7ac5'
-                        }}
-                      >
-                        {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - 
-                         (stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0) - 
-                         locations.reduce((total, location) => {
-                           const { signedQuantity, waitingQuantity } = getLocationData(item, location);
-                           return total + signedQuantity + waitingQuantity;
-                         }, 0)}
-                      </span>
-                    </td>
-                    <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#fef5e7',
-                        borderLeft: '3px solid #f39c12'
-                      }}
-                    >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#f39c12',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(243, 156, 18, 0.3)',
-                          border: '2px solid #f5b041'
-                        }}
-                      >
-                        {stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0}
-                      </span>
-                    </td>
-                  </tr>
-                  );
-                }).filter(Boolean) : null}
-              </tbody>
-            </table>
-          </div>
+                              {hasAnyData ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                                  {locationData.signed > 0 && (
+                                    <span 
+                                      className="badge" 
+                                      style={{ 
+                                        backgroundColor: '#27ae60',
+                                        color: 'white',
+                                        fontSize: '11px',
+                                        padding: '4px 8px',
+                                        borderRadius: '12px',
+                                        fontWeight: '600',
+                                        boxShadow: '0 1px 3px rgba(39, 174, 96, 0.3)',
+                                        border: '1px solid #2ecc71'
+                                      }}
+                                      title={`חתומים: ${locationData.signed}`}
+                                    >
+                                      ✓ {locationData.signed}
+                                    </span>
+                                  )}
+                                  {locationData.pending > 0 && (
+                                    <span 
+                                      className="badge" 
+                                      style={{ 
+                                        backgroundColor: '#f39c12',
+                                        color: 'white',
+                                        fontSize: '11px',
+                                        padding: '4px 8px',
+                                        borderRadius: '12px',
+                                        fontWeight: '600',
+                                        boxShadow: '0 1px 3px rgba(243, 156, 18, 0.3)',
+                                        border: '1px solid #f5b041'
+                                      }}
+                                      title={`ממתינים: ${locationData.pending}`}
+                                    >
+                                      ⏳ {locationData.pending}
+                                    </span>
+                                  )}
+                                  {locationData.allocation > 0 && (
+                                    <span 
+                                      className="badge" 
+                                      style={{ 
+                                        backgroundColor: '#3498db',
+                                        color: 'white',
+                                        fontSize: '11px',
+                                        padding: '4px 8px',
+                                        borderRadius: '12px',
+                                        fontWeight: '600',
+                                        boxShadow: '0 1px 3px rgba(52, 152, 219, 0.3)',
+                                        border: '1px solid #5dade2'
+                                      }}
+                                      title={`הקצאה: ${locationData.allocation}`}
+                                    >
+                                      📋 {locationData.allocation}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span 
+                                  className="badge" 
+                                  style={{ 
+                                    backgroundColor: '#e9ecef',
+                                    color: '#6c757d',
+                                    fontSize: '12px',
+                                    padding: '6px 10px',
+                                    borderRadius: '15px',
+                                    fontWeight: '500',
+                                    border: '1px solid #dee2e6'
+                                  }}
+                                >
+                                  0
+                                </span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              </>
+            ) : (
+              <div style={{ 
+                padding: '60px 24px',
+                textAlign: 'center',
+                backgroundColor: '#f8f9fa',
+                color: '#6c757d',
+                fontSize: '18px',
+                fontWeight: '500'
+              }}>
+                <div style={{ marginBottom: '16px', fontSize: '48px' }}>📊</div>
+                אין נתונים זמינים עבור יחידה זו
+              </div>
+            )}
+          </>
         )}
 
         {/* Show message when no unit selected for locations tab */}
@@ -1442,13 +1697,14 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-          {totalPages > 1 && (
-            <SmartPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          )}
+        {/* Pagination for units tab */}
+        {activeTab === 'units' && totalPages > 1 && (
+          <SmartPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
         </div>
       </div>
 

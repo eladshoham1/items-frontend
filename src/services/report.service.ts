@@ -3,13 +3,14 @@ import {
   DashboardStatistics, 
   CurrentReportingStatusResponse,
   UpdateReportItemsRequest,
-  ReportCompletionHistoryResponse
+  ReportCompletionHistoryResponse,
+  UnitDashboardResponse
 } from '../types';
 
 export const reportService = {
   // Get dashboard statistics
   async getStatistics(): Promise<DashboardStatistics> {
-    return apiService.get<DashboardStatistics>('/reports/statistics');
+    return apiService.get<DashboardStatistics>('/reports/dashboard');
   },
 
   // Get current reporting status
@@ -35,5 +36,10 @@ export const reportService = {
   // Download report PDF by ID (admin only)
   async downloadReportPDF(reportId: string): Promise<Blob> {
     return apiService.getBlob(`/reports/download/${reportId}`);
+  },
+
+  // Get dashboard data for specific unit (admin only)
+  async getDashboardByUnit(unitId: string): Promise<UnitDashboardResponse> {
+    return apiService.get<UnitDashboardResponse>(`/reports/dashboard/${unitId}`);
   },
 };

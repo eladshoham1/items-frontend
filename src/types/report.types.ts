@@ -245,3 +245,39 @@ export interface UpdateDailyReportRequest {
 export interface CompleteDailyReportRequest {
   reportId: string;
 }
+
+// Unit Dashboard Types
+export interface UnitDashboardLocationData {
+  locationName: string;
+  signed: number;
+  pending: number;
+  allocation: number;
+  receipts: any[]; // You can define a more specific type if needed
+}
+
+export interface UnitDashboardRow {
+  itemName: string;
+  locations: Record<string, UnitDashboardLocationData>;
+}
+
+export interface UnitDashboardColumn {
+  id: string;
+  name: string;
+}
+
+export interface UnitDashboardTableStructure {
+  columns: UnitDashboardColumn[];
+  rows: UnitDashboardRow[];
+}
+
+export interface UnitDashboardMetadata {
+  unitId: string;
+  unitName: string;
+  totalLocations: number;
+  totalAllocations: number;
+}
+
+export interface UnitDashboardResponse {
+  tableStructure: UnitDashboardTableStructure;
+  metadata: UnitDashboardMetadata;
+}

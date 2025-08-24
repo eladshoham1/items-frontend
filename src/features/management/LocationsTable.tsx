@@ -227,29 +227,31 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
       <div className="management-header">
         <h2>ניהול מיקומים</h2>
         <div className="management-actions">
-          <button 
-            className="btn btn-primary" 
-            onClick={() => setIsAddModalOpen(true)}
-            disabled={loading}
-          >
-            הוסף מיקום
-          </button>
-          {selectedIds.length > 0 && (
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button 
-              className="btn btn-danger" 
-              onClick={handleBulkDelete}
-              disabled={isSubmitting}
+              className="btn btn-primary" 
+              onClick={() => setIsAddModalOpen(true)}
+              disabled={loading}
             >
-              מחק נבחרים ({selectedIds.length})
+              הוסף מיקום
             </button>
-          )}
-          <button 
-            className="btn btn-ghost" 
-            onClick={onRefresh}
-            disabled={loading}
-          >
-            רענן
-          </button>
+            {selectedIds.length > 0 && (
+              <button 
+                className="btn btn-danger" 
+                onClick={handleBulkDelete}
+                disabled={isSubmitting}
+              >
+                מחק נבחרים ({selectedIds.length})
+              </button>
+            )}
+            <button 
+              className="btn btn-ghost" 
+              onClick={onRefresh}
+              disabled={loading}
+            >
+              רענן
+            </button>
+          </div>
         </div>
       </div>
 
