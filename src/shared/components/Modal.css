@@ -9,8 +9,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   padding: var(--spacing-md);
+  /* Better touch handling */
+  touch-action: none;
+  -webkit-overflow-scrolling: touch;
+  /* Prevent iOS Safari bouncing */
+  overscroll-behavior: contain;
 }
 
 .modal-content {
@@ -21,6 +26,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Ensure modal content is touchable */
+  touch-action: auto;
+  position: relative;
 }
 
 .modal-sm {
@@ -50,6 +58,8 @@
   padding: var(--spacing-lg);
   border-bottom: 1px solid var(--color-border);
   background: var(--color-table-header);
+  /* Prevent header from shrinking */
+  flex-shrink: 0;
 }
 
 .modal-title {
@@ -69,6 +79,13 @@
   border-radius: var(--radius);
   transition: color var(--transition), background var(--transition);
   line-height: 1;
+  /* Better touch target */
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
 }
 
 .modal-close-btn:hover {
@@ -80,6 +97,88 @@
   padding: var(--spacing-lg);
   overflow-y: auto;
   flex: 1;
+  /* Better touch scrolling */
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Mobile responsiveness removed - keeping desktop view only */
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: var(--spacing-sm);
+    align-items: flex-start;
+    padding-top: 5vh;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .modal-sm,
+  .modal-md,
+  .modal-lg,
+  .modal-xl {
+    max-width: none;
+    width: 100%;
+  }
+
+  .modal-header {
+    padding: var(--spacing-md);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .modal-body {
+    padding: var(--spacing-md);
+  }
+
+  .modal-close-btn {
+    /* Larger touch target on mobile */
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 1.75rem;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: stretch;
+  }
+
+  .modal-content {
+    border-radius: 0;
+    max-height: 100vh;
+    height: 100vh;
+  }
+
+  .modal-header {
+    border-radius: 0;
+  }
+}
+
+/* Prevent zoom on double tap for mobile Safari */
+.modal-content * {
+  touch-action: manipulation;
+}
+
+/* Ensure proper touch targets */
+.modal-content button,
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Fix iOS Safari modal issues */
+@supports (-webkit-touch-callout: none) {
+  .modal-overlay {
+    /* Fix for iOS Safari viewport issues */
+    height: -webkit-fill-available;
+  }
+}

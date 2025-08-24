@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import './Modal.css';
 
 interface ModalProps {
@@ -16,6 +16,22 @@ const Modal: React.FC<ModalProps> = ({
   title,
   size = 'md'
 }) => {
+  const handleOverlayClick = useCallback((event: React.MouseEvent | React.TouchEvent) => {
+    if (event.target === event.currentTarget) {
+      onClose();
+    }
+  }, [onClose]);
+
+  const handleContentClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const handleCloseClick = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -26,28 +42,40 @@ const Modal: React.FC<ModalProps> = ({
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
+      // Prevent background scrolling on mobile
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.width = '';
     };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div 
+      className="modal-overlay" 
+      onClick={handleOverlayClick}
+      onTouchStart={handleOverlayClick}
+    >
       <div 
         className={`modal-content modal-${size}`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={handleContentClick}
+        onTouchStart={handleContentClick}
       >
         <div className="modal-header">
           {title && <h3 className="modal-title">{title}</h3>}
           <button 
             className="modal-close-btn" 
-            onClick={onClose}
+            onClick={handleCloseClick}
+            onTouchStart={handleCloseClick}
             aria-label="סגור"
+            type="button"
           >
             &times;
           </button>
