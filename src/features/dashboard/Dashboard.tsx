@@ -130,80 +130,6 @@ const Dashboard: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const getSortedItems = () => {
-    if (!items || !Array.isArray(items) || !sortConfig) {
-      return items;
-    }
-
-    return [...items].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (sortConfig.key) {
-        case 'name':
-          aValue = a;
-          bValue = b;
-          break;
-        case 'signed':
-          aValue = getItemSignedTotal(a);
-          bValue = getItemSignedTotal(b);
-          break;
-        case 'waiting':
-          aValue = getItemWaitingTotal(a);
-          bValue = getItemWaitingTotal(b);
-          break;
-        case 'nonOperational':
-          aValue = stats && stats[a] && typeof stats[a].nonOperationalQuantity === 'number' ? stats[a].nonOperationalQuantity : 0;
-          bValue = stats && stats[b] && typeof stats[b].nonOperationalQuantity === 'number' ? stats[b].nonOperationalQuantity : 0;
-          break;
-        case 'available':
-          aValue = (stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0) - (stats && stats[a] && typeof stats[a].nonOperationalQuantity === 'number' ? stats[a].nonOperationalQuantity : 0) - getItemSignedTotal(a) - getItemWaitingTotal(a);
-          bValue = (stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0) - (stats && stats[b] && typeof stats[b].nonOperationalQuantity === 'number' ? stats[b].nonOperationalQuantity : 0) - getItemSignedTotal(b) - getItemWaitingTotal(b);
-          break;
-        case 'total':
-          aValue = stats && stats[a] && typeof stats[a].quantity === 'number' ? stats[a].quantity : 0;
-          bValue = stats && stats[b] && typeof stats[b].quantity === 'number' ? stats[b].quantity : 0;
-          break;
-        default:
-          // For unit columns
-          if (sortConfig.key.startsWith('unit_')) {
-            const unit = sortConfig.key.replace('unit_', '');
-            aValue = getCellData(a, unit).signedQuantity;
-            bValue = getCellData(b, unit).signedQuantity;
-          } else {
-            return 0;
-          }
-      }
-
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortConfig.direction === 'asc' 
-          ? aValue.localeCompare(bValue, 'he') 
-          : bValue.localeCompare(aValue, 'he');
-      }
-
-      if (sortConfig.direction === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
-  };
-
-  // Get paginated items for display
-  const filteredAndSortedItems = useMemo(() => {
-    return getFilteredAndSortedUnitsData();
-  }, [items, unitsSearchTerm, sortConfig]);
-  const { paginatedItems, totalPages } = paginate(filteredAndSortedItems || [], currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
-
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   const getCellData = (itemName: string, unit: string) => {
     try {
       if (!stats || !stats[itemName] || !stats[itemName].units || !stats[itemName].units[unit]) {
@@ -321,8 +247,8 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Units table helper functions
-  const getFilteredAndSortedUnitsData = () => {
+  // Get paginated items for display
+  const filteredAndSortedItems = useMemo(() => {
     let filteredItems = items;
     
     // Filter by search term
@@ -393,6 +319,17 @@ const Dashboard: React.FC = () => {
     }
 
     return filteredItems;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, unitsSearchTerm, sortConfig, stats]);
+  const { paginatedItems, totalPages } = paginate(filteredAndSortedItems || [], currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
+
+  const getSortIcon = (key: string) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <i className="fas fa-sort-up ms-1"></i>
+      : <i className="fas fa-sort-down ms-1"></i>;
   };
 
   // Locations table helper functions
