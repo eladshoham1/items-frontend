@@ -3,12 +3,15 @@ import {
   UnitEntity,
   LocationEntity,
   ItemNameEntity,
+  AllocationEntity,
   CreateUnitRequest,
   CreateLocationRequest,
   CreateItemNameRequest,
+  CreateAllocationRequest,
   UpdateUnitRequest,
   UpdateLocationRequest,
   UpdateItemNameRequest,
+  UpdateAllocationRequest,
   BulkDeleteRequest,
   ManagementResponse,
 } from '../types';
@@ -236,6 +239,73 @@ class ManagementService {
       return {
         success: false,
         error: error.response?.data?.message || error.message || 'שגיאה בעדכון הגדרות',
+      };
+    }
+  }
+
+  // Allocation methods
+  async getAllAllocations(): Promise<ManagementResponse<AllocationEntity[]>> {
+    try {
+      const response = await apiService.get<AllocationEntity[]>('/management/allocations');
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בטעינת שבצ"ק',
+      };
+    }
+  }
+
+  async createAllocation(data: CreateAllocationRequest): Promise<ManagementResponse<AllocationEntity>> {
+    try {
+      const response = await apiService.post<AllocationEntity>('/management/allocations', data);
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      const isConflict = error.response?.status === 409;
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה ביצירת שבצ"ק',
+        isConflict,
+      };
+    }
+  }
+
+  async updateAllocation(id: string, data: UpdateAllocationRequest): Promise<ManagementResponse<AllocationEntity>> {
+    try {
+      const response = await apiService.patch<AllocationEntity>(`/management/allocations/${id}`, data);
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      const isConflict = error.response?.status === 409;
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בעדכון שבצ"ק',
+        isConflict,
+      };
+    }
+  }
+
+  async deleteAllocations(data: BulkDeleteRequest): Promise<ManagementResponse<{ deleted: boolean; deletedCount: number; message: string }>> {
+    try {
+      const response = await apiService.delete<{ deleted: boolean; deletedCount: number; message: string }>('/management/allocations', {
+        data,
+      });
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה במחיקת שבצ"ק',
       };
     }
   }

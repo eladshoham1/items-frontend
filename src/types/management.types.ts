@@ -34,6 +34,22 @@ export interface ItemNameEntity {
   updatedAt: string;
 }
 
+export interface AllocationEntity {
+  id: string;
+  unit: string;
+  secondaryUnit: string;
+  owner: string;
+  vehicleType: string | null;
+  idNumber: string | null;
+  standard: string;
+  isIssued: boolean;
+  form624: string | null;
+  is624Issued: boolean;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Create DTOs
 export interface CreateUnitRequest {
   name: string;
@@ -56,6 +72,19 @@ export interface CreateItemNameRequest {
   name: string;
 }
 
+export interface CreateAllocationRequest {
+  unit: string;
+  secondaryUnit: string;
+  owner: string;
+  vehicleType?: string | null;
+  idNumber?: string | null;
+  standard: string;
+  isIssued?: boolean;
+  form624?: string | null;
+  is624Issued?: boolean;
+  note?: string | null;
+}
+
 export interface UpdateUnitRequest {
   name: string;
 }
@@ -75,6 +104,19 @@ export interface UpdateOriginRequest {
 
 export interface UpdateItemNameRequest {
   name: string;
+}
+
+export interface UpdateAllocationRequest {
+  unit?: string;
+  secondaryUnit?: string;
+  owner?: string;
+  vehicleType?: string | null;
+  idNumber?: string | null;
+  standard?: string;
+  isIssued?: boolean;
+  form624?: string | null;
+  is624Issued?: boolean;
+  note?: string | null;
 }
 
 export interface BulkDeleteRequest {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TabNavigation } from '../../shared/components';
-import { UnitsTab, LocationsTab, ItemNamesTab, ManagementSettingsTab, BackupRestoreTab } from './index';
+import { UnitsTab, LocationsTab, ItemNamesTab, AllocationsTab, ManagementSettingsTab, BackupRestoreTab } from './index';
 
 const ManagementTab: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState('units');
@@ -9,6 +9,7 @@ const ManagementTab: React.FC = () => {
     { id: 'units', label: 'יחידות', icon: 'fas fa-building' },
     { id: 'locations', label: 'מיקומים', icon: 'fas fa-map-marker-alt' },
     { id: 'itemNames', label: 'שמות פריטים', icon: 'fas fa-tags' },
+    { id: 'allocations', label: 'שבצק', icon: 'fas fa-clipboard-list' },
     { id: 'backup', label: 'גיבוי ושחזור', icon: 'fas fa-database' },
     { id: 'settings', label: 'הגדרות', icon: 'fas fa-cog' },
   ];
@@ -25,6 +26,8 @@ const ManagementTab: React.FC = () => {
         return <LocationsTab />;
       case 'itemNames':
         return <ItemNamesTab />;
+      case 'allocations':
+        return <AllocationsTab />;
       case 'backup':
         return <BackupRestoreTab />;
       case 'settings':
