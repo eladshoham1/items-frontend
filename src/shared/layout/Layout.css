@@ -16,6 +16,42 @@
   background: var(--color-sidebar);
   border-bottom: 1px solid var(--color-border);
   box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--color-text-sidebar);
+  cursor: pointer;
+  padding: 8px;
+  margin-left: 16px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-menu-toggle:hover {
+  background-color: var(--color-hover);
+}
+
+.mobile-menu-toggle svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Mobile Overlay */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: none;
 }
 
 /* Sidebar */
@@ -28,7 +64,7 @@
   right: 0;
   height: calc(100vh - 60px);
   overflow-y: auto;
-  z-index: 100;
+  z-index: 1000;
   box-shadow: var(--shadow-sidebar);
   transition: transform var(--transition-smooth);
 }
@@ -80,11 +116,20 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block;
+  }
+
+  .mobile-overlay {
+    display: block;
+  }
+
   .layout-sidebar {
     transform: translateX(100%);
     width: 280px;
     top: 60px;
     height: calc(100vh - 60px);
+    z-index: 1000;
   }
   
   .layout-sidebar.mobile-open {
@@ -102,8 +147,23 @@
   }
 }
 
+/* Small Mobile responsiveness */
+@media (max-width: 480px) {
+  .layout-sidebar {
+    width: 100%;
+  }
+  
+  .layout-content {
+    padding: var(--spacing-sm);
+  }
+}
+
 /* Tablet responsiveness */
 @media (min-width: 769px) and (max-width: 1024px) {
+  .mobile-menu-toggle {
+    display: none;
+  }
+
   .layout-sidebar {
     width: 240px;
   }

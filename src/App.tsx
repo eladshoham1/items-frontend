@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Navigation, TopHeader } from './shared/layout';
 import { Dashboard } from './features/dashboard';
 import { DailyReport } from './features/reports';
@@ -28,6 +28,38 @@ const App: React.FC = () => {
     isAdmin,
     createUserProfile
   } = useUserProfile();
+
+  // Mobile optimization effects
+  useEffect(() => {
+    // Prevent zoom on input focus for iOS
+    const handleInputFocus = (e: FocusEvent) => {
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+          target.style.fontSize = '16px';
+        }
+      }
+    };
+
+    // Prevent pull-to-refresh on mobile
+    const preventPullToRefresh = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      
+      const touch = e.touches[0];
+      if (touch.clientY > 0 && window.scrollY === 0) {
+        e.preventDefault();
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('focusin', handleInputFocus);
+    document.addEventListener('touchstart', preventPullToRefresh, { passive: false });
+
+    return () => {
+      document.removeEventListener('focusin', handleInputFocus);
+      document.removeEventListener('touchstart', preventPullToRefresh);
+    };
+  }, []);
 
   const handleAuthSuccess = (user: User) => {
     setAuthError(null);

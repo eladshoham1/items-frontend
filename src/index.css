@@ -14,8 +14,15 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Set viewport meta tag for proper mobile rendering */
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 #root {
   min-width: 320px;
+  width: 100%;
 }
 
 body {
@@ -29,6 +36,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'kern' 1, 'liga' 1;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
 }
 
 /* Content wrapper with sidebar margin */
@@ -524,6 +533,80 @@ body {
   .table td,
   .table th {
     padding: 8px 4px;
+  }
+
+  /* Mobile responsive containers */
+  .main-content-wrapper {
+    margin-right: 0;
+    padding: var(--spacing-md);
+  }
+
+  .page-header {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+  }
+
+  .page-title {
+    font-size: var(--font-size-xl);
+  }
+
+  .page-subtitle {
+    font-size: var(--font-size-md);
+  }
+
+  /* Mobile form improvements */
+  .form-row {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: var(--spacing-sm);
+  }
+
+  .form-actions .btn {
+    width: 100%;
+  }
+}
+
+/* Small mobile devices (480px and below) */
+@media (max-width: 480px) {
+  .main-content-wrapper {
+    padding: var(--spacing-sm);
+  }
+
+  .page-header {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .page-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .page-subtitle {
+    font-size: var(--font-size-sm);
+  }
+
+  /* Smaller spacing for very small screens */
+  .form-group {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  /* Stack all buttons vertically on small screens */
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-group .btn {
+    width: 100%;
+    margin: 2px 0;
   }
 }
 
