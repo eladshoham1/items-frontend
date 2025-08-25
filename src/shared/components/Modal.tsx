@@ -51,28 +51,34 @@ const Modal: React.FC<ModalProps> = ({
       // Focus the modal
       modalRef.current?.focus();
       
-      // Prevent background scrolling - mobile friendly approach
-      const scrollY = window.scrollY;
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.height = '100vh';
-      
-      // Store scroll position for restoration
-      document.body.setAttribute('data-scroll-y', scrollY.toString());
+      // Simple mobile-friendly scroll prevention
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        // On mobile, just prevent overflow - don't fix position
+        document.body.style.overflow = 'hidden';
+        document.body.style.touchAction = 'none';
+      } else {
+        // On desktop, use the more aggressive prevention
+        const scrollY = window.scrollY;
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        document.body.setAttribute('data-scroll-y', scrollY.toString());
+      }
     } else {
-      // Restore background scrolling
+      // Always restore all styles regardless of device
       const scrollY = document.body.getAttribute('data-scroll-y');
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.height = '';
+      document.body.style.touchAction = '';
       document.body.removeAttribute('data-scroll-y');
       
-      // Restore scroll position
-      if (scrollY) {
+      // Restore scroll position only on desktop
+      if (scrollY && window.innerWidth > 768) {
         window.scrollTo(0, parseInt(scrollY));
       }
       
@@ -83,11 +89,13 @@ const Modal: React.FC<ModalProps> = ({
     }
 
     return () => {
+      // Cleanup function - always restore normal state
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.height = '';
+      document.body.style.touchAction = '';
       document.body.removeAttribute('data-scroll-y');
     };
   }, [isOpen]);
