@@ -1,16 +1,21 @@
-/* Modern Tab Navigation - Dark Theme */
+/* ===================================
+   MODERN TAB NAVIGATION COMPONENT
+   Clean, Professional, Accessible
+   =================================== */
+
+/* Container */
 .tab-navigation-container {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 24px;
 }
 
+/* Main navigation wrapper */
 .tab-navigation {
   display: flex;
+  position: relative;
   background: transparent;
-  border-radius: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   padding: 0;
-  box-shadow: none;
-  border: none;
-  border-bottom: 1px solid #404040;
+  margin: 0;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -20,159 +25,271 @@
   display: none;
 }
 
+/* Layout variants */
 .tab-navigation--full-width {
   justify-content: stretch;
 }
 
-/* Tab Items */
+.tab-navigation--full-width .tab-navigation__item {
+  flex: 1;
+}
+
+/* Tab item (button) */
 .tab-navigation__item {
   position: relative;
-  border-radius: 0;
-  overflow: visible;
-  transition: all var(--transition);
-}
-
-.tab-navigation__item button {
-  width: 100%;
-  background: transparent !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  margin: 0;
+  background: none;
   border: none;
-  cursor: pointer;
-  transition: all var(--transition);
-  position: relative;
-  z-index: 1;
-  font-family: inherit;
+  border-left: none;
+  border-right: none;
   border-radius: 0;
-  padding: 12px 24px;
-  color: #adb5bd;
+  font-family: inherit;
   font-size: 14px;
   font-weight: 500;
-  border-bottom: 3px solid transparent;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0s ease;
+  outline: none !important;
+  box-shadow: none !important;
+  user-select: none;
+  border-bottom: 2px solid transparent;
 }
 
-.tab-navigation__item:hover {
-  transform: none;
+/* Hover state */
+.tab-navigation__item:hover:not(.tab-navigation__item--disabled) {
+  font-weight: 550;
+  color: #ffffff;
 }
 
-.tab-navigation__item button:hover {
-  color: var(--color-primary);
-  background: transparent !important;
+/* Active state */
+.tab-navigation__item--active {
+  color: #ffffff;
+  font-weight: 550;
+  border-bottom-color: #ffffff;
 }
 
-.tab-navigation__item--active button {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  background: transparent !important;
-}
-
+/* Disabled state */
 .tab-navigation__item--disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
-.tab-navigation__item--disabled:hover {
-  transform: none;
+/* Focus state for accessibility */
+.tab-navigation__item:focus,
+.tab-navigation__item:focus-visible,
+.tab-navigation__item:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border-left: none !important;
+  border-right: none !important;
 }
 
-/* Tab Content */
+/* Content wrapper */
 .tab-navigation__content {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  text-align: center;
-  white-space: nowrap;
+  gap: 8px;
 }
 
+/* Icon */
 .tab-navigation__icon {
-  font-size: var(--font-size-lg);
-  transition: transform var(--transition);
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 0.2s ease;
 }
 
+.tab-navigation__item--active .tab-navigation__icon {
+  transform: scale(1.05);
+}
+
+/* Label */
 .tab-navigation__label {
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
-  transition: all var(--transition);
+  font-weight: inherit;
+  line-height: 1.2;
 }
 
+/* Count badge */
 .tab-navigation__count {
-  background: var(--color-primary);
-  color: white;
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
-  min-width: 18px;
-  height: 18px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all var(--transition);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  line-height: 1;
 }
 
-/* Tab Indicator - Using border-bottom instead */
-.tab-navigation__indicator {
-  display: none; /* We use border-bottom instead */
+.tab-navigation__item--active .tab-navigation__count {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
-@keyframes slideIn {
-  from {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-  to {
-    transform: scaleX(1);
-    opacity: 1;
-  }
+/* Size variants */
+.tab-navigation--sm .tab-navigation__item {
+  padding: 8px 16px;
+  font-size: 13px;
 }
 
-/* Variants */
-
-/* Primary variant */
-.tab-navigation--primary .tab-navigation__item button {
-  padding: var(--spacing-md) var(--spacing-lg);
-  color: var(--color-text-secondary);
-  background: transparent !important;
-  border-bottom: 3px solid transparent;
+.tab-navigation--sm .tab-navigation__icon {
+  font-size: 14px;
 }
 
-.tab-navigation--primary .tab-navigation__item button:hover {
-  color: var(--color-primary);
-  background: transparent !important;
+.tab-navigation--lg .tab-navigation__item {
+  padding: 16px 24px;
+  font-size: 16px;
 }
 
-.tab-navigation--primary .tab-navigation__item--active button {
-  color: var(--color-primary);
-  background: transparent !important;
-  font-weight: var(--font-weight-semibold);
-  border-bottom: 3px solid var(--color-primary);
+.tab-navigation--lg .tab-navigation__icon {
+  font-size: 18px;
 }
 
-.tab-navigation--primary .tab-navigation__item--active .tab-navigation__icon {
-  transform: scale(1.1);
-}
-
-.tab-navigation--primary .tab-navigation__item--active .tab-navigation__count {
-  background: var(--color-primary-hover);
-  transform: scale(1.1);
-}
-
-/* Mobile responsiveness */
+/* Responsive design */
 @media (max-width: 768px) {
   .tab-navigation {
-    padding: var(--spacing-xs);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
   }
   
-  .tab-navigation--primary .tab-navigation__item button {
-    padding: var(--spacing-sm) var(--spacing-md);
+  .tab-navigation__item {
+    padding: 10px 16px;
+    font-size: 13px;
   }
   
   .tab-navigation__label {
     display: none;
   }
+  
+  .tab-navigation__icon {
+    font-size: 18px;
+  }
+  
+  .tab-navigation--lg .tab-navigation__item {
+    padding: 12px 20px;
+  }
 }
 
-/* Focus styles for accessibility */
-.tab-navigation__item button:focus {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+@media (max-width: 480px) {
+  .tab-navigation__item {
+    padding: 8px 12px;
+  }
+  
+  .tab-navigation__count {
+    font-size: 10px;
+    min-width: 16px;
+    height: 16px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .tab-navigation {
+    border-bottom-color: #ffffff;
+  }
+  
+  .tab-navigation__item {
+    color: #ffffff;
+  }
+  
+  .tab-navigation__item--active {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .tab-navigation__item,
+  .tab-navigation__icon,
+  .tab-navigation__count {
+    transition: none;
+  }
+}
+
+/* Right-to-left support */
+[dir="rtl"] .tab-navigation__content {
+  direction: rtl;
+}
+
+[dir="rtl"] .tab-navigation__icon {
+  margin-left: 8px;
+  margin-right: 0;
+}
+
+/* Tab navigation compact variant for management tables */
+.tab-navigation--compact {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 2px;
+  margin-bottom: 0;
+}
+
+.tab-navigation--compact .tab-navigation__item {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 32px;
+}
+
+.tab-navigation--compact .tab-navigation__item:hover:not(.tab-navigation__item--disabled):not(.tab-navigation__item--active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tab-navigation--compact .tab-navigation__item--active {
+  background: #ffffff;
+  color: #2d2d2d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-navigation--compact .tab-navigation__icon {
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+.tab-navigation--compact .tab-navigation__label {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.tab-navigation--compact .tab-navigation__count {
+  font-size: 11px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  min-width: 18px;
+  height: 18px;
+}
+
+/* Compact variant responsive adjustments */
+@media (max-width: 768px) {
+  .tab-navigation--compact .tab-navigation__item {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .tab-navigation--compact .tab-navigation__icon {
+    font-size: 11px;
+    margin-right: 4px;
+  }
+  
+  .tab-navigation--compact .tab-navigation__label {
+    font-size: 12px;
+  }
 }

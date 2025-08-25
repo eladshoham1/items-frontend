@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { AllocationEntity, CreateAllocationRequest, UpdateAllocationRequest } from '../../types';
 import { managementService } from '../../services';
-import { BulkDeleteErrorModal, Modal } from '../../shared/components';
+import { BulkDeleteErrorModal, Modal, LoadingSpinner } from '../../shared/components';
 
 interface EditingCell {
   id: string;
@@ -311,10 +311,8 @@ export const AllocationsTab: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '200px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">טוען...</span>
-        </div>
+      <div className="management-container">
+        <LoadingSpinner />
       </div>
     );
   }
@@ -332,64 +330,82 @@ export const AllocationsTab: React.FC = () => {
   }
 
   return (
-    <div>
-      {/* Header and Controls */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4>שבצ"ק</h4>
-        <div className="d-flex gap-2">
-          <button 
-            className="btn btn-success btn-sm"
+    <div className="management-container">
+      {/* Compact Header with Actions */}
+      <div className="management-header-compact">
+        <div className="management-search-section">
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="text"
+              className="management-search-input"
+              placeholder="חפש לפי מסגרת, מסגרת משנה, בעל, סוג הכלי, תקן..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ flex: 1 }}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => setSearchTerm('')}
+                title="נקה חיפוש"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '0 12px',
+                  minWidth: 'auto'
+                }}
+              >
+                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
+              </button>
+            )}
+          </div>
+        </div>
+        
+        <div className="management-actions-compact">
+          <button
+            className="btn btn-primary btn-sm"
             onClick={() => setIsAddModalOpen(true)}
+            disabled={loading}
+            title="הוסף שבצק חדש"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 16px'
+            }}
           >
-            <i className="fas fa-plus me-1"></i>
-            הוסף שבצק
+            <i className="fas fa-plus" style={{ fontSize: '13px' }}></i>
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>הוסף חדש</span>
           </button>
+          
           {selectedIds.length > 0 && (
-            <button 
+            <button
               className="btn btn-danger btn-sm"
               onClick={handleDelete}
+              disabled={isSubmitting}
+              title={`מחק ${selectedIds.length} שבצקים נבחרים`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0 12px'
+              }}
             >
-              <i className="fas fa-trash me-1"></i>
-              מחק נבחרים ({selectedIds.length})
-            </button>
-          )}
-          <button 
-            className="btn btn-outline-secondary btn-sm"
-            onClick={loadAllocations}
-          >
-            <i className="fas fa-sync-alt me-1"></i>
-            רענן
-          </button>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="mb-3">
-        <div className="input-group">
-          <span className="input-group-text">
-            <i className="fas fa-search"></i>
-          </span>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="חפש לפי מסגרת, מסגרת משנה, בעת, סוג הכלי, תקן..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              className="btn btn-outline-secondary"
-              onClick={() => setSearchTerm('')}
-            >
-              <i className="fas fa-times"></i>
+              <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
+              <span style={{ fontSize: '12px', fontWeight: '500' }}>מחק ({selectedIds.length})</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Table */}
-      <div className="table-responsive">
-        <table className="table table-striped table-hover">
+      <div className="table-container">
+        <table className="management-table">
           <thead>
             <tr>
               <th style={{ width: '40px' }}>

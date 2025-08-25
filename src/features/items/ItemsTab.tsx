@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import ItemForm from './ItemForm';
 import { useItems } from '../../hooks';
@@ -230,16 +230,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="card-header">
-          <h2 className="mb-0">ציוד</h2>
-        </div>
-        <div className="card-body">
-          <div className="alert alert-info">
-            <div className="spinner"></div>
-            <span>טוען נתונים...</span>
-          </div>
-        </div>
+      <div className="management-container">
+        <LoadingSpinner message="טוען פריטי ציוד..." />
       </div>
     );
   }
@@ -249,64 +241,70 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
   }
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          {selectedItemIds.length > 0 && (
-            <>
-              <span className="badge bg-primary">
-                {selectedItemIds.length} נבחרו
-              </span>
-              <button 
-                className="btn btn-danger btn-sm" 
-                onClick={handleBulkDelete}
-                disabled={selectedItemIds.length === 0}
-              >
-                <i className="fas fa-trash me-1"></i>
-                מחק נבחרים ({selectedItemIds.length})
-              </button>
-            </>
-          )}
-          <button className="btn btn-primary" onClick={handleAddClick}>
-            הוסף פריט חדש
-          </button>
-        </div>
-      </div>
-
-      <div>
-        {/* Search Input */}
-        <div className="row mb-3">
-          <div className="col-md-6">
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fas fa-search"></i>
-              </span>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="חפש פריטים לפי שם, מספר צ', הקצאה או הערה..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                style={{ direction: 'rtl' }}
-              />
-              {searchTerm && (
-                <button
-                  className="btn btn-outline-secondary"
-                  type="button"
-                  onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                  title="נקה חיפוש"
-                >
-                  <i className="fas fa-times"></i>
-                </button>
-              )}
-            </div>
+    <div className="management-container">
+      {/* Compact Header with Actions */}
+      <div className="management-header-compact">
+        <div className="management-search-section">
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="text"
+              className="management-search-input"
+              placeholder="חפש פריטים לפי שם, מספר צ', הקצאה או הערה..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={{ flex: 1 }}
+            />
             {searchTerm && (
-              <small className="text-muted mt-1 d-block">
-                נמצאו {filteredAndSortedItems.length} פריטים מתוך {items.length}
-              </small>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                title="נקה חיפוש"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '0 12px',
+                  minWidth: 'auto'
+                }}
+              >
+                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
+              </button>
             )}
           </div>
+          {searchTerm && (
+            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
+              נמצאו {filteredAndSortedItems.length} פריטים מתוך {items.length}
+            </div>
+          )}
         </div>
+        
+        <div className="management-actions-compact">
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {selectedItemIds.length > 0 && (
+              <>
+                <span className="badge bg-primary" style={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {selectedItemIds.length} נבחרו
+                </span>
+                <button 
+                  className="btn btn-danger btn-sm" 
+                  onClick={handleBulkDelete}
+                  disabled={selectedItemIds.length === 0}
+                  style={{ fontSize: '12px', padding: '6px 12px' }}
+                >
+                  <i className="fas fa-trash" style={{ marginLeft: '4px' }}></i>
+                  מחק נבחרים ({selectedItemIds.length})
+                </button>
+              </>
+            )}
+            <button className="btn btn-primary btn-sm" onClick={handleAddClick}>
+              <i className="fas fa-plus" style={{ marginLeft: '6px' }}></i>
+              הוסף פריט חדש
+            </button>
+          </div>
+        </div>
+      </div>
 
         <div className="table-responsive">
           <table className="table">
@@ -443,7 +441,6 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
             onPageChange={setCurrentPage}
           />
         )}
-      </div>
 
       <Modal
         isOpen={isModalOpen}

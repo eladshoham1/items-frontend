@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Receipt, SignPendingReceiptRequest } from '../../types';
 import { SignaturePad } from './SignaturePad';
 import { Modal, BulkDeleteErrorModal, SmartPagination } from '../../shared/components';
-import CreateReceiptForm from './CreatePendingReceiptForm';
+import ReceiptForm from './ReceiptForm';
+import ReceiptDetailsModal from './ReceiptDetailsModal';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import './ReceiptsTab.css';
@@ -262,48 +263,55 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   return (
     <>
       <div className="pending-receipts-list" style={{ direction: 'rtl' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <h4 style={{ color: '#333' }}>קבלות ממתינות לחתימה</h4>
-          {isAdmin && selectedReceiptIds.length > 0 && (
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <span className="badge bg-primary">
-                {selectedReceiptIds.length} נבחרו
-              </span>
-              <button 
-                className="btn btn-danger btn-sm" 
-                onClick={handleBulkDelete}
-                disabled={selectedReceiptIds.length === 0}
-              >
-                <i className="fas fa-trash me-1"></i>
-                מחק נבחרים ({selectedReceiptIds.length})
-              </button>
+        {/* Compact Header with Actions */}
+        <div className="management-header-compact">
+          <div className="management-search-section">
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="text"
+                className="management-search-input"
+                placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                style={{ flex: 1 }}
+              />
+              {searchTerm && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                  title="נקה חיפוש"
+                  style={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    padding: '0 12px',
+                    minWidth: 'auto'
+                  }}
+                >
+                  <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                  <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
+                </button>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* Full-width search bar */}
-        <div className="search-bar" style={{ direction: 'rtl', margin: '12px 0 16px 0' }}>
-          <div className="input-group" style={{ width: '100%' }}>
-            <span className="input-group-text">
-              <i className="fas fa-search" />
-            </span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              style={{ direction: 'rtl' }}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-outline-secondary"
-                type="button"
-                onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                title="נקה חיפוש"
-              >
-                <i className="fas fa-times" />
-              </button>
+          </div>
+          
+          <div className="management-actions-compact">
+            {isAdmin && selectedReceiptIds.length > 0 && (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span className="badge bg-primary" style={{ fontSize: '12px', padding: '4px 8px' }}>
+                  {selectedReceiptIds.length} נבחרו
+                </span>
+                <button 
+                  className="btn btn-danger btn-sm" 
+                  onClick={handleBulkDelete}
+                  disabled={selectedReceiptIds.length === 0}
+                  style={{ fontSize: '12px', padding: '6px 12px' }}
+                >
+                  <i className="fas fa-trash" style={{ marginLeft: '4px' }}></i>
+                  מחק נבחרים ({selectedReceiptIds.length})
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -367,7 +375,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     style={{ 
                       cursor: 'pointer',
                       opacity: !isAdmin && !canSign ? 0.6 : 1,
-                      backgroundColor: !isAdmin && !canSign ? '#f8f9fa' : 'transparent'
+                      backgroundColor: !isAdmin && !canSign ? 'rgba(255, 255, 255, 0.05)' : 'transparent'
                     }}
                   >
                     {isAdmin && (
@@ -381,10 +389,12 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         />
                       </td>
                     )}
-                    <td>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
+                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        {receipt.signedBy?.name || 'משתמש לא ידוע'}
+                        <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                          {receipt.signedBy?.name || 'משתמש לא ידוע'}
+                        </span>
                         {!isAdmin && !canSign && (
                           <span 
                             className="badge bg-warning ms-2" 
@@ -396,9 +406,9 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         )}
                       </div>
                     </td>
-                    <td>{getUnit(receipt)}</td>
-                    <td>{receipt.receiptItems?.length || 0}</td>
-                    <td>{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
+                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{getUnit(receipt)}</td>
+                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.receiptItems?.length || 0}</td>
+                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
                     <td>
                       <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
                         {isAdmin && (
@@ -422,7 +432,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                           </button>
                         )}
                         {!canSign && !isAdmin && (
-                          <span className="text-muted small">לא זמין לחתימה</span>
+                          <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '12px' }}>לא זמין לחתימה</span>
                         )}
                       </div>
                     </td>
@@ -439,133 +449,11 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
       </div>
 
       {/* Details Modal */}
-      {detailsReceipt && (
-        <Modal
-          isOpen={!!detailsReceipt}
-          onClose={() => setDetailsReceipt(null)}
-          title={`פרטי קבלה #${detailsReceipt.id}`}
-          size="lg"
-        >
-          <div style={{ direction: 'rtl', padding: '16px' }}>
-            {/* Summary */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px',
-                marginBottom: '16px',
-                background: '#ffffff',
-                border: '1px solid #e9ecef',
-                borderRadius: '8px',
-                padding: '12px',
-              }}
-            >
-              <div>
-                <div style={{ color: '#6c757d', fontSize: 12 }}>מנפיק</div>
-                <div style={{ fontWeight: 700 }}>{detailsReceipt.createdBy?.name || '—'}</div>
-              </div>
-              <div>
-                <div style={{ color: '#6c757d', fontSize: 12 }}>מקבל</div>
-                <div style={{ fontWeight: 700 }}>{detailsReceipt.signedBy?.name || '—'}</div>
-              </div>
-              <div>
-                <div style={{ color: '#6c757d', fontSize: 12 }}>יחידה</div>
-                <div style={{ fontWeight: 700 }}>{(detailsReceipt.signedBy?.location?.unit?.name || detailsReceipt.createdBy?.location?.unit?.name) ?? '—'}</div>
-              </div>
-              <div>
-                <div style={{ color: '#6c757d', fontSize: 12 }}>תאריך יצירה</div>
-                <div style={{ fontWeight: 700 }}>{new Date(detailsReceipt.createdAt).toLocaleString('he-IL')}</div>
-              </div>
-            </div>
-
-            {/* Items Table */}
-            <div
-              style={{
-                background: '#ffffff',
-                border: '1px solid #e9ecef',
-                borderRadius: '8px',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  padding: '10px 12px',
-                  borderBottom: '1px solid #e9ecef',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ fontWeight: 700 }}>פריטים</div>
-                <span
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    padding: '2px 10px',
-                    borderRadius: '12px',
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  {detailsReceipt.receiptItems?.length || 0}
-                </span>
-              </div>
-
-              <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: '#f8f9fa' }}>
-                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 60 }}>#</th>
-                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>פריט</th>
-                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 180 }}>מספר צ'</th>
-                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 120 }}>צופן</th>
-                      <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>הערה</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(detailsReceipt.receiptItems || []).map((ri, idx) => {
-                      const itemName = ri.item?.itemName?.name || '—';
-                      const idNumber = ri.item?.idNumber || '';
-                      const requiresReporting = !!ri.item?.requiresReporting;
-                      const note = ri.item?.note || '';
-                      return (
-                        <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
-                          <td style={{ padding: '10px 12px', color: '#6c757d' }}>{idx + 1}</td>
-                          <td style={{ padding: '10px 12px', fontWeight: 600, color: '#333' }}>{itemName}</td>
-                          <td style={{ padding: '10px 12px', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', direction: 'ltr', textAlign: 'right' }}>{idNumber || '—'}</td>
-                          <td style={{ padding: '10px 12px' }}>
-                            <span
-                              style={{
-                                backgroundColor: requiresReporting ? '#dc3545' : '#28a745',
-                                color: 'white',
-                                padding: '2px 8px',
-                                borderRadius: '12px',
-                                fontSize: 12,
-                                fontWeight: 700,
-                              }}
-                            >
-                              {requiresReporting ? 'כן' : 'לא'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '10px 12px', color: '#495057' }}>{note || '—'}</td>
-                        </tr>
-                      );
-                    })}
-
-                    {(!detailsReceipt.receiptItems || detailsReceipt.receiptItems.length === 0) && (
-                      <tr>
-                        <td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#6c757d' }}>
-                          לא נמצאו פריטים עבור קבלה זו
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <ReceiptDetailsModal
+        receipt={detailsReceipt}
+        isOpen={!!detailsReceipt}
+        onClose={() => setDetailsReceipt(null)}
+      />
 
       {/* Sign Modal */}
       <Modal
@@ -582,16 +470,16 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
           )}
 
           <div style={{ marginBottom: '24px' }}>
-            <h5 style={{ color: '#2980b9', marginBottom: '16px', fontSize: '18px', fontWeight: 'bold' }}>
-              <i className="fas fa-receipt me-2"></i>
+            <h5 style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '16px', fontSize: '18px', fontWeight: 'bold' }}>
+              <i className="fas fa-receipt" style={{ marginLeft: '8px' }}></i>
               פרטי הקבלה לחתימה
             </h5>
             {selectedReceipt && (
               <div className="receipt-summary-card" style={{
-                border: '1px solid #dee2e6',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
                 borderRadius: '8px',
                 padding: '20px',
-                backgroundColor: '#f8f9fa',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
                 marginBottom: '20px'
               }}>
                 {/* Receipt Header Info */}
@@ -601,19 +489,19 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                   gap: '16px',
                   marginBottom: '20px',
                   padding: '16px',
-                  backgroundColor: '#ffffff',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
                   borderRadius: '6px',
-                  border: '1px solid #e9ecef'
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
                 }}>
                   <div>
-                    <strong style={{ color: '#495057' }}>מזהה קבלה:</strong>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#2980b9' }}>
+                    <strong style={{ color: 'rgba(255, 255, 255, 0.7)' }}>מזהה קבלה:</strong>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#3b82f6' }}>
                       #{selectedReceipt.id}
                     </div>
                   </div>
                   <div>
-                    <strong style={{ color: '#495057' }}>סה"כ פריטים:</strong>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#28a745' }}>
+                    <strong style={{ color: 'rgba(255, 255, 255, 0.7)' }}>סה"כ פריטים:</strong>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#22c55e' }}>
                       {selectedReceipt.receiptItems?.length || 0}
                     </div>
                   </div>
@@ -625,11 +513,11 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     margin: '0 0 16px 0', 
                     fontWeight: '600', 
                     fontSize: '16px',
-                    color: '#495057',
-                    borderBottom: '2px solid #dee2e6',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
                     paddingBottom: '8px'
                   }}>
-                    <i className="fas fa-list me-2"></i>
+                    <i className="fas fa-list" style={{ marginLeft: '8px' }}></i>
                     רשימת פריטים לקבלה:
                   </p>
                   <div className="items-grid" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -674,26 +562,26 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                               justifyContent: 'space-between',
                               alignItems: 'center',
                               padding: '16px',
-                              backgroundColor: '#ffffff',
-                              border: '1px solid #e9ecef',
-                              borderRadius: '6px',
-                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1px solid rgba(255, 255, 255, 0.15)',
+                              borderRadius: '12px',
+                              backdropFilter: 'blur(10px)'
                             }}
                           >
                             <div style={{ flex: 1 }}>
                               <div style={{ 
                                 fontSize: '16px', 
                                 fontWeight: 'bold', 
-                                color: '#333',
+                                color: 'rgba(255, 255, 255, 0.9)',
                                 marginBottom: '8px'
                               }}>
-                                <i className="fas fa-box me-2" style={{ color: '#6c757d' }}></i>
+                                <i className="fas fa-box me-2" style={{ color: '#64b5f6' }}></i>
                                 {group.name}
                                 {group.count > 1 && (
                                   <span 
                                     className="quantity-badge"
                                     style={{
-                                      backgroundColor: '#28a745',
+                                      background: 'linear-gradient(135deg, #4caf50, #388e3c)',
                                       color: 'white',
                                       padding: '4px 8px',
                                       borderRadius: '12px',
@@ -712,7 +600,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                                 {group.requiresReporting ? 
                                   // For cipher items, show each ID separately
                                   group.items.map((item, itemIndex) => (
-                                    <div key={itemIndex} style={{ fontSize: '14px', color: '#6c757d' }}>
+                                    <div key={itemIndex} style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>
                                       {item.item?.idNumber && (
                                         <span>
                                           <i className="fas fa-hashtag me-1"></i>
@@ -724,7 +612,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                                   :
                                   // For non-cipher items, show just one example ID if available
                                   group.items[0]?.item?.idNumber && (
-                                    <div style={{ fontSize: '14px', color: '#6c757d' }}>
+                                    <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>
                                       <i className="fas fa-hashtag me-1"></i>
                                       מספר צ': {group.items[0].item.idNumber}
                                       {group.count > 1 && ' (ועוד)'}
@@ -742,7 +630,9 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                                   borderRadius: '20px',
                                   fontSize: '12px',
                                   fontWeight: 'bold',
-                                  backgroundColor: group.requiresReporting ? '#dc3545' : '#28a745',
+                                  background: group.requiresReporting 
+                                    ? 'linear-gradient(135deg, #f44336, #d32f2f)' 
+                                    : 'linear-gradient(135deg, #4caf50, #388e3c)',
                                   color: 'white'
                                 }}
                               >
@@ -757,13 +647,13 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         style={{
                           textAlign: 'center',
                           padding: '40px 20px',
-                          backgroundColor: '#fff3cd',
-                          border: '1px solid #ffeaa7',
-                          borderRadius: '6px',
-                          color: '#856404'
+                          background: 'rgba(245, 158, 11, 0.1)',
+                          border: '1px solid rgba(245, 158, 11, 0.3)',
+                          borderRadius: '12px',
+                          color: 'rgba(255, 255, 255, 0.8)'
                         }}
                       >
-                        <i className="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <i className="fas fa-exclamation-triangle fa-2x mb-3" style={{ color: '#f59e0b' }}></i>
                         <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
                           לא נמצאו פריטים עבור קבלה זו
                         </div>
@@ -777,33 +667,34 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
 
           <div style={{ marginBottom: '24px' }}>
             <div style={{
-              backgroundColor: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: '8px',
-              padding: '20px'
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '12px',
+              padding: '20px',
+              backdropFilter: 'blur(10px)'
             }}>
               <label className="form-label required" style={{ 
                 fontSize: '16px', 
                 fontWeight: 'bold', 
-                color: '#495057',
+                color: 'rgba(255, 255, 255, 0.9)',
                 marginBottom: '12px',
                 display: 'block'
               }}>
-                <i className="fas fa-signature me-2" style={{ color: '#2980b9' }}></i>
+                <i className="fas fa-signature me-2" style={{ color: '#64b5f6' }}></i>
                 חתימה לאישור קבלת הפריטים:
               </label>
               <div style={{
-                backgroundColor: '#ffffff',
-                border: '2px dashed #dee2e6',
-                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '2px dashed rgba(255, 255, 255, 0.3)',
+                borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center'
               }}>
-                <div style={{ marginBottom: '12px', color: '#6c757d', fontSize: '14px' }}>
+                <div style={{ marginBottom: '12px', color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px' }}>
                   אנא חתמו במסגרת זו לאישור קבלת הפריטים
                 </div>
                 <SignaturePad onSave={setSignature} />
-                <div style={{ marginTop: '8px', fontSize: '12px', color: '#6c757d' }}>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>
                   <i className="fas fa-info-circle me-1"></i>
                   החתימה מהווה אישור על קבלת הפריטים הרשומים לעיל
                 </div>
@@ -840,7 +731,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
           title={`עדכון קבלה #${selectedReceipt.id}`}
           size="lg"
         >
-          <CreateReceiptForm
+          <ReceiptForm
             originalReceipt={selectedReceipt}
             onSuccess={handleUpdateSuccess}
             onCancel={handleCloseModal}

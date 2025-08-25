@@ -13,7 +13,7 @@ interface TabNavigationProps {
   tabs: TabItem[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
-  variant?: 'primary' | 'secondary' | 'minimal';
+  variant?: 'primary' | 'secondary' | 'minimal' | 'compact';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   className?: string;

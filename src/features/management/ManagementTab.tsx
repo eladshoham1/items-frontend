@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TabNavigation } from '../../shared/components';
 import { UnitsTab, LocationsTab, ItemNamesTab, AllocationsTab, ManagementSettingsTab, BackupRestoreTab } from './index';
+import '../../shared/styles/components.css';
 
 const ManagementTab: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState('units');
@@ -38,7 +39,7 @@ const ManagementTab: React.FC = () => {
   };
 
   return (
-    <>
+    <div className="page-container">
       {/* Tab Navigation */}
       <TabNavigation
         tabs={subTabs}
@@ -48,10 +49,10 @@ const ManagementTab: React.FC = () => {
         size="md"
       />
       
-      <div style={{ padding: '20px 0' }}>
+      <div className="tab-content">
         {renderActiveTab()}
       </div>
-    </>
+    </div>
   );
 };
 

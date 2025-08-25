@@ -242,61 +242,18 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                     </div>
                   </div>
                 </th>
-                <th 
-                  className="sortable-header text-center"
-                  onClick={() => handleSort('reportedItems')}
-                  title="לחץ למיון לפי פריטים שדווחו"
-                  data-sorted={sortConfig?.key === 'reportedItems' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>דווחו</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('reportedItems')}
-                    </div>
-                  </div>
-                </th>
-                <th 
-                  className="sortable-header text-center"
-                  onClick={() => handleSort('completionPercentage')}
-                  title="לחץ למיון לפי אחוז השלמה"
-                  data-sorted={sortConfig?.key === 'completionPercentage' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>אחוז השלמה</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('completionPercentage')}
-                    </div>
-                  </div>
-                </th>
-                <th 
-                  className="sortable-header text-center"
-                  onClick={() => handleSort('isCompleted')}
-                  title="לחץ למיון לפי סטטוס השלמה"
-                  data-sorted={sortConfig?.key === 'isCompleted' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center justify-content-between">
-                    <span>סטטוס</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('isCompleted')}
-                    </div>
-                  </div>
-                </th>
                 <th className="text-center">פעולות</th>
               </tr>
             </thead>
             <tbody>
               {sortedHistory.map(report => {
-                const completionPercentage = report.totalItems > 0 
-                  ? Math.round((report.reportedItems / report.totalItems) * 100) 
-                  : 0;
-                
                 return (
                   <tr key={report.id}>
                     <td className="text-center">{formatDateWithTime(report.createdAt)}</td>
-                    <td className="text-center">{report.createdBy.rank} {report.createdBy.name}</td>
+                    <td className="text-center">{report.createdBy.name}</td>
                     <td className="text-center">
                       {report.completedBy ? (
-                        <span>{report.completedBy.rank} {report.completedBy.name}</span>
+                        <span>{report.completedBy.name}</span>
                       ) : (
                         <span className="text-muted">-</span>
                       )}
@@ -304,37 +261,6 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                     <td className="text-center">
                       <span className="badge bg-secondary">
                         {report.totalItems}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <span className="badge bg-primary">
-                        {report.reportedItems}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <div className="d-flex align-items-center justify-content-center">
-                        <div 
-                          className="progress me-2" 
-                          style={{ width: '60px', height: '20px' }}
-                        >
-                          <div 
-                            className={`progress-bar ${
-                              completionPercentage === 100 ? 'bg-success' :
-                              completionPercentage >= 70 ? 'bg-warning' : 'bg-danger'
-                            }`}
-                            style={{ width: `${completionPercentage}%` }}
-                          />
-                        </div>
-                        <span className="small">
-                          {completionPercentage}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="text-center">
-                      <span className={`badge ${
-                        report.isCompleted ? 'bg-success' : 'bg-warning'
-                      }`}>
-                        {report.isCompleted ? '✅ הושלם' : '⏳ בעבודה'}
                       </span>
                     </td>
                     <td className="text-center">

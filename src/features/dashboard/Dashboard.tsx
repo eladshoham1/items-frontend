@@ -3,10 +3,11 @@ import { useDashboardStats } from '../../hooks';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { reportService, managementService } from '../../services';
 import ServerError from '../../shared/components/ServerError';
-import { SmartPagination, TabNavigation } from '../../shared/components';
+import { SmartPagination, TabNavigation, LoadingSpinner } from '../../shared/components';
 import { SignUser, UnitEntity } from '../../types';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
+import '../../shared/styles/components.css';
 
 const Dashboard: React.FC = () => {
   const { userProfile } = useUserProfile();
@@ -566,16 +567,8 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="card-header">
-          <h2 className="mb-0">לוח בקרה</h2>
-      </div>
-        <div className="card-body">
-          <div className="alert alert-info">
-            <div className="spinner"></div>
-            <span>טוען נתונים...</span>
-        </div>
-      </div>
+      <div className="management-container">
+        <LoadingSpinner message="טוען נתוני לוח בקרה..." />
       </div>
     );
   }
@@ -585,7 +578,7 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <>
+    <div className="page-container">
       {/* Tab Navigation */}
       <TabNavigation
         tabs={dashboardTabs}
@@ -596,21 +589,14 @@ const Dashboard: React.FC = () => {
       />
 
       {/* Content Area */}
-      <div style={{
-        flex: 1,
-        backgroundColor: 'var(--color-bg)',
-        overflowY: 'auto'
-      }}>
+      <div className="tab-content">
         <div style={{
-          padding: '0',
           position: 'relative'
         }}>
           {/* Unit Selection for Locations Tab */}
           {activeTab === 'locations' && (
-              <div style={{ 
-                padding: '20px 24px',
-                backgroundColor: 'var(--color-surface)',
-                borderBottom: '1px solid var(--color-border)',
+              <div className="card" style={{ 
+                margin: '0 0 24px 0',
                 direction: 'rtl'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -727,9 +713,9 @@ const Dashboard: React.FC = () => {
           )}
 
           {activeTab === 'units' && (
-            <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px', backgroundColor: 'white' }}>
-            <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
-              <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
+            <div className="table-container">
+            <table className="table">
+              <thead>
                 <tr>
                   <th 
                     style={{ 
@@ -1249,17 +1235,10 @@ const Dashboard: React.FC = () => {
         {activeTab === 'locations' && selectedUnit && (
           <>
             {dashboardLoading || unitsLoading ? (
-              <div style={{ 
-                padding: '60px 24px',
-                textAlign: 'center',
-                backgroundColor: '#f8f9fa',
-                color: '#6c757d',
-                fontSize: '18px',
-                fontWeight: '500'
-              }}>
-                <div style={{ marginBottom: '16px', fontSize: '48px' }}>⏳</div>
-                {unitsLoading ? 'טוען רשימת יחידות...' : 'טוען נתוני יחידה...'}
-            </div>
+              <LoadingSpinner 
+                message={unitsLoading ? 'טוען רשימת יחידות...' : 'טוען נתוני יחידה...'} 
+                containerStyle={{ backgroundColor: '#f8f9fa' }}
+              />
             ) : dashboardError ? (
               <div style={{ 
                 padding: '60px 24px',
@@ -1338,9 +1317,9 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-                <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px', backgroundColor: 'white' }}>
-                <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
-                  <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
+                <div className="table-container">
+                <table className="table">
+                  <thead>
                     <tr>
                       <th 
                         style={{ 
@@ -1629,9 +1608,9 @@ const Dashboard: React.FC = () => {
             </button>
         </div>
           <div className="card-body p-0">
-            <div className="table-responsive">
-              <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
-                <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
+            <div className="table-container">
+              <table className="table">
+                <thead>
                   <tr>
                     <th style={{ 
                       background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
@@ -1968,7 +1947,7 @@ const Dashboard: React.FC = () => {
       </div>
       )}
       </div>
-    </>
+    </div>
   );
 };
 

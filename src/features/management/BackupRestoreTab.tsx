@@ -11,8 +11,6 @@ const BackupRestoreTab: React.FC = () => {
   const [pendingPayload, setPendingPayload] = useState<any | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string>('');
   const [override, setOverride] = useState<boolean>(false);
-
-  // Export/Import result details
   const [exportResult, setExportResult] = useState<any | null>(null);
   const [importResult, setImportResult] = useState<any | null>(null);
 
@@ -27,7 +25,6 @@ const BackupRestoreTab: React.FC = () => {
       setImportResult(null);
       
       const resp = await managementService.exportDatabase();
-      console.log('Export response:', resp); // Debug log
       
       if (!resp.success) {
         setBusy(false);
@@ -35,12 +32,10 @@ const BackupRestoreTab: React.FC = () => {
         return;
       }
       
-      // Save export result for display
-      setExportResult(resp.data); // Use resp.data instead of resp
+      setExportResult(resp.data);
       
-      // Download the exported data
       const blob = new Blob([
-        JSON.stringify(resp.data.data, null, 2) // Download only the data part
+        JSON.stringify(resp.data.data, null, 2)
       ], { type: 'application/json;charset=utf-8' });
       const objectUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -56,6 +51,13 @@ const BackupRestoreTab: React.FC = () => {
     } catch (e: any) {
       setBusy(false);
       setError(e?.message || 'שגיאה בייצוא');
+    }
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      openConfirmImport(file);
     }
   };
 
@@ -84,13 +86,11 @@ const BackupRestoreTab: React.FC = () => {
       setSuccess(null);
       setExportResult(null);
       setImportResult(null);
-      setIsConfirmOpen(false); // Close modal immediately to show progress
+      setIsConfirmOpen(false);
       
-      // Show a message indicating the import is in progress
       setSuccess('ייבוא החל - אנא המתן, פעולה זו עלולה לקחת זמן רב...');
       
       const resp = await managementService.importDatabase(pendingPayload, override);
-      console.log('Import response:', resp); // Debug log
       
       if (!resp.success) {
         setBusy(false);
@@ -99,19 +99,16 @@ const BackupRestoreTab: React.FC = () => {
         return;
       }
       
-      // Save import result for display
-      setImportResult(resp.data); // Use resp.data instead of resp
-      await loadAllData();
+      setImportResult(resp.data);
       setSuccess('ייבוא הושלם בהצלחה');
       setBusy(false);
+      
+      await loadAllData();
+      
     } catch (e: any) {
       setBusy(false);
+      setError(e?.message || 'שגיאה בייבוא');
       setSuccess(null);
-      if (e?.name === 'AbortError') {
-        setError('הייבוא בוטל - זמן המתנה הסתיים');
-      } else {
-        setError(e?.message || 'שגיאה בייבוא - ייתכן שהפעולה לקחה זמן רב מדי');
-      }
     } finally {
       setPendingPayload(null);
       setSelectedFileName('');
@@ -119,422 +116,213 @@ const BackupRestoreTab: React.FC = () => {
     }
   };
 
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      openConfirmImport(file);
-      e.currentTarget.value = '';
-    }
-  };
-
   return (
-    <div className="management-container" style={{ direction: 'rtl' }}>
-      <div className="management-header">
-        <h2>גיבוי ושחזור</h2>
-        <div className="management-actions">
-          <button className="btn btn-outline-primary" onClick={handleExport} disabled={busy}>
-            ⬇️ ייצוא נתונים
+    <div className="management-container">
+      {/* Compact Header with Actions */}
+      <div className="management-header-compact">
+        <div className="management-search-section">
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '16px',
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontSize: '14px'
+          }}>
+            <i className="fas fa-database" style={{ fontSize: '16px' }}></i>
+            <span>גיבוי ושחזור מסד נתונים</span>
+          </div>
+        </div>
+        
+        <div className="management-actions-compact">
+          <button 
+            className="btn btn-primary btn-sm"
+            onClick={handleExport} 
+            disabled={busy}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 16px'
+            }}
+          >
+            <i className="fas fa-download" style={{ fontSize: '13px' }}></i>
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>ייצוא</span>
           </button>
-          <label className="btn btn-outline-secondary" style={{ marginRight: 8 }}>
-            ⬆️ ייבוא נתונים
-            <input type="file" accept="application/json,.json" onChange={onFileChange} style={{ display: 'none' }} disabled={busy} />
+          
+          <label 
+            className="btn btn-ghost btn-sm"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 16px',
+              cursor: busy ? 'not-allowed' : 'pointer',
+              opacity: busy ? 0.6 : 1
+            }}
+          >
+            <i className="fas fa-upload" style={{ fontSize: '13px' }}></i>
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>ייבוא</span>
+            <input 
+              type="file" 
+              accept="application/json,.json" 
+              onChange={onFileChange} 
+              style={{ display: 'none' }} 
+              disabled={busy} 
+            />
           </label>
         </div>
       </div>
 
+      {/* Status Messages */}
       {error && (
-        <div className="error-message" style={{ marginTop: 12 }}>
-          <span className="error-icon">⚠️</span>
-          {error}
+        <div style={{ 
+          padding: '12px 16px',
+          margin: '16px 0',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.2)',
+          borderRadius: '8px',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <i className="fas fa-exclamation-triangle"></i>
+          <span>{error}</span>
         </div>
       )}
 
       {success && (
-        <div className="success-message" style={{ marginTop: 12 }}>
-          <span className="success-icon">✅</span>
-          {success}
+        <div style={{ 
+          padding: '12px 16px',
+          margin: '16px 0',
+          background: 'rgba(34, 197, 94, 0.1)',
+          border: '1px solid rgba(34, 197, 94, 0.2)',
+          borderRadius: '8px',
+          color: '#22c55e',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <i className="fas fa-check-circle"></i>
+          <span>{success}</span>
         </div>
       )}
 
       {busy && (
-        <div className="saving-indicator" style={{ marginTop: 16 }}>
+        <div style={{ 
+          padding: '16px',
+          margin: '16px 0',
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          color: 'rgba(255, 255, 255, 0.8)'
+        }}>
           <div className="saving-spinner"></div>
-          <span style={{ marginRight: 8 }}>
+          <span>
             {importResult ? 'מבצע פעולה...' : success?.includes('ייבוא החל') ? 'מבצע ייבוא - פעולה זו עלולה לקחת מספר דקות...' : 'מבצע פעולה...'}
           </span>
         </div>
       )}
 
-      {/* פרטי ייצוא */}
+      {/* Export Results */}
       {exportResult && (
-        <div className="card mt-4 border-0 shadow">
-          <div className="card-header bg-primary text-white py-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h4 className="mb-1 fw-bold">
-                  <i className="fas fa-download me-2"></i>
-                  תוצאות ייצוא נתונים
-                </h4>
-                <small className="opacity-75">
-                  {exportResult.statistics?.summary?.exportedAt ? new Date(exportResult.statistics.summary.exportedAt).toLocaleString('he-IL') : 'לא זמין'} • 
-                  {exportResult.statistics?.summary?.totalRecords || 0} רשומות כולל • 
-                  {exportResult.statistics?.summary?.totalTables || 0} טבלאות
-                </small>
-              </div>
-              <div className="badge bg-success bg-opacity-20 text-white fs-6 px-3 py-2">
-                <i className="fas fa-check-circle me-2"></i>הושלם בהצלחה
-              </div>
+        <div style={{ 
+          margin: '20px 0',
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '8px',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            padding: '16px 20px',
+            background: 'rgba(34, 197, 94, 0.15)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="fas fa-download" style={{ color: '#22c55e', fontSize: '16px' }}></i>
+              <span style={{ color: '#ffffff', fontWeight: '600', fontSize: '14px' }}>ייצוא הושלם</span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '13px' }}>
+                {exportResult.statistics?.summary?.totalRecords || 0} רשומות • {exportResult.statistics?.summary?.totalTables || 0} טבלאות
+              </span>
+            </div>
+            <div style={{ 
+              background: 'rgba(34, 197, 94, 0.2)',
+              color: '#22c55e',
+              padding: '4px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: '600'
+            }}>
+              <i className="fas fa-check-circle" style={{ marginLeft: '4px' }}></i>
+              הצלחה
             </div>
           </div>
           
-          <div className="card-body p-0">
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-dark">
-                  <tr>
-                    <th className="border-0 fw-bold py-3 px-4" style={{ width: '25%' }}>
-                      <i className="fas fa-table me-2 text-primary"></i>שם הטבלה
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
-                      <i className="fas fa-database me-2 text-info"></i>כולל
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
-                      <i className="fas fa-check-circle me-2 text-success"></i>הצליחו
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
-                      <i className="fas fa-times-circle me-2 text-danger"></i>נכשלו
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '30%' }}>
-                      פעולות
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exportResult.statistics?.tables ? 
-                    Object.entries(exportResult.statistics.tables).map(([tableName, tableStats]) => {
-                      const stats = tableStats as { total: number; success: number; failed: number; errors: string[] };
-                      return (
-                        <tr key={tableName} className="align-middle">
-                          <td className="px-4 py-3">
-                            <div className="d-flex align-items-center">
-                              <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3" 
-                                   style={{ width: '40px', height: '40px' }}>
-                                <i className="fas fa-table text-primary"></i>
-                              </div>
-                              <div>
-                                <div className="fw-semibold text-dark">{tableName}</div>
-                                <small className="text-muted">{stats.total} רשומות</small>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className="badge bg-info bg-opacity-15 text-info px-3 py-2 rounded-pill fw-bold">
-                              {stats.total}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className="badge bg-success bg-opacity-15 text-success px-3 py-2 rounded-pill fw-bold">
-                              {stats.success}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${stats.failed > 0 ? 'bg-danger bg-opacity-15 text-danger' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
-                              {stats.failed}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            <button 
-                              className="btn btn-outline-primary btn-sm rounded-pill"
-                              onClick={() => {
-                                const tableData = exportResult.data?.[tableName as keyof typeof exportResult.data];
-                                if (tableData && Array.isArray(tableData) && tableData.length > 0) {
-                                  const blob = new Blob([JSON.stringify(tableData, null, 2)], { type: 'application/json' });
-                                  const url = URL.createObjectURL(blob);
-                                  const a = document.createElement('a');
-                                  a.href = url;
-                                  a.download = `${tableName}-data.json`;
-                                  a.click();
-                                  URL.revokeObjectURL(url);
-                                } else {
-                                  alert(`אין נתונים להורדה עבור טבלה ${tableName}`);
-                                }
-                              }}
-                              disabled={!exportResult.data?.[tableName as keyof typeof exportResult.data] || 
-                                       (Array.isArray(exportResult.data[tableName as keyof typeof exportResult.data]) && 
-                                        (exportResult.data[tableName as keyof typeof exportResult.data] as any[]).length === 0)}
-                              title={exportResult.data?.[tableName as keyof typeof exportResult.data] && 
-                                     Array.isArray(exportResult.data[tableName as keyof typeof exportResult.data]) && 
-                                     (exportResult.data[tableName as keyof typeof exportResult.data] as any[]).length > 0 
-                                     ? "הורד נתונים" : "אין נתונים להורדה"}
-                            >
-                              <i className="fas fa-download me-1"></i>
-                              הורד
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    }) : (
-                      <tr>
-                        <td colSpan={5} className="text-center py-5">
-                          <div className="text-muted">
-                            <i className="fas fa-inbox fa-3x mb-3 opacity-25"></i>
-                            <p className="mb-0 fw-medium">אין נתונים להצגה</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="card-footer bg-light border-0 py-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <small className="text-muted">
-                <i className="fas fa-info-circle me-1"></i>
-                {exportResult.message || 'ייצוא הושלם בהצלחה'}
-              </small>
-              <button 
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => {
-                  const blob = new Blob([JSON.stringify(exportResult.statistics, null, 2)], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'export-statistics.json';
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-              >
-                <i className="fas fa-download me-1"></i>הורד סטטיסטיקות
-              </button>
+          <div style={{ padding: '16px 20px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="fas fa-info-circle" style={{ color: 'rgba(255, 255, 255, 0.5)' }}></i>
+              <span>הנתונים יוצאו בהצלחה והורדו כקובץ JSON</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* פרטי ייבוא */}
+      {/* Import Results */}
       {importResult && (
-        <div className="card mt-4 border-0 shadow">
-          <div className="card-header bg-success text-white py-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h4 className="mb-1 fw-bold">
-                  <i className="fas fa-upload me-2"></i>
-                  תוצאות ייבוא נתונים
-                </h4>
-                <small className="opacity-75">
-                  {importResult.importedAt ? new Date(importResult.importedAt).toLocaleString('he-IL') : 'לא זמין'} • 
-                  {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.success || 0), 0)} יובאו • 
-                  {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.exist || 0), 0)} קיימים • 
-                  {Object.keys(importResult || {}).length} טבלאות
-                </small>
-              </div>
-              <div className="badge bg-light bg-opacity-20 text-white fs-6 px-3 py-2">
-                <i className="fas fa-check-circle me-2"></i>הושלם בהצלחה
-              </div>
+        <div style={{ 
+          margin: '20px 0',
+          background: 'rgba(255, 255, 255, 0.05)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '8px',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            padding: '16px 20px',
+            background: 'rgba(59, 130, 246, 0.15)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="fas fa-upload" style={{ color: '#3b82f6', fontSize: '16px' }}></i>
+              <span style={{ color: '#ffffff', fontWeight: '600', fontSize: '14px' }}>ייבוא הושלם</span>
+              <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '13px' }}>
+                {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.success || 0), 0)} יובאו • 
+                {Object.keys(importResult || {}).length} טבלאות
+              </span>
+            </div>
+            <div style={{ 
+              background: 'rgba(59, 130, 246, 0.2)',
+              color: '#3b82f6',
+              padding: '4px 12px',
+              borderRadius: '4px',
+              fontSize: '12px',
+              fontWeight: '600'
+            }}>
+              <i className="fas fa-check-circle" style={{ marginLeft: '4px' }}></i>
+              הצלחה
             </div>
           </div>
           
-          <div className="card-body p-0">
-            <div className="table-responsive">
-              <table className="table table-hover mb-0">
-                <thead className="table-dark">
-                  <tr>
-                    <th className="border-0 fw-bold py-3 px-4" style={{ width: '20%' }}>
-                      <i className="fas fa-table me-2 text-primary"></i>שם הטבלה
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      <i className="fas fa-database me-2 text-info"></i>קיימים
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      <i className="fas fa-plus-circle me-2 text-success"></i>נוספו
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      <i className="fas fa-edit me-2 text-primary"></i>עודכנו
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      <i className="fas fa-times-circle me-2 text-danger"></i>נכשלו
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '15%' }}>
-                      <i className="fas fa-exclamation-triangle me-2 text-warning"></i>שגיאות
-                    </th>
-                    <th className="border-0 fw-bold text-center py-3" style={{ width: '13%' }}>
-                      פעולות
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {importResult ? 
-                    Object.entries(importResult).map(([tableName, tableStats]) => {
-                      const stats = tableStats as { exist: number; success: number; updated: number; failed: number; errors: string[] };
-                      const total = stats.exist + stats.success + stats.updated + stats.failed;
-                      const hasErrors = stats.errors && stats.errors.length > 0;
-                      const cleanTableName = tableName.replace(/[^a-zA-Z0-9]/g, '');
-                      
-                      return (
-                        <tr key={tableName} className="align-middle">
-                          <td className="px-4 py-3">
-                            <div className="d-flex align-items-center">
-                              <div className={`rounded-circle d-flex align-items-center justify-content-center me-3 ${hasErrors ? 'bg-warning bg-opacity-15' : 'bg-success bg-opacity-15'}`} 
-                                   style={{ width: '40px', height: '40px' }}>
-                                <i className={`fas fa-table ${hasErrors ? 'text-warning' : 'text-success'}`}></i>
-                              </div>
-                              <div>
-                                <div className="fw-semibold text-dark">{tableName}</div>
-                                <small className="text-muted">{total} רשומות כולל</small>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className="badge bg-info bg-opacity-15 text-info px-3 py-2 rounded-pill fw-bold">
-                              {stats.exist}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className="badge bg-success bg-opacity-15 text-success px-3 py-2 rounded-pill fw-bold">
-                              {stats.success}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className="badge bg-primary bg-opacity-15 text-primary px-3 py-2 rounded-pill fw-bold">
-                              {stats.updated}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            <span className={`badge px-3 py-2 rounded-pill fw-bold ${stats.failed > 0 ? 'bg-danger bg-opacity-15 text-danger' : 'bg-secondary bg-opacity-15 text-secondary'}`}>
-                              {stats.failed}
-                            </span>
-                          </td>
-                          <td className="text-center py-3">
-                            {hasErrors ? (
-                              <span className="badge bg-danger bg-opacity-15 text-danger px-3 py-2 rounded-pill fw-bold">
-                                {stats.errors!.length} שגיאות
-                              </span>
-                            ) : (
-                              <span className="badge bg-secondary bg-opacity-15 text-secondary px-3 py-2 rounded-pill fw-bold">
-                                אין שגיאות
-                              </span>
-                            )}
-                          </td>
-                          <td className="text-center py-3">
-                            {hasErrors && (
-                              <button 
-                                className="btn btn-outline-warning btn-sm rounded-pill"
-                                type="button"
-                                data-bs-toggle="modal"
-                                data-bs-target={`#errorsModal${cleanTableName}`}
-                                title="הצג שגיאות"
-                              >
-                                <i className="fas fa-eye"></i>
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    }) : (
-                      <tr>
-                        <td colSpan={7} className="text-center py-5">
-                          <div className="text-muted">
-                            <i className="fas fa-inbox fa-3x mb-3 opacity-25"></i>
-                            <p className="mb-0 fw-medium">אין נתונים להצגה</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  }
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="card-footer bg-light border-0 py-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <small className="text-muted">
-                <i className="fas fa-info-circle me-1"></i>
-                {importResult.message || 'ייבוא הושלם בהצלחה'}
-              </small>
-              <button 
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => {
-                  const blob = new Blob([JSON.stringify(importResult, null, 2)], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'import-statistics.json';
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }}
-              >
-                <i className="fas fa-download me-1"></i>הורד סטטיסטיקות
-              </button>
+          <div style={{ padding: '16px 20px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <i className="fas fa-info-circle" style={{ color: 'rgba(255, 255, 255, 0.5)' }}></i>
+              <span>הנתונים יובאו בהצלחה למסד הנתונים</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Error Modals */}
-      {importResult && Object.entries(importResult).map(([tableName, tableStats]) => {
-        const stats = tableStats as { exist: number; success: number; updated: number; failed: number; errors?: string[] };
-        const hasErrors = stats.errors && stats.errors.length > 0;
-        const cleanTableName = tableName.replace(/[^a-zA-Z0-9]/g, '');
-        
-        if (!hasErrors) return null;
-        
-        return (
-          <div className="modal fade" id={`errorsModal${cleanTableName}`} key={`modal-${tableName}`} tabIndex={-1}>
-            <div className="modal-dialog modal-lg">
-              <div className="modal-content">
-                <div className="modal-header bg-warning bg-opacity-10">
-                  <h5 className="modal-title">
-                    <i className="fas fa-exclamation-triangle text-warning me-2"></i>
-                    שגיאות בטבלה: {tableName}
-                  </h5>
-                  <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div className="modal-body">
-                  <div className="alert alert-warning border-0 mb-3">
-                    <strong>נמצאו {stats.errors!.length} שגיאות בעת ייבוא הטבלה</strong>
-                  </div>
-                  <div className="list-group list-group-flush" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                    {stats.errors!.map((error, errorIndex) => (
-                      <div key={errorIndex} className="list-group-item border-0 bg-light bg-opacity-50 mb-2 rounded">
-                        <div className="d-flex align-items-start">
-                          <div className="badge bg-warning text-dark me-3 mt-1">{errorIndex + 1}</div>
-                          <div className="flex-grow-1">
-                            <div className="text-dark small font-monospace">{error}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button 
-                    type="button" 
-                    className="btn btn-outline-warning"
-                    onClick={() => {
-                      const blob = new Blob([stats.errors!.join('\n')], { type: 'text/plain' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `${tableName}-errors.txt`;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    }}
-                  >
-                    <i className="fas fa-download me-2"></i>
-                    הורד שגיאות
-                  </button>
-                  <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">סגור</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
+      {/* Confirmation Modal */}
       <Modal
         isOpen={isConfirmOpen}
         onClose={() => {
@@ -546,44 +334,69 @@ const BackupRestoreTab: React.FC = () => {
           }
         }}
         title="אישור ייבוא נתונים"
-        size="sm"
+        size="md"
       >
-        <div className="mb-3">
-          <div className="alert alert-warning d-flex align-items-start">
-            <i className="fas fa-exclamation-triangle me-2 mt-1" />
-            <div>
-              <strong>לפני שממשיכים:</strong>
-              <p className="mb-0 mt-2" style={{ whiteSpace: 'pre-line' }}>
-                ייבוא לא ישכתב נתונים קיימים כברירת מחדל. ניתן לבחור לשכתב נתונים קיימים באמצעות הסימון הבא.
-                {selectedFileName ? `\nקובץ: ${selectedFileName}` : ''}
-              </p>
-              <p className="mb-0 mt-2 text-warning">
-                <strong>שים לב:</strong> ייבוא עלול לקחת זמן רב (מספר דקות) במיוחד עבור קבצים גדולים.
-              </p>
+        <div style={{ padding: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ 
+              padding: '12px 16px',
+              background: 'rgba(251, 191, 36, 0.1)',
+              border: '1px solid rgba(251, 191, 36, 0.2)',
+              borderRadius: '8px',
+              color: '#f59e0b',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px'
+            }}>
+              <i className="fas fa-exclamation-triangle" style={{ marginTop: '2px' }}></i>
+              <div>
+                <div style={{ fontWeight: '600', marginBottom: '4px' }}>אזהרה</div>
+                <div style={{ fontSize: '13px' }}>
+                  פעולת ייבוא עלולה לשנות נתונים קיימים במערכת.
+                  {selectedFileName && (
+                    <div style={{ marginTop: '8px' }}>
+                      <strong>קובץ:</strong> {selectedFileName}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="form-check mt-2" dir="rtl">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="overrideExisting"
-              checked={override}
-              onChange={(e) => setOverride(e.target.checked)}
-              disabled={busy}
-            />
-            <label className="form-check-label" htmlFor="overrideExisting">
-              דרוס נתונים קיימים בעת ייבוא (Override)
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}>
+              <input
+                type="checkbox"
+                checked={override}
+                onChange={(e) => setOverride(e.target.checked)}
+                disabled={busy}
+              />
+              <span>החלף נתונים קיימים (אם רלוונטי)</span>
             </label>
           </div>
-        </div>
-        <div className="d-flex gap-2 justify-content-start">
-          <button className="btn btn-secondary" onClick={() => setIsConfirmOpen(false)} disabled={busy}>
-            ביטול
-          </button>
-          <button className="btn btn-primary" onClick={performImport} disabled={busy}>
-            אשר ייבוא
-          </button>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => setIsConfirmOpen(false)} 
+              disabled={busy}
+            >
+              ביטול
+            </button>
+            <button 
+              className="btn btn-primary" 
+              onClick={performImport} 
+              disabled={busy}
+            >
+              {busy ? 'מבצע ייבוא...' : 'אשר ייבוא'}
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

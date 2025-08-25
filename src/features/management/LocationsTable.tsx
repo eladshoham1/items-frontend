@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, ConflictErrorModal, SmartPagination } from '../../shared/components';
+import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import { LocationEntity, UnitEntity } from '../../types';
@@ -224,51 +224,90 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
 
   return (
     <div className="management-container">
-      <div className="management-header">
-        <h2>ניהול מיקומים</h2>
-        <div className="management-actions">
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setIsAddModalOpen(true)}
-              disabled={loading}
-            >
-              הוסף מיקום
-            </button>
-            {selectedIds.length > 0 && (
-              <button 
-                className="btn btn-danger" 
-                onClick={handleBulkDelete}
-                disabled={isSubmitting}
+      {/* Compact Header with Actions */}
+      <div className="management-header-compact">
+        <div className="management-search-section">
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="text"
+              className="management-search-input"
+              placeholder="חיפוש מיקומים או יחידות..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              style={{ flex: 1 }}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                }}
+                title="נקה חיפוש"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '0 12px',
+                  minWidth: 'auto'
+                }}
               >
-                מחק נבחרים ({selectedIds.length})
+                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
               </button>
             )}
-            <button 
-              className="btn btn-ghost" 
-              onClick={onRefresh}
-              disabled={loading}
-            >
-              רענן
-            </button>
           </div>
         </div>
-      </div>
-
-      <div className="management-controls">
-        <input
-          type="text"
-          className="form-control search-input"
-          placeholder="חיפוש מיקומים או יחידות..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        
+        <div className="management-actions-compact">
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => setIsAddModalOpen(true)}
+            disabled={loading}
+            title="הוסף מיקום חדש"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 16px'
+            }}
+          >
+            <i className="fas fa-plus" style={{ fontSize: '13px' }}></i>
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>הוסף חדש</span>
+          </button>
+          
+          {selectedIds.length > 0 && (
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={handleBulkDelete}
+              disabled={isSubmitting}
+              title={`מחק ${selectedIds.length} מיקומים נבחרים`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0 12px'
+              }}
+            >
+              <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
+              <span style={{ fontSize: '12px', fontWeight: '500' }}>מחק ({selectedIds.length})</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
-        <div className="loading-container">
-          <p>טוען מיקומים...</p>
-        </div>
+        <LoadingSpinner 
+          message="טוען מיקומים..." 
+          padding="80px 20px"
+          minHeight="400px"
+        />
       ) : (
         <>
           <div className="table-container">
