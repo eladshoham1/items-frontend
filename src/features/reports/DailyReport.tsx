@@ -37,11 +37,35 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   // If not admin, hide history tab
   const availableReportTabs = isAdmin 
     ? [
-        { id: 'current', label: 'דוח נוכחי', icon: 'fas fa-calendar-day' },
-        { id: 'history', label: 'היסטוריית דוחות', icon: 'fas fa-history' }
+        { 
+          id: 'current', 
+          label: 'דוח נוכחי', 
+          icon: (
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+            </svg>
+          )
+        },
+        { 
+          id: 'history', 
+          label: 'היסטוריית דוחות', 
+          icon: (
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+            </svg>
+          )
+        }
       ]
     : [
-        { id: 'current', label: 'דוח נוכחי', icon: 'fas fa-calendar-day' }
+        { 
+          id: 'current', 
+          label: 'דוח נוכחי', 
+          icon: (
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+            </svg>
+          )
+        }
       ];
 
   const handleTabChange = (tabId: string) => {
@@ -78,15 +102,15 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
 
     // Apply search filter
     if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase().trim();
+      const searchLower = searchTerm.toLowerCase().trim().normalize('NFC');
       filteredItems = filteredItems.filter(item => 
-        (item.itemName?.toLowerCase() || '').includes(searchLower) ||
-        (item.idNumber?.toLowerCase() || '').includes(searchLower) ||
-        (item.signedByUserName?.toLowerCase() || '').includes(searchLower) ||
-        (item.location?.toLowerCase() || '').includes(searchLower) ||
-        (item.reportedBy?.name?.toLowerCase() || '').includes(searchLower) ||
-        (item.reportedBy?.rank?.toLowerCase() || '').includes(searchLower) ||
-        (item.notes?.toLowerCase() || '').includes(searchLower)
+        (item.itemName?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.idNumber?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.signedByUserName?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.location?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.reportedBy?.name?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.reportedBy?.rank?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.notes?.toLowerCase().normalize('NFC') || '').includes(searchLower)
       );
     }
 

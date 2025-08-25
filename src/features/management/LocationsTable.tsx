@@ -51,8 +51,8 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
 
   // Filter locations
   const filteredLocations = locations.filter(location =>
-    location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    getUnitName(location.unitId).toLowerCase().includes(searchTerm.toLowerCase())
+    location.name.toLowerCase().normalize('NFC').includes(searchTerm.toLowerCase().normalize('NFC')) ||
+    getUnitName(location.unitId).toLowerCase().normalize('NFC').includes(searchTerm.toLowerCase().normalize('NFC'))
   );
 
   // Sort locations

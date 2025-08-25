@@ -41,12 +41,20 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         { 
             id: 'signed', 
             label: isAdmin ? 'כל הקבלות החתומות' : 'קבלות המיקום שלי', 
-            icon: 'fas fa-receipt' 
+            icon: (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18 17H6v-2h12v2zm0-4H6v-2h12v2zm0-4H6V7h12v2zM3 21l1.5-1.5L6 21l1.5-1.5L9 21l1.5-1.5L12 21l1.5-1.5L15 21l1.5-1.5L18 21l1.5-1.5L21 21V3l-1.5 1.5L18 3l-1.5 1.5L15 3l-1.5 1.5L12 3L10.5 4.5 9 3 7.5 4.5 6 3 4.5 4.5 3 3v18z"/>
+                </svg>
+            )
         },
         { 
             id: 'pending', 
             label: isAdmin ? 'כל הקבלות הממתינות' : 'קבלות ממתינות במיקום שלי', 
-            icon: 'fas fa-clock' 
+            icon: (
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M16.2,16.2L11,13V7H12.5V12.2L17,14.7L16.2,16.2Z"/>
+                </svg>
+            )
         },
     ];
 
@@ -113,13 +121,13 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
 
     // Apply search + sort
     const filteredAndSortedReceipts = useMemo(() => {
-        const term = searchTerm.toLowerCase();
+        const term = searchTerm.toLowerCase().normalize('NFC');
         let filtered = userReceipts.filter((r) => {
-            const issuer = r.createdBy?.name?.toLowerCase() || '';
-            const receiver = r.signedBy?.name?.toLowerCase() || '';
-            const unit = getUnit(r).toLowerCase();
+            const issuer = (r.createdBy?.name?.toLowerCase() || '').normalize('NFC');
+            const receiver = (r.signedBy?.name?.toLowerCase() || '').normalize('NFC');
+            const unit = getUnit(r).toLowerCase().normalize('NFC');
             const count = (r.receiptItems?.length || 0).toString();
-            const dateStr = timestampToDate(r.updatedAt.toString()).toLowerCase();
+            const dateStr = timestampToDate(r.updatedAt.toString()).toLowerCase().normalize('NFC');
             return issuer.includes(term) || receiver.includes(term) || unit.includes(term) || count.includes(term) || dateStr.includes(term);
         });
 
@@ -189,12 +197,6 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         setModalType('update');
         setIsUpdateModalOpen(true);
     };
-
-    // const handleReturnClick = (receipt: Receipt) => {
-    //     setSelectedReceipt(receipt);
-    //     setModalType('return');
-    //     setIsModalOpen(true);
-    // };
 
     const handleDeleteClick = (receipt: Receipt) => {
         setSelectedReceipt(receipt);

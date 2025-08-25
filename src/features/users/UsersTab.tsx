@@ -65,15 +65,16 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
 
   // Filter and sort users based on search term and sort config
   const filteredAndSortedUsers = (() => {
+    const normalizedSearchTerm = searchTerm.toLowerCase().normalize('NFC');
     let filtered = users.filter(user => 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.name.toLowerCase().normalize('NFC').includes(normalizedSearchTerm) ||
       user.personalNumber.toString().includes(searchTerm) ||
-      user.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.rank.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.isAdmin && 'מנהל'.includes(searchTerm)) ||
-      (!user.isAdmin && 'משתמש'.includes(searchTerm))
+      user.phoneNumber.toLowerCase().normalize('NFC').includes(normalizedSearchTerm) ||
+      user.location.toLowerCase().normalize('NFC').includes(normalizedSearchTerm) ||
+      user.unit.toLowerCase().normalize('NFC').includes(normalizedSearchTerm) ||
+      user.rank.toLowerCase().normalize('NFC').includes(normalizedSearchTerm) ||
+      (user.isAdmin && 'מנהל'.normalize('NFC').includes(normalizedSearchTerm)) ||
+      (!user.isAdmin && 'משתמש'.normalize('NFC').includes(normalizedSearchTerm))
     );
 
     if (sortConfig) {

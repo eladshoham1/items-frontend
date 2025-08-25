@@ -51,7 +51,7 @@ export function ManagementTable<T extends BaseEntity>({
 
   // Filter and sort items
   const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().normalize('NFC').includes(searchTerm.toLowerCase().normalize('NFC'))
   );
 
   const sortedItems = [...filteredItems].sort((a, b) => {

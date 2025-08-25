@@ -77,12 +77,12 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
 
   // New: search + sort + paginate
   const filteredAndSorted = useMemo(() => {
-    const term = searchTerm.toLowerCase();
+    const term = searchTerm.toLowerCase().normalize('NFC');
 
     let filtered = pendingReceipts.filter((r) => {
-      const issuer = r.createdBy?.name?.toLowerCase() || '';
-      const receiver = r.signedBy?.name?.toLowerCase() || '';
-      const unit = getUnit(r).toLowerCase();
+      const issuer = (r.createdBy?.name?.toLowerCase() || '').normalize('NFC');
+      const receiver = (r.signedBy?.name?.toLowerCase() || '').normalize('NFC');
+      const unit = getUnit(r).toLowerCase().normalize('NFC');
       const count = (r.receiptItems?.length || 0).toString();
       const date = new Date(r.createdAt).toLocaleDateString('he-IL');
       return (

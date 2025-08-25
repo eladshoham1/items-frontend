@@ -11,6 +11,8 @@ interface NavigationProps {
   userProfile?: User | null;
   isAdmin?: boolean;
   onLogout?: () => void;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 const Navigation: React.FC<NavigationProps> = ({ 
@@ -20,9 +22,21 @@ const Navigation: React.FC<NavigationProps> = ({
   user, 
   userProfile,
   isAdmin,
-  onLogout 
+  onLogout,
+  isMobileOpen = false,
+  onMobileClose
 }) => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  // Use mobile state from Layout component if provided, otherwise use local state
+  const [localMobileOpen, setLocalMobileOpen] = useState(false);
+  const isMobileMenuOpen = isMobileOpen || localMobileOpen;
+  
+  const handleMobileClose = () => {
+    if (onMobileClose) {
+      onMobileClose();
+    } else {
+      setLocalMobileOpen(false);
+    }
+  };
 
   const allTabs = [
     { 
@@ -86,28 +100,13 @@ const Navigation: React.FC<NavigationProps> = ({
 
   const handleTabClick = (tab: string) => {
     onTabChange(tab);
-    setIsMobileOpen(false);
-  };
-
-  const toggleMobileMenu = () => {
-    setIsMobileOpen(!isMobileOpen);
+    handleMobileClose();
   };
 
   return (
     <>
-      {/* Mobile menu button */}
-      <button 
-        className="mobile-menu-button"
-        onClick={toggleMobileMenu}
-        aria-label="פתח תפריט"
-      >
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-        </svg>
-      </button>
-
       {/* Sidebar Navigation */}
-      <nav className={`navigation ${isMobileOpen ? 'mobile-open' : ''}`}>
+      <nav className={`navigation ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
         {/* Navigation Menu */}
         <div className="nav-menu">
           <ul className="nav-list">
@@ -137,11 +136,11 @@ const Navigation: React.FC<NavigationProps> = ({
           </div>
         </div>
 
-        {/* Mobile overlay */}
-        {isMobileOpen && (
+        {/* Mobile overlay - only show if not controlled by Layout */}
+        {!onMobileClose && isMobileMenuOpen && (
           <div 
             className="mobile-overlay"
-            onClick={() => setIsMobileOpen(false)}
+            onClick={handleMobileClose}
           />
         )}
       </nav>

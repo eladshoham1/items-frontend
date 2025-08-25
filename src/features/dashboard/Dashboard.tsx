@@ -8,6 +8,7 @@ import { SignUser, UnitEntity } from '../../types';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import '../../shared/styles/components.css';
+import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
   const { userProfile } = useUserProfile();
@@ -86,10 +87,10 @@ const Dashboard: React.FC = () => {
 
   // Set default unit selection
   React.useEffect(() => {
-    if (units.length > 0 && !selectedUnit) {
-      setSelectedUnit(units[0]);
+    if (allUnits.length > 0 && !selectedUnit) {
+      setSelectedUnit(allUnits[0].name);
     }
-  }, [units, selectedUnit]);
+  }, [allUnits, selectedUnit]);
 
   // Extract unique locations for selected unit
   const locations = useMemo(() => {
@@ -264,8 +265,9 @@ const Dashboard: React.FC = () => {
     
     // Filter by search term
     if (unitsSearchTerm.trim()) {
+      const normalizedSearchTerm = unitsSearchTerm.trim().toLowerCase().normalize('NFC');
       filteredItems = items.filter(item =>
-        item.toLowerCase().includes(unitsSearchTerm.toLowerCase())
+        item.toLowerCase().normalize('NFC').includes(normalizedSearchTerm)
       );
     }
 
@@ -367,8 +369,9 @@ const Dashboard: React.FC = () => {
     // Filter by search term
     let filteredItems = tableData.items;
     if (locationsSearchTerm.trim()) {
+      const normalizedSearchTerm = locationsSearchTerm.trim().toLowerCase().normalize('NFC');
       filteredItems = tableData.items.filter(item =>
-        item.itemName.toLowerCase().includes(locationsSearchTerm.toLowerCase())
+        item.itemName.toLowerCase().normalize('NFC').includes(normalizedSearchTerm)
       );
     }
 
@@ -612,6 +615,7 @@ const Dashboard: React.FC = () => {
                     id="unitSelect"
                     value={selectedUnit}
                     onChange={(e) => setSelectedUnit(e.target.value)}
+                    disabled={unitsLoading}
                     style={{
                       padding: '10px 16px',
                       borderRadius: '8px',
@@ -621,12 +625,13 @@ const Dashboard: React.FC = () => {
                       backgroundColor: 'var(--color-bg)',
                       color: 'var(--color-text)',
                       minWidth: '200px',
-                      direction: 'rtl'
+                      direction: 'rtl',
+                      opacity: unitsLoading ? 0.6 : 1
                     }}
                   >
-                    <option value="">בחר יחידה...</option>
-                    {units.map(unit => (
-                      <option key={unit} value={unit}>{unit}</option>
+                    <option value="">{unitsLoading ? 'טוען יחידות...' : 'בחר יחידה...'}</option>
+                    {allUnits.map(unit => (
+                      <option key={unit.id} value={unit.name}>{unit.name}</option>
                     ))}
                   </select>
                   {selectedUnit && (
@@ -713,26 +718,12 @@ const Dashboard: React.FC = () => {
           )}
 
           {activeTab === 'units' && (
-            <div className="table-container">
-            <table className="table">
+            <div className="dashboard-table-container scroll-container force-horizontal-scroll">
+            <table className="dashboard-table">
               <thead>
                 <tr>
                   <th 
-                    style={{ 
-                      position: 'sticky', 
-                      right: 0, 
-                      background: '#495057', 
-                      color: 'white',
-                      zIndex: 10, 
-                      minWidth: '180px',
-                      padding: '16px 12px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      borderBottom: '2px solid #6c757d',
-                      textAlign: 'center',
-                      boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
-                      cursor: 'pointer'
-                    }}
+                    className="dashboard-table-header-item"
                     onClick={() => handleSort('name')}
                   >
                     פריט
@@ -741,17 +732,7 @@ const Dashboard: React.FC = () => {
                   {units.map(unit => (
                     <th 
                       key={unit} 
-                      className="text-center" 
-                      style={{ 
-                        minWidth: '120px', 
-                        background: '#495057',
-                        color: 'white',
-                        padding: '16px 8px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        borderBottom: '2px solid #6c757d',
-                        cursor: 'pointer'
-                      }}
+                      className="dashboard-table-header-unit"
                       onClick={() => handleSort(`unit_${unit}`)}
                     >
                       {unit}
@@ -759,85 +740,35 @@ const Dashboard: React.FC = () => {
                     </th>
                   ))}
                   <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: '#6c757d',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '2px solid #868e96',
-                      cursor: 'pointer'
-                    }}
+                    className="dashboard-table-header-signed"
                     onClick={() => handleSort('signed')}
                   >
                     חתומים
                     {getSortIcon('signed')}
                   </th>
                   <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #f39c12 0%, #e67e22 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #f39c12',
-                      cursor: 'pointer'
-                    }}
+                    className="dashboard-table-header-waiting"
                     onClick={() => handleSort('waiting')}
                   >
                     ממתינים לחתימה
                     {getSortIcon('waiting')}
                   </th>
                   <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #e74c3c',
-                      cursor: 'pointer'
-                    }}
+                    className="dashboard-table-header-broken"
                     onClick={() => handleSort('nonOperational')}
                   >
                     תקולים
                     {getSortIcon('nonOperational')}
                   </th>
                   <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #af7ac5',
-                      cursor: 'pointer'
-                    }}
+                    className="dashboard-table-header-available"
                     onClick={() => handleSort('available')}
                   >
                     זמינים
                     {getSortIcon('available')}
                   </th>
                   <th 
-                    className="text-center" 
-                    style={{ 
-                      minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #d35400 0%, #e67e22 100%)',
-                      color: 'white',
-                      padding: '16px 8px',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      borderBottom: '3px solid #f39c12',
-                      cursor: 'pointer'
-                    }}
+                    className="dashboard-table-header-total"
                     onClick={() => handleSort('total')}
                   >
                     סה"כ
@@ -852,33 +783,9 @@ const Dashboard: React.FC = () => {
                   return (
                   <tr 
                     key={item} 
-                    style={{
-                      backgroundColor: itemIndex % 2 === 0 ? '#f8fafc' : 'white',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#e3f2fd';
-                      e.currentTarget.style.transform = 'scale(1.01)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = itemIndex % 2 === 0 ? '#f8fafc' : 'white';
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
+                    className="dashboard-table-row"
                   >
-                    <td 
-                      style={{ 
-                        position: 'sticky', 
-                        right: 0, 
-                        background: itemIndex % 2 === 0 ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' : 'linear-gradient(135deg, white 0%, #f1f5f9 100%)',
-                        fontWeight: '700',
-                        borderRight: '3px solid #3498db',
-                        padding: '16px 12px',
-                        fontSize: '14px',
-                        color: '#2c3e50',
-                        boxShadow: '2px 0 4px rgba(0,0,0,0.05)',
-                        textAlign: 'center'
-                      }}
-                    >
+                    <td className={`dashboard-table-cell-item ${itemIndex % 2 === 0 ? 'even' : 'odd'}`}>
                       {item}
                     </td>
                     {units && Array.isArray(units) ? units.map(unit => {
@@ -892,82 +799,25 @@ const Dashboard: React.FC = () => {
                       return (
                         <td 
                           key={`${item}-${unit}`}
-                          className="text-center"
-                          style={{ 
-                            cursor: hasUsers ? 'pointer' : 'default',
-                            position: 'relative',
-                            padding: '16px 8px',
-                            transition: 'all 0.3s ease',
-                            backgroundColor: hasUsers ? '#e8f5e8' : '#f8f9fa',
-                            borderLeft: hasUsers ? '3px solid #27ae60' : '1px solid #dee2e6'
-                          }}
+                          className={`dashboard-table-cell ${hasUsers ? 'has-users' : 'no-users'}`}
                           onClick={(e) => handleCellClick(e, users || [], item, unit)}
                           title={hasUsers ? 'לחץ לפרטים נוספים' : 'אין משתמשים רשומים'}
-                          onMouseEnter={(e) => {
-                            if (hasUsers) {
-                              e.currentTarget.style.backgroundColor = '#d4edda';
-                              e.currentTarget.style.transform = 'scale(1.05)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(39, 174, 96, 0.3)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = hasUsers ? '#e8f5e8' : '#f8f9fa';
-                            e.currentTarget.style.transform = 'scale(1)';
-                            e.currentTarget.style.boxShadow = 'none';
-                          }}
                         >
                           {hasUsers ? (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
                               {hasSignedUsers && (
-                                <span 
-                                  className="badge" 
-                                  style={{ 
-                                    backgroundColor: '#27ae60',
-                                    color: 'white',
-                                    fontSize: '11px',
-                                    padding: '4px 8px',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    boxShadow: '0 1px 3px rgba(39, 174, 96, 0.3)',
-                                    border: '1px solid #2ecc71'
-                                  }}
-                                  title={`חתומים: ${signedQuantity}`}
-                                >
+                                <span className="dashboard-badge-signed" title={`חתומים: ${signedQuantity}`}>
                                   ✓ {signedQuantity}
                                 </span>
                               )}
                               {hasWaitingUsers && (
-                                <span 
-                                  className="badge" 
-                                  style={{ 
-                                    backgroundColor: '#f39c12',
-                                    color: 'white',
-                                    fontSize: '11px',
-                                    padding: '4px 8px',
-                                    borderRadius: '12px',
-                                    fontWeight: '600',
-                                    boxShadow: '0 1px 3px rgba(243, 156, 18, 0.3)',
-                                    border: '1px solid #f5b041'
-                                  }}
-                                  title={`ממתינים: ${waitingQuantity}`}
-                                >
+                                <span className="dashboard-badge-waiting" title={`ממתינים: ${waitingQuantity}`}>
                                   ⏳ {waitingQuantity}
                                 </span>
                               )}
                           </div>
                           ) : (
-                            <span 
-                              className="badge" 
-                              style={{ 
-                                backgroundColor: '#e9ecef',
-                                color: '#6c757d',
-                                fontSize: '12px',
-                                padding: '6px 10px',
-                                borderRadius: '15px',
-                                fontWeight: '500',
-                                border: '1px solid #dee2e6'
-                              }}
-                            >
+                            <span className="dashboard-badge-empty">
                               0
                             </span>
                           )}
@@ -975,14 +825,7 @@ const Dashboard: React.FC = () => {
                       );
                     }) : null}
                     <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#e8f4fd',
-                        borderLeft: '3px solid #3498db',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease'
-                      }}
+                      className="dashboard-table-cell-signed"
                       onClick={(e) => {
                         // Collect all signed users from all units for this item
                         const allSignedUsers: SignUser[] = [];
@@ -996,42 +839,13 @@ const Dashboard: React.FC = () => {
                         handleCellClick(e, allSignedUsers, item, 'כל היחידות - חתומים');
                       }}
                       title="לחץ לפרטי כל המשתמשים החתומים"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#d4edda';
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(52, 152, 219, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#e8f4fd';
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
                     >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#3498db',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(52, 152, 219, 0.3)',
-                          border: '2px solid #5dade2'
-                        }}
-                      >
+                      <span className="dashboard-badge-large dashboard-badge-signed-large">
                         {getItemSignedTotal(item)}
                       </span>
                     </td>
                     <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#fef4e3',
-                        borderLeft: '3px solid #f39c12',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease'
-                      }}
+                      className="dashboard-table-cell-waiting"
                       onClick={(e) => {
                         // Collect all waiting users from all units for this item
                         const allWaitingUsers: SignUser[] = [];
@@ -1045,42 +859,13 @@ const Dashboard: React.FC = () => {
                         handleCellClick(e, allWaitingUsers, item, 'כל היחידות - ממתינים');
                       }}
                       title="לחץ לפרטי כל המשתמשים הממתינים"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8d7da';
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 156, 18, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fef4e3';
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
                     >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#f39c12',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(243, 156, 18, 0.3)',
-                          border: '2px solid #f5b041'
-                        }}
-                      >
+                      <span className="dashboard-badge-large dashboard-badge-waiting-large">
                         {getItemWaitingTotal(item)}
                       </span>
                     </td>
                     <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#fadbd8',
-                        borderLeft: '3px solid #e74c3c',
-                        cursor: stats && stats[item] && stats[item].nonOperationalQuantity > 0 ? 'pointer' : 'default',
-                        transition: 'all 0.3s ease'
-                      }}
+                      className="dashboard-table-cell-broken"
                       onClick={(e) => {
                         const nonOpCount = stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0;
                         if (nonOpCount > 0) {
@@ -1090,44 +875,13 @@ const Dashboard: React.FC = () => {
                         }
                       }}
                       title={stats && stats[item] && stats[item].nonOperationalQuantity > 0 ? "לחץ לפרטי הפריטים התקולים" : "אין פריטים תקולים"}
-                      onMouseEnter={(e) => {
-                        if (stats && stats[item] && stats[item].nonOperationalQuantity > 0) {
-                          e.currentTarget.style.backgroundColor = '#f5c6cb';
-                          e.currentTarget.style.transform = 'scale(1.05)';
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(231, 76, 60, 0.3)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fadbd8';
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
                     >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#e74c3c',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(231, 76, 60, 0.3)',
-                          border: '2px solid #ec7063'
-                        }}
-                      >
+                      <span className="dashboard-badge-large dashboard-badge-broken-large">
                         {stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0}
                       </span>
                     </td>
                     <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#f3e5f5',
-                        borderLeft: '3px solid #9b59b6',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease'
-                      }}
+                      className="dashboard-table-cell-available"
                       onClick={(e) => {
                         // For available items, show all users who are not assigned or not signed
                         const allUsers: SignUser[] = [];
@@ -1140,42 +894,13 @@ const Dashboard: React.FC = () => {
                         handleCellClick(e, allUsers, item, 'כל היחידות - סטטוס זמינות');
                       }}
                       title="לחץ לפרטי זמינות הפריט"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#e8daef';
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(155, 89, 182, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f3e5f5';
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
                     >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#9b59b6',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(155, 89, 182, 0.3)',
-                          border: '2px solid #af7ac5'
-                        }}
-                      >
+                      <span className="dashboard-badge-large dashboard-badge-available-large">
                         {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - (stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0) - getItemSignedTotal(item) - getItemWaitingTotal(item)}
                       </span>
                     </td>
                     <td 
-                      className="text-center" 
-                      style={{ 
-                        padding: '16px 8px',
-                        backgroundColor: '#fef5e7',
-                        borderLeft: '3px solid #f39c12',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease'
-                      }}
+                      className="dashboard-table-cell-total"
                       onClick={(e) => {
                         // For total, show all users from all units for this item
                         const allUsers: SignUser[] = [];
@@ -1188,30 +913,8 @@ const Dashboard: React.FC = () => {
                         handleCellClick(e, allUsers, item, 'כל היחידות - סיכום כללי');
                       }}
                       title="לחץ לפרטי כל המשתמשים הרשומים לפריט"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#f8e8cd';
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(243, 156, 18, 0.3)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#fef5e7';
-                        e.currentTarget.style.transform = 'scale(1)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }}
                     >
-                      <span 
-                        className="badge" 
-                        style={{ 
-                          backgroundColor: '#f39c12',
-                          color: 'white',
-                          fontSize: '13px',
-                          padding: '8px 12px',
-                          borderRadius: '20px',
-                          fontWeight: '600',
-                          boxShadow: '0 2px 4px rgba(243, 156, 18, 0.3)',
-                          border: '2px solid #f5b041'
-                        }}
-                      >
+                      <span className="dashboard-badge-large dashboard-badge-total-large">
                         {stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0}
                       </span>
                     </td>
@@ -1237,14 +940,14 @@ const Dashboard: React.FC = () => {
             {dashboardLoading || unitsLoading ? (
               <LoadingSpinner 
                 message={unitsLoading ? 'טוען רשימת יחידות...' : 'טוען נתוני יחידה...'} 
-                containerStyle={{ backgroundColor: '#f8f9fa' }}
+                containerStyle={{ backgroundColor: 'var(--color-bg, #1a1a1a)' }}
               />
             ) : dashboardError ? (
               <div style={{ 
                 padding: '60px 24px',
                 textAlign: 'center',
-                backgroundColor: '#f8f9fa',
-                color: '#dc3545',
+                backgroundColor: 'var(--color-bg, #1a1a1a)',
+                color: 'var(--color-danger, #dc3545)',
                 fontSize: '18px',
                 fontWeight: '500'
               }}>
@@ -1256,15 +959,15 @@ const Dashboard: React.FC = () => {
                 {/* Search Input */}
                 <div style={{ 
                   padding: '20px 24px',
-                  backgroundColor: 'white',
-                  borderBottom: '1px solid #e9ecef',
+                  backgroundColor: 'var(--color-bg, #1a1a1a)',
+                  borderBottom: '1px solid var(--color-border, #404040)',
                   direction: 'rtl'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <label htmlFor="locationsSearch" style={{ 
                       fontSize: '16px',
                       fontWeight: '600',
-                      color: '#495057',
+                      color: 'var(--color-text, #ffffff)',
                       marginBottom: 0
                     }}>
                       חיפוש פריטים:
@@ -1278,11 +981,11 @@ const Dashboard: React.FC = () => {
                       style={{
                         padding: '10px 16px',
                         borderRadius: '8px',
-                        border: '2px solid #e9ecef',
+                        border: '2px solid var(--color-border, #404040)',
                         fontSize: '14px',
                         fontWeight: '500',
-                        backgroundColor: 'white',
-                        color: '#495057',
+                        backgroundColor: 'var(--color-bg-secondary, #2a2a2a)',
+                        color: 'var(--color-text, #ffffff)',
                         minWidth: '300px',
                         direction: 'rtl'
                       }}
@@ -1294,7 +997,7 @@ const Dashboard: React.FC = () => {
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: '#6c757d',
+                          color: 'var(--color-text-muted, #8e8e93)',
                           fontSize: '16px',
                           cursor: 'pointer',
                           padding: '5px'
@@ -1305,8 +1008,8 @@ const Dashboard: React.FC = () => {
                       </button>
                     )}
                     <span style={{
-                      backgroundColor: '#e3f2fd',
-                      color: '#1976d2',
+                      backgroundColor: 'var(--color-accent, #007bff)',
+                      color: 'var(--color-text, #ffffff)',
                       padding: '8px 16px',
                       borderRadius: '20px',
                       fontSize: '12px',
@@ -1317,84 +1020,38 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-                <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th 
-                        style={{ 
-                          position: 'sticky', 
-                          right: 0, 
-                          background: '#495057', 
-                          color: 'white',
-                          zIndex: 10, 
-                          minWidth: '180px',
-                          padding: '16px 12px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          borderBottom: '2px solid #6c757d',
-                          textAlign: 'center',
-                          boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => handleLocationsSort('itemName')}
-                      >
-                        פריט
-                        {getLocationsSortIcon('itemName')}
-                      </th>
-                      {getFilteredAndSortedLocationsData().locations.map(location => (
-                        <th 
-                          key={location} 
-                          className="text-center" 
-                          style={{ 
-                            minWidth: '150px', 
-                            background: '#495057',
-                            color: 'white',
-                            padding: '16px 8px',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            borderBottom: '2px solid #6c757d',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => handleLocationsSort(`location_${location}`)}
-                        >
-                          {location}
-                          {getLocationsSortIcon(`location_${location}`)}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
+                <div className="dashboard-card">
+                  <div className="dashboard-card-body">
+                    <div className="table-container scroll-container force-horizontal-scroll">
+                      <table className="table">
+                        <thead>
+                          <tr>
+                            <th 
+                              className="dashboard-locations-header-item"
+                              onClick={() => handleLocationsSort('itemName')}
+                            >
+                              פריט
+                              {getLocationsSortIcon('itemName')}
+                            </th>
+                            {getFilteredAndSortedLocationsData().locations.map(location => (
+                              <th 
+                                key={location} 
+                                className="dashboard-locations-header-location"
+                                onClick={() => handleLocationsSort(`location_${location}`)}
+                              >
+                                {location}
+                                {getLocationsSortIcon(`location_${location}`)}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
                   <tbody>
                     {getFilteredAndSortedLocationsData().items.map((item, itemIndex) => (
                       <tr 
                         key={`${item.itemName}-locations`} 
-                        style={{
-                          backgroundColor: itemIndex % 2 === 0 ? '#f8fafc' : 'white',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#e3f2fd';
-                          e.currentTarget.style.transform = 'scale(1.01)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = itemIndex % 2 === 0 ? '#f8fafc' : 'white';
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
+                        className="dashboard-locations-row"
                       >
-                        <td 
-                          style={{ 
-                            position: 'sticky', 
-                            right: 0, 
-                            background: itemIndex % 2 === 0 ? 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' : 'linear-gradient(135deg, white 0%, #f1f5f9 100%)',
-                            fontWeight: '700',
-                            borderRight: '3px solid #3498db',
-                            padding: '16px 12px',
-                            fontSize: '14px',
-                            color: '#2c3e50',
-                            boxShadow: '2px 0 4px rgba(0,0,0,0.05)',
-                            textAlign: 'center'
-                          }}
-                        >
+                        <td className="dashboard-locations-cell-item">
                           {item.itemName}
                         </td>
                         {getFilteredAndSortedLocationsData().locations.map(location => {
@@ -1405,45 +1062,18 @@ const Dashboard: React.FC = () => {
                           return (
                             <td 
                               key={`${item.itemName}-${location}`}
-                              className="text-center"
+                              className={`dashboard-locations-table-cell ${hasAnyData ? 'dashboard-locations-table-cell--has-data' : 'dashboard-locations-table-cell--no-data'}`}
                               style={{ 
-                                cursor: hasUserData ? 'pointer' : 'default',
-                                position: 'relative',
-                                padding: '16px 8px',
-                                transition: 'all 0.3s ease',
-                                backgroundColor: hasAnyData ? '#e8f5e8' : '#f8f9fa',
-                                borderLeft: hasAnyData ? '3px solid #27ae60' : '1px solid #dee2e6'
+                                cursor: hasUserData ? 'pointer' : 'default'
                               }}
                               onClick={(e) => hasUserData && handleUnifiedLocationsCellClick(e, locationData, item.itemName, location)}
                               title={hasUserData ? `לחץ לפרטים נוספים` : hasAnyData ? 'יש הקצאות אך אין נתוני משתמשים' : 'אין נתונים'}
-                              onMouseEnter={(e) => {
-                                if (hasUserData) {
-                                  e.currentTarget.style.backgroundColor = '#d4edda';
-                                  e.currentTarget.style.transform = 'scale(1.05)';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(39, 174, 96, 0.3)';
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = hasAnyData ? '#e8f5e8' : '#f8f9fa';
-                                e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.boxShadow = 'none';
-                              }}
                             >
                               {hasAnyData ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
                                   {locationData.signed > 0 && (
                                     <span 
-                                      className="badge" 
-                                      style={{ 
-                                        backgroundColor: '#27ae60',
-                                        color: 'white',
-                                        fontSize: '11px',
-                                        padding: '4px 8px',
-                                        borderRadius: '12px',
-                                        fontWeight: '600',
-                                        boxShadow: '0 1px 3px rgba(39, 174, 96, 0.3)',
-                                        border: '1px solid #2ecc71'
-                                      }}
+                                      className="dashboard-locations-badge-signed" 
                                       title={`חתומים: ${locationData.signed}`}
                                     >
                                       ✓ {locationData.signed}
@@ -1451,17 +1081,7 @@ const Dashboard: React.FC = () => {
                                   )}
                                   {locationData.pending > 0 && (
                                     <span 
-                                      className="badge" 
-                                      style={{ 
-                                        backgroundColor: '#f39c12',
-                                        color: 'white',
-                                        fontSize: '11px',
-                                        padding: '4px 8px',
-                                        borderRadius: '12px',
-                                        fontWeight: '600',
-                                        boxShadow: '0 1px 3px rgba(243, 156, 18, 0.3)',
-                                        border: '1px solid #f5b041'
-                                      }}
+                                      className="dashboard-locations-badge-pending" 
                                       title={`ממתינים: ${locationData.pending}`}
                                     >
                                       ⏳ {locationData.pending}
@@ -1469,17 +1089,7 @@ const Dashboard: React.FC = () => {
                                   )}
                                   {locationData.allocation > 0 && (
                                     <span 
-                                      className="badge" 
-                                      style={{ 
-                                        backgroundColor: '#3498db',
-                                        color: 'white',
-                                        fontSize: '11px',
-                                        padding: '4px 8px',
-                                        borderRadius: '12px',
-                                        fontWeight: '600',
-                                        boxShadow: '0 1px 3px rgba(52, 152, 219, 0.3)',
-                                        border: '1px solid #5dade2'
-                                      }}
+                                      className="dashboard-locations-badge-allocation" 
                                       title={`הקצאה: ${locationData.allocation}`}
                                     >
                                       📋 {locationData.allocation}
@@ -1487,18 +1097,7 @@ const Dashboard: React.FC = () => {
                                   )}
                               </div>
                               ) : (
-                                <span 
-                                  className="badge" 
-                                  style={{ 
-                                    backgroundColor: '#e9ecef',
-                                    color: '#6c757d',
-                                    fontSize: '12px',
-                                    padding: '6px 10px',
-                                    borderRadius: '15px',
-                                    fontWeight: '500',
-                                    border: '1px solid #dee2e6'
-                                  }}
-                                >
+                                <span className="dashboard-locations-badge-empty">
                                   0
                                 </span>
                               )}
@@ -1509,14 +1108,16 @@ const Dashboard: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
             </div>
+          </div>
               </>
             ) : (
               <div style={{ 
                 padding: '60px 24px',
                 textAlign: 'center',
-                backgroundColor: '#f8f9fa',
-                color: '#6c757d',
+                backgroundColor: 'var(--color-bg, #1a1a1a)',
+                color: 'var(--color-text-muted, #8e8e93)',
                 fontSize: '18px',
                 fontWeight: '500'
               }}>
@@ -1532,8 +1133,8 @@ const Dashboard: React.FC = () => {
           <div style={{ 
             padding: '60px 24px',
             textAlign: 'center',
-            backgroundColor: '#f8f9fa',
-            color: '#6c757d',
+            backgroundColor: 'var(--color-bg, #1a1a1a)',
+            color: 'var(--color-text-muted, #8e8e93)',
             fontSize: '18px',
             fontWeight: '500'
           }}>

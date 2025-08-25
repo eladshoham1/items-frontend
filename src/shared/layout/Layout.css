@@ -122,6 +122,7 @@
 
   .mobile-overlay {
     display: block;
+    z-index: 1001; /* Above navigation */
   }
 
   .layout-sidebar {

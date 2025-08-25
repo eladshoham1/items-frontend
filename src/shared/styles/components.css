@@ -12,6 +12,9 @@
   font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
   direction: rtl;
   color: #e9ecef;
+  /* Ensure page container allows horizontal scrolling */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Content wrapper */
@@ -99,7 +102,14 @@
   margin-bottom: 24px;
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
   position: relative;
+  /* Enable momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Ensure the container can scroll horizontally */
+  max-width: 100%;
+  /* Allow touch scrolling in all directions */
+  touch-action: auto;
 }
 
 .table-header {
@@ -129,6 +139,8 @@
   border-collapse: collapse;
   margin: 0;
   background: #2d2d2d;
+  /* Ensure table has minimum width to trigger horizontal scroll */
+  min-width: 600px;
 }
 
 .table th {

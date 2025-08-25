@@ -4,7 +4,7 @@ import './TabNavigation.css';
 export interface TabItem {
   id: string;
   label: string;
-  icon?: string;
+  icon?: string | React.ReactElement;
   count?: number;
   disabled?: boolean;
 }
@@ -48,7 +48,13 @@ const TabNavigation: React.FC<TabNavigationProps> = ({
           >
             <div className="tab-navigation__content">
               {tab.icon && (
-                <i className={`${tab.icon} tab-navigation__icon`} aria-hidden="true"></i>
+                typeof tab.icon === 'string' ? (
+                  <i className={`${tab.icon} tab-navigation__icon`} aria-hidden="true"></i>
+                ) : (
+                  <div className="tab-navigation__icon" aria-hidden="true">
+                    {tab.icon}
+                  </div>
+                )
               )}
               <span className="tab-navigation__label">{tab.label}</span>
               {typeof tab.count === 'number' && (

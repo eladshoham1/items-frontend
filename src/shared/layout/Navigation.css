@@ -1,20 +1,8 @@
 /* Navigation.css - Modern Sidebar Navigation */
 
-/* Mobile menu button */
+/* Mobile menu button - now handled by Layout component */
 .mobile-menu-button {
-  display: none;
-  position: fixed;
-  top: var(--spacing-md);
-  right: var(--spacing-md);
-  z-index: 1000;
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius);
-  padding: var(--spacing-sm);
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition);
+  display: none; /* Always hidden since Layout handles mobile menu button */
 }
 
 .mobile-menu-button svg {
@@ -43,6 +31,7 @@
   overflow-y: auto;
   box-shadow: var(--shadow-sidebar);
   transition: transform var(--transition-smooth);
+  pointer-events: auto; /* Ensure it's clickable */
 }
 
 /* Navigation header with logo */
@@ -125,6 +114,9 @@
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   text-align: right;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .nav-link:hover {
@@ -373,9 +365,7 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
-  .mobile-menu-button {
-    display: block;
-  }
+  /* Mobile menu button is handled by Layout component */
   
   .navigation {
     transform: translateX(100%);
@@ -386,6 +376,7 @@
   
   .navigation.mobile-open {
     transform: translateX(0);
+    z-index: 1000; /* Ensure it's above content but below Layout overlay */
   }
   
   .mobile-overlay {
@@ -404,6 +395,15 @@
     padding: var(--spacing-lg) var(--spacing-md);
     font-size: var(--font-size-md);
     min-height: 56px;
+    justify-content: flex-start;
+    text-align: right;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  .nav-link:active {
+    background: var(--color-primary);
+    color: white;
   }
   
   .nav-icon {

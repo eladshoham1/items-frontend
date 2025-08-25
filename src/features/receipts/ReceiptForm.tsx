@@ -536,11 +536,11 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
     // Then apply search filter - search in item name, ID number, and location name
     let filteredItems = unselectedItems;
     if (itemSearchQuery.trim()) {
-      const query = itemSearchQuery.toLowerCase();
+      const query = itemSearchQuery.toLowerCase().normalize('NFC');
       filteredItems = unselectedItems.filter(item => 
-        item.itemName?.name?.toLowerCase().includes(query) ||
-        item.idNumber?.toLowerCase().includes(query) ||
-        item.allocatedLocation?.name?.toLowerCase().includes(query)
+        (item.itemName?.name?.toLowerCase().normalize('NFC') || '').includes(query) ||
+        (item.idNumber?.toLowerCase().normalize('NFC') || '').includes(query) ||
+        (item.allocatedLocation?.name?.toLowerCase().normalize('NFC') || '').includes(query)
       );
     }
 

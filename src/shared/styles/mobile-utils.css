@@ -76,6 +76,61 @@
   touch-action: manipulation;
 }
 
+/* Mobile scrolling improvements */
+@media (max-width: 768px) {
+  /* Ensure all containers can scroll properly on mobile */
+  .page-container,
+  .content-container,
+  .layout-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: auto;
+  }
+  
+  /* Table-specific mobile scrolling */
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: auto !important;
+    /* Add scroll indicators */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+  
+  /* Webkit scrollbar styling for better visibility */
+  .table-container::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  .table-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+  
+  .table-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+  
+  .table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Utility classes for forcing scrolling */
+.force-horizontal-scroll {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: auto !important;
+}
+
+.scroll-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  touch-action: auto;
+}
+
 /* Mobile-first hidden/shown classes */
 .mobile-hidden {
   display: none;

@@ -12,17 +12,22 @@ html {
   min-width: 320px;
   overflow-x: auto;
   scroll-behavior: smooth;
+  /* Enable smooth scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Set viewport meta tag for proper mobile rendering */
 html, body {
   width: 100%;
-  overflow-x: hidden;
+  /* Allow horizontal scrolling for tables but prevent body overflow */
+  overflow-x: auto;
 }
 
 #root {
   min-width: 320px;
   width: 100%;
+  /* Ensure root doesn't cause horizontal overflow */
+  overflow-x: auto;
 }
 
 body {
@@ -38,6 +43,10 @@ body {
   font-feature-settings: 'kern' 1, 'liga' 1;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
+  /* Enable momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent horizontal overflow from children but allow table scrolling */
+  overflow-x: auto;
 }
 
 /* Content wrapper with sidebar margin */

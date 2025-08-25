@@ -84,16 +84,16 @@ export const AllocationsTab: React.FC = () => {
 
   const filteredAndSortedAllocations = useMemo(() => {
     let filtered = allocations.filter(allocation => {
-      const searchLower = searchTerm.toLowerCase();
+      const searchLower = searchTerm.toLowerCase().normalize('NFC');
       return (
-        allocation.unit.toLowerCase().includes(searchLower) ||
-        allocation.secondaryUnit.toLowerCase().includes(searchLower) ||
-        allocation.owner.toLowerCase().includes(searchLower) ||
-        allocation.standard.toLowerCase().includes(searchLower) ||
-        (allocation.vehicleType && allocation.vehicleType.toLowerCase().includes(searchLower)) ||
-        (allocation.idNumber && allocation.idNumber.toLowerCase().includes(searchLower)) ||
-        (allocation.form624 && allocation.form624.toLowerCase().includes(searchLower)) ||
-        (allocation.note && allocation.note.toLowerCase().includes(searchLower))
+        allocation.unit.toLowerCase().normalize('NFC').includes(searchLower) ||
+        allocation.secondaryUnit.toLowerCase().normalize('NFC').includes(searchLower) ||
+        allocation.owner.toLowerCase().normalize('NFC').includes(searchLower) ||
+        allocation.standard.toLowerCase().normalize('NFC').includes(searchLower) ||
+        (allocation.vehicleType && allocation.vehicleType.toLowerCase().normalize('NFC').includes(searchLower)) ||
+        (allocation.idNumber && allocation.idNumber.toLowerCase().normalize('NFC').includes(searchLower)) ||
+        (allocation.form624 && allocation.form624.toLowerCase().normalize('NFC').includes(searchLower)) ||
+        (allocation.note && allocation.note.toLowerCase().normalize('NFC').includes(searchLower))
       );
     });
 

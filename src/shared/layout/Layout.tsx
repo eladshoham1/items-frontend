@@ -33,6 +33,14 @@ const Layout: React.FC<LayoutProps> = ({ children, sidebar, topHeader }) => {
     setIsMobileMenuOpen(false);
   };
 
+  // Clone the sidebar element to pass mobile menu props
+  const enhancedSidebar = sidebar && React.isValidElement(sidebar) 
+    ? React.cloneElement(sidebar as React.ReactElement<any>, {
+        isMobileOpen: isMobileMenuOpen,
+        onMobileClose: closeMobileMenu
+      })
+    : sidebar;
+
   return (
     <div className="layout">
       {/* Top Header */}
@@ -62,9 +70,9 @@ const Layout: React.FC<LayoutProps> = ({ children, sidebar, topHeader }) => {
       )}
       
       {/* Sidebar */}
-      {sidebar && (
+      {enhancedSidebar && (
         <aside className={`layout-sidebar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-          {sidebar}
+          {enhancedSidebar}
         </aside>
       )}
       
