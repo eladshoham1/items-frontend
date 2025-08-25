@@ -1,7 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { getAuth } from 'firebase/auth';
 import { API_CONFIG, FEATURES } from '../config/app.config';
-import { apiLoadingHelpers } from '../hooks/useColdStartLoader';
 
 class ApiService {
   private api: AxiosInstance;
@@ -20,9 +19,6 @@ class ApiService {
     // Request interceptor
     this.api.interceptors.request.use(
       async (config) => {
-        // Start cold start loading detection
-        apiLoadingHelpers.startLoading();
-        
         try {
           const auth = getAuth();
           const user = auth.currentUser;
@@ -40,9 +36,6 @@ class ApiService {
         return config;
       },
       (error) => {
-        // Stop loading on request error
-        apiLoadingHelpers.stopLoading();
-        
         if (FEATURES.ENABLE_LOGGING) {
           // console.error('❌ Request Error:', error);
         }
@@ -53,28 +46,12 @@ class ApiService {
     // Response interceptor
     this.api.interceptors.response.use(
       (response: AxiosResponse) => {
-        // Stop loading on successful response
-        apiLoadingHelpers.stopLoading();
-        
         if (FEATURES.ENABLE_LOGGING) {
           // console.log(`✅ API Response: ${response.status} ${response.config.url}`);
         }
         return response;
       },
       (error) => {
-        // Stop loading on response error
-        apiLoadingHelpers.stopLoading();
-        
-        // Detect if server might be sleeping based on error type
-        const isTimeoutError = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
-        const isConnectionError = error.code === 'ECONNREFUSED' || 
-                                 error.message?.includes('ECONNREFUSED') ||
-                                 error.message?.includes('Network Error');
-        
-        if (isTimeoutError || isConnectionError) {
-          apiLoadingHelpers.markServerSleeping();
-        }
-        
         if (FEATURES.ENABLE_LOGGING) {
           // console.error('❌ Response Error:', error);
         }

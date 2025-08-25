@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import UserForm from './UserForm';
 import { useUsers } from '../../hooks';
@@ -210,16 +210,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="card-header">
-          <h2 className="mb-0">משתמשים</h2>
-        </div>
-        <div className="card-body">
-          <div className="alert alert-info">
-            <div className="spinner"></div>
-            <span>טוען נתונים...</span>
-          </div>
-        </div>
+      <div className="management-container">
+        <LoadingSpinner message="טוען משתמשים..." />
       </div>
     );
   }
@@ -229,64 +221,64 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
   }
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="mb-0">משתמשים</h2>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {selectedUserIds.length > 0 && (
-              <>
-                <span className="badge bg-primary">
-                  {selectedUserIds.length} נבחרו
-                </span>
-                <button 
-                  className="btn btn-danger btn-sm" 
-                  onClick={handleBulkDelete}
-                  disabled={selectedUserIds.length === 0}
-                >
-                  <i className="fas fa-trash me-1"></i>
-                  מחק נבחרים ({selectedUserIds.length})
-                </button>
-              </>
+    <div className="management-container">
+      {/* Compact Header with Actions */}
+      <div className="management-header-compact">
+        <div className="management-search-section">
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="text"
+              className="management-search-input"
+              placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה, מיקום, מסגרת או סוג משתמש..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={{ flex: 1 }}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                title="נקה חיפוש"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '0 12px',
+                  minWidth: 'auto'
+                }}
+              >
+                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
+              </button>
             )}
           </div>
+          {searchTerm && (
+            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
+              נמצאו {filteredAndSortedUsers.length} משתמשים מתוך {users.length}
+            </div>
+          )}
+        </div>
+        
+        <div className="management-actions-compact">
+          {selectedUserIds.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span className="badge bg-primary" style={{ fontSize: '12px', padding: '4px 8px' }}>
+                {selectedUserIds.length} נבחרו
+              </span>
+              <button 
+                className="btn btn-danger btn-sm" 
+                onClick={handleBulkDelete}
+                disabled={selectedUserIds.length === 0}
+                style={{ fontSize: '12px', padding: '6px 12px' }}
+              >
+                <i className="fas fa-trash" style={{ marginLeft: '4px' }}></i>
+                מחק נבחרים ({selectedUserIds.length})
+              </button>
+            </div>
+          )}
         </div>
       </div>
-
-      <div className="card-body">
-        {/* Search Input */}
-        <div className="row mb-3">
-          <div className="col-md-6">
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fas fa-search"></i>
-              </span>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה, מיקום, מסגרת או סוג משתמש..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                style={{ direction: 'rtl' }}
-              />
-              {searchTerm && (
-                <button
-                  className="btn btn-outline-secondary"
-                  type="button"
-                  onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                  title="נקה חיפוש"
-                >
-                  <i className="fas fa-times"></i>
-                </button>
-              )}
-            </div>
-            {searchTerm && (
-              <small className="text-muted mt-1 d-block">
-                נמצאו {filteredAndSortedUsers.length} משתמשים מתוך {users.length}
-              </small>
-            )}
-          </div>
-        </div>
 
         <div className="table-responsive">
           <table className="table">
@@ -434,7 +426,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
             onPageChange={setCurrentPage}
           />
         )}
-      </div>
 
       <Modal
         isOpen={isModalOpen}

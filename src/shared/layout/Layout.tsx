@@ -3,27 +3,36 @@ import './Layout.css';
 
 interface LayoutProps {
   children: React.ReactNode;
+  sidebar?: React.ReactNode;
+  topHeader?: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, sidebar, topHeader }) => {
   return (
     <div className="layout">
-      <header className="layout-header">
-        <div className="header-container">
-          <h1 className="app-title">אחל"ן</h1>
-          <h2 className="app-subtitle">אמצעי חתימות ללא ניירת</h2>
-        </div>
-      </header>
-      <main className="layout-main">
-        <div className="main-container">
-          {children}
-        </div>
-      </main>
-      <footer className="layout-footer">
-        <div className="footer-container">
-          <p className="footer-text">פותח ע"י סק"ש</p>
-        </div>
-      </footer>
+      {/* Top Header */}
+      {topHeader && (
+        <header className="layout-top-header">
+          {topHeader}
+        </header>
+      )}
+      
+      {/* Sidebar */}
+      {sidebar && (
+        <aside className="layout-sidebar">
+          {sidebar}
+        </aside>
+      )}
+      
+      {/* Main Content Area */}
+      <div className="layout-main">
+        {/* Content */}
+        <main className="layout-content">
+          <div className="content-container">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

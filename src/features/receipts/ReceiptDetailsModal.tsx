@@ -40,45 +40,55 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
           gap: '16px',
           marginBottom: '24px',
           padding: '16px',
-          backgroundColor: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #e9ecef'
+          background: 'rgba(255, 255, 255, 0.08)',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          backdropFilter: 'blur(10px)'
         }}>
           <div>
-            <label className="text-muted small">מנפיק:</label>
-            <div className="fw-bold">{receipt.createdBy?.name || 'משתמש לא ידוע'}</div>
-            <small className="text-muted">
+            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>מנפיק:</label>
+            <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.createdBy?.name || 'משתמש לא ידוע'}</div>
+            <small style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               {receipt.createdBy?.personalNumber && `צ': ${receipt.createdBy.personalNumber}`}
             </small>
           </div>
           
           <div>
-            <label className="text-muted small">מקבל:</label>
-            <div className="fw-bold">{receipt.signedBy?.name || 'משתמש לא ידוע'}</div>
-            <small className="text-muted">
+            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>מקבל:</label>
+            <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.signedBy?.name || 'משתמש לא ידוע'}</div>
+            <small style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               {receipt.signedBy?.personalNumber && `צ': ${receipt.signedBy.personalNumber}`}
             </small>
           </div>
           
           <div>
-            <label className="text-muted small">יחידה:</label>
-            <div className="fw-bold">{getUnit(receipt)}</div>
+            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>יחידה:</label>
+            <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{getUnit(receipt)}</div>
           </div>
           
           <div>
-            <label className="text-muted small">תאריך יצירה:</label>
-            <div className="fw-bold">{formatDate(receipt.createdAt)}</div>
+            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>תאריך יצירה:</label>
+            <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{formatDate(receipt.createdAt)}</div>
           </div>
           
           <div>
-            <label className="text-muted small">תאריך עדכון:</label>
-            <div className="fw-bold">{formatDate(receipt.updatedAt)}</div>
+            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>תאריך עדכון:</label>
+            <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{formatDate(receipt.updatedAt)}</div>
           </div>
           
           <div>
-            <label className="text-muted small">סטטוס:</label>
+            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>סטטוס:</label>
             <div>
-              <span className={`badge ${receipt.isSigned ? 'bg-success' : 'bg-warning'}`}>
+              <span style={{
+                background: receipt.isSigned 
+                  ? 'linear-gradient(135deg, #4caf50, #388e3c)' 
+                  : 'linear-gradient(135deg, #ffc107, #ffb300)',
+                color: receipt.isSigned ? 'white' : 'black',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: '600'
+              }}>
                 {receipt.isSigned ? 'חתום' : 'ממתין לחתימה'}
               </span>
             </div>
@@ -87,24 +97,32 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
 
         {/* Items Table */}
         <div className="receipt-items" style={{
-          backgroundColor: '#ffffff',
-          border: '1px solid #e9ecef',
-          borderRadius: '8px',
-          overflow: 'hidden'
+          background: 'rgba(255, 255, 255, 0.08)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          backdropFilter: 'blur(10px)'
         }}>
           <div className="items-header" style={{
             padding: '12px 16px',
-            borderBottom: '1px solid #e9ecef',
-            backgroundColor: '#f8f9fa',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(255, 255, 255, 0.05)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between'
           }}>
-            <h6 className="mb-0 fw-bold">
-              <i className="fas fa-list me-2"></i>
+            <h6 style={{ margin: 0, fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>
+              <i className="fas fa-list me-2" style={{ color: '#64b5f6' }}></i>
               פריטים בקבלה
             </h6>
-            <span className="badge bg-primary">
+            <span style={{
+              background: 'linear-gradient(135deg, #64b5f6, #42a5f5)',
+              color: 'white',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: '600'
+            }}>
               {receipt.receiptItems?.length || 0} פריטים
             </span>
           </div>
@@ -114,53 +132,94 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
             overflowY: 'auto' 
           }}>
             {!receipt.receiptItems || receipt.receiptItems.length === 0 ? (
-              <div className="text-center p-4 text-muted">
-                <i className="fas fa-inbox fa-2x mb-2"></i>
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '32px 16px', 
+                color: 'rgba(255, 255, 255, 0.6)' 
+              }}>
+                <i className="fas fa-inbox fa-2x mb-2" style={{ color: 'rgba(255, 255, 255, 0.4)' }}></i>
                 <div>לא נמצאו פריטים בקבלה זו</div>
               </div>
             ) : (
-              <table className="table table-striped mb-0">
-                <thead style={{ backgroundColor: '#f8f9fa', position: 'sticky', top: 0 }}>
+              <table className="table mb-0" style={{ backgroundColor: 'transparent' }}>
+                <thead style={{ background: 'rgba(255, 255, 255, 0.05)', position: 'sticky', top: 0 }}>
                   <tr>
-                    <th style={{ width: '50px', textAlign: 'center' }}>#</th>
-                    <th>שם הפריט</th>
-                    <th style={{ width: '150px' }}>מספר צ'</th>
-                    <th style={{ width: '100px', textAlign: 'center' }}>צופן</th>
-                    <th style={{ width: '120px' }}>מיקום</th>
-                    <th>הערות</th>
+                    <th style={{ 
+                      width: '50px', 
+                      textAlign: 'center', 
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: '600',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>#</th>
+                    <th style={{ 
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: '600',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>שם הפריט</th>
+                    <th style={{ 
+                      width: '150px', 
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: '600',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>מספר צ'</th>
+                    <th style={{ 
+                      width: '100px', 
+                      textAlign: 'center', 
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: '600',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>צופן</th>
+                    <th style={{ 
+                      width: '120px', 
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: '600',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>מיקום</th>
+                    <th style={{ 
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      fontWeight: '600',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}>הערות</th>
                   </tr>
                 </thead>
                 <tbody>
                   {receipt.receiptItems.map((receiptItem, index) => {
                     const item = receiptItem.item;
                     return (
-                      <tr key={receiptItem.id}>
-                        <td style={{ textAlign: 'center', color: '#6c757d' }}>
+                      <tr key={receiptItem.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                        <td style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
                           {index + 1}
                         </td>
-                        <td style={{ fontWeight: '600' }}>
+                        <td style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
                           {item?.itemName?.name || 'פריט לא ידוע'}
                         </td>
                         <td style={{ 
                           fontFamily: 'monospace', 
                           fontSize: '14px',
-                          color: item?.idNumber ? '#495057' : '#6c757d'
+                          color: item?.idNumber ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)'
                         }}>
                           {item?.idNumber || '—'}
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <span className={`badge ${
-                            item?.requiresReporting ? 'bg-warning text-dark' : 'bg-success'
-                          }`}>
+                          <span style={{
+                            background: item?.requiresReporting 
+                              ? 'linear-gradient(135deg, #ffc107, #ffb300)' 
+                              : 'linear-gradient(135deg, #4caf50, #388e3c)',
+                            color: item?.requiresReporting ? 'black' : 'white',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
                             {item?.requiresReporting ? 'כן' : 'לא'}
                           </span>
                         </td>
-                        <td style={{ fontSize: '14px' }}>
+                        <td style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>
                           {/* Note: allocatedLocation might not be directly available in receiptItem */}
-                          <span className="text-muted">—</span>
+                          <span>—</span>
                         </td>
                         <td style={{ 
-                          color: item?.note ? '#495057' : '#6c757d',
+                          color: item?.note ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)',
                           fontSize: '14px' 
                         }}>
                           {item?.note || '—'}
@@ -178,18 +237,19 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
         {receipt.isSigned && receipt.signature && (
           <div className="receipt-signature mt-4" style={{
             padding: '16px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            border: '1px solid #e9ecef'
+            background: 'rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(10px)'
           }}>
-            <h6 className="mb-3">
-              <i className="fas fa-signature me-2"></i>
+            <h6 style={{ marginBottom: '12px', color: 'rgba(255, 255, 255, 0.9)' }}>
+              <i className="fas fa-signature me-2" style={{ color: '#64b5f6' }}></i>
               חתימה דיגיטלית:
             </h6>
             <div style={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #dee2e6',
-              borderRadius: '4px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
               padding: '12px',
               maxHeight: '150px',
               overflow: 'hidden'
@@ -213,12 +273,17 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
           justifyContent: 'flex-end',
           gap: '8px',
           paddingTop: '16px',
-          borderTop: '1px solid #e9ecef'
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
           <button 
             type="button" 
             className="btn btn-secondary"
             onClick={onClose}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'rgba(255, 255, 255, 0.9)'
+            }}
           >
             <i className="fas fa-times me-2"></i>
             סגור

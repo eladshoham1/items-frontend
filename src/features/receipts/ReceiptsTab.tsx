@@ -7,11 +7,12 @@ import { receiptService } from '../../services';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
 import { SmartPagination, TabNavigation } from '../../shared/components';
-import CreateReceiptForm from './CreatePendingReceiptForm';
+import ReceiptForm from './ReceiptForm';
 import PendingReceiptsList from './PendingReceiptsList';
 import DeleteReceiptModal from './DeleteReceiptModal';
-import './ReceiptsTab.css';
+import ReceiptDetailsModal from './ReceiptDetailsModal';
 import '../../shared/styles/components.css';
+import './ReceiptsTab.css';
 
 const timestampToDate = (timestamp: string): string => {
     return format(new Date(timestamp), 'dd/MM/yy HH:mm:ss');
@@ -296,37 +297,45 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         switch (activeTab) {
             case 'signed':
                 return (
-                    <div>
-                        <div className="header-actions">
-                            <h3>{isAdmin ? 'כל הקבלות החתומות' : 'קבלות המיקום שלי'}</h3>
-                            {isAdmin && (
-                                <button className="create-button" onClick={handleCreateNewClick}>
-                                    <i className="fas fa-plus"></i>
-                                    צור קבלה חדשה
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Full-width search bar */}
-                        <div className="search-bar" style={{ direction: 'rtl', margin: '12px 0 16px 0' }}>
-                            <div className="input-group" style={{ width: '100%' }}>
-                                <span className="input-group-text"><i className="fas fa-search" /></span>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
-                                    value={searchTerm}
-                                    onChange={handleSearchChange}
-                                    style={{ direction: 'rtl' }}
-                                />
-                                {searchTerm && (
-                                    <button
-                                        className="btn btn-outline-secondary"
-                                        type="button"
-                                        onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                                        title="נקה חיפוש"
-                                    >
-                                        <i className="fas fa-times" />
+                    <div className="management-container">
+                        {/* Compact Header with Actions */}
+                        <div className="management-header-compact">
+                            <div className="management-search-section">
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input
+                                        type="text"
+                                        className="management-search-input"
+                                        placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+                                        value={searchTerm}
+                                        onChange={handleSearchChange}
+                                        style={{ flex: 1 }}
+                                    />
+                                    {searchTerm && (
+                                        <button
+                                            className="btn btn-ghost btn-sm"
+                                            onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
+                                            title="נקה חיפוש"
+                                            style={{ 
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '4px',
+                                                padding: '0 12px',
+                                                minWidth: 'auto'
+                                            }}
+                                        >
+                                            <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                                            <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div className="management-actions-compact">
+                                {isAdmin && (
+                                    <button className="btn btn-primary btn-sm" onClick={handleCreateNewClick}>
+                                        <i className="fas fa-plus" style={{ marginLeft: '6px' }}></i>
+                                        צור קבלה חדשה
                                     </button>
                                 )}
                             </div>
@@ -340,42 +349,43 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                             </div>
                         ) : (
                             <>
-                                <table className="receipts-table">
-                                    <thead>
-                                        <tr>
-                                            <th className="sortable-header" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <span>מנפיק</span>
-                                                    <div className="sort-indicator">{getSortIcon('createdBy')}</div>
-                                                </div>
-                                            </th>
-                                            <th className="sortable-header" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <span>מקבל</span>
-                                                    <div className="sort-indicator">{getSortIcon('signedBy')}</div>
-                                                </div>
-                                            </th>
-                                            <th className="sortable-header" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <span>יחידה</span>
-                                                    <div className="sort-indicator">{getSortIcon('unit')}</div>
-                                                </div>
-                                            </th>
-                                            <th className="sortable-header" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <span>כמות פריטים</span>
-                                                    <div className="sort-indicator">{getSortIcon('itemCount')}</div>
-                                                </div>
-                                            </th>
-                                            <th className="sortable-header" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
-                                                <div className="d-flex align-items-center justify-content-between">
-                                                    <span>תאריך חתימה</span>
-                                                    <div className="sort-indicator">{getSortIcon('updatedAt')}</div>
-                                                </div>
-                                            </th>
-                                            <th>פעולות</th>
-                                        </tr>
-                                    </thead>
+                                <div className="table-container">
+                                    <table className="table">
+                                        <thead>
+                                            <tr>
+                                                <th className="sortable-header" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
+                                                    <div className="d-flex align-items-center justify-content-between">
+                                                        <span>מנפיק</span>
+                                                        <div className="sort-indicator">{getSortIcon('createdBy')}</div>
+                                                    </div>
+                                                </th>
+                                                <th className="sortable-header" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
+                                                    <div className="d-flex align-items-center justify-content-between">
+                                                        <span>מקבל</span>
+                                                        <div className="sort-indicator">{getSortIcon('signedBy')}</div>
+                                                    </div>
+                                                </th>
+                                                <th className="sortable-header" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
+                                                    <div className="d-flex align-items-center justify-content-between">
+                                                        <span>יחידה</span>
+                                                        <div className="sort-indicator">{getSortIcon('unit')}</div>
+                                                    </div>
+                                                </th>
+                                                <th className="sortable-header" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
+                                                    <div className="d-flex align-items-center justify-content-between">
+                                                        <span>כמות פריטים</span>
+                                                        <div className="sort-indicator">{getSortIcon('itemCount')}</div>
+                                                    </div>
+                                                </th>
+                                                <th className="sortable-header" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
+                                                    <div className="d-flex align-items-center justify-content-between">
+                                                        <span>תאריך חתימה</span>
+                                                        <div className="sort-indicator">{getSortIcon('updatedAt')}</div>
+                                                    </div>
+                                                </th>
+                                                <th>פעולות</th>
+                                            </tr>
+                                        </thead>
                                     <tbody>
                                         {paginatedReceipts.map(receipt => (
                                             <tr key={receipt.id} onClick={() => setDetailsReceipt(receipt)} style={{ cursor: 'pointer' }}>
@@ -430,6 +440,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                         ))}
                                     </tbody>
                                 </table>
+                                </div>
 
                                 {totalPages > 1 && (
                                     <SmartPagination
@@ -445,7 +456,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
 
             case 'pending':
                 return (
-                    <div style={{ direction: 'rtl' }}>
+                    <div className="management-container">
                         <PendingReceiptsList
                             pendingReceipts={userPendingReceipts}
                             onRefresh={handlePendingReceiptsRefresh}
@@ -477,7 +488,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     }
 
     return (
-        <div className="surface receipts-tab-container">
+        <div className="page-container">
             <TabNavigation
                 tabs={receiptTabs}
                 activeTab={activeTab}
@@ -485,142 +496,22 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                 variant="primary"
                 size="md"
             />
-            <div style={{ padding: '20px' }}>
+            <div className="tab-content">
                 {renderTabContent()}
             </div>
 
             {/* Details Modal for signed receipts */}
-            {detailsReceipt && (
-                <Modal
-                    isOpen={!!detailsReceipt}
-                    onClose={() => setDetailsReceipt(null)}
-                    title={`פרטי קבלה #${detailsReceipt.id}`}
-                    size="lg"
-                >
-                    <div style={{ direction: 'rtl', padding: '16px' }}>
-                        {/* Summary */}
-                        <div
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(4, 1fr)',
-                                gap: '12px',
-                                marginBottom: '16px',
-                                background: '#ffffff',
-                                border: '1px solid #e9ecef',
-                                borderRadius: '8px',
-                                padding: '12px'
-                            }}
-                        >
-                            <div>
-                                <div style={{ color: '#6c757d', fontSize: 12 }}>מנפיק</div>
-                                <div style={{ fontWeight: 700 }}>{detailsReceipt.createdBy?.name || '—'}</div>
-                            </div>
-                            <div>
-                                <div style={{ color: '#6c757d', fontSize: 12 }}>מקבל</div>
-                                <div style={{ fontWeight: 700 }}>{detailsReceipt.signedBy?.name || '—'}</div>
-                            </div>
-                            <div>
-                                <div style={{ color: '#6c757d', fontSize: 12 }}>יחידה</div>
-                                <div style={{ fontWeight: 700 }}>{getUnit(detailsReceipt)}</div>
-                            </div>
-                            <div>
-                                <div style={{ color: '#6c757d', fontSize: 12 }}>תאריך חתימה</div>
-                                <div style={{ fontWeight: 700 }}>{timestampToDate(detailsReceipt.updatedAt.toString())}</div>
-                            </div>
-                        </div>
-
-                        {/* Items Table */}
-                        <div
-                            style={{
-                                background: '#ffffff',
-                                border: '1px solid #e9ecef',
-                                borderRadius: '8px',
-                                overflow: 'hidden'
-                            }}
-                        >
-                            <div style={{
-                                padding: '10px 12px',
-                                borderBottom: '1px solid #e9ecef',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between'
-                            }}>
-                                <div style={{ fontWeight: 700 }}>פריטים</div>
-                                <span style={{
-                                    backgroundColor: '#28a745',
-                                    color: 'white',
-                                    padding: '2px 10px',
-                                    borderRadius: '12px',
-                                    fontSize: 12,
-                                    fontWeight: 700
-                                }}>
-                                    {detailsReceipt.receiptItems?.length || 0}
-                                </span>
-                            </div>
-
-                            <div style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ background: '#f8f9fa' }}>
-                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 60 }}>#</th>
-                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>פריט</th>
-                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 180 }}>מספר צ'</th>
-                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef', width: 120 }}>צופן</th>
-                                            <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: 12, color: '#6c757d', borderBottom: '1px solid #e9ecef' }}>הערה</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(detailsReceipt.receiptItems || []).map((ri, idx) => {
-                                            const itemName = ri.item?.itemName?.name || '—';
-                                            const idNumber = ri.item?.idNumber || '';
-                                            const requiresReporting = !!ri.item?.requiresReporting;
-                                            const note = ri.item?.note || '';
-                                            return (
-                                                <tr key={ri.id} style={{ borderBottom: '1px solid #f1f3f5' }}>
-                                                    <td style={{ padding: '10px 12px', color: '#6c757d' }}>{idx + 1}</td>
-                                                    <td style={{ padding: '10px 12px', fontWeight: 600, color: '#333' }}>{itemName}</td>
-                                                    <td style={{ padding: '10px 12px', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', direction: 'ltr', textAlign: 'right' }}>
-                                                        {idNumber ? idNumber : '—'}
-                                                    </td>
-                                                    <td style={{ padding: '10px 12px' }}>
-                                                        <span
-                                                            style={{
-                                                                backgroundColor: requiresReporting ? '#dc3545' : '#28a745',
-                                                                color: 'white',
-                                                                padding: '2px 8px',
-                                                                borderRadius: '12px',
-                                                                fontSize: 12,
-                                                                fontWeight: 700
-                                                            }}
-                                                        >
-                                                            {requiresReporting ? 'כן' : 'לא'}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ padding: '10px 12px', color: '#495057' }}>{note || '—'}</td>
-                                                </tr>
-                                            );
-                                        })}
-
-                                        {(!detailsReceipt.receiptItems || detailsReceipt.receiptItems.length === 0) && (
-                                            <tr>
-                                                <td colSpan={5} style={{ padding: '24px', textAlign: 'center', color: '#6c757d' }}>
-                                                    לא נמצאו פריטים עבור קבלה זו
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </Modal>
-            )}
+            <ReceiptDetailsModal
+                receipt={detailsReceipt}
+                isOpen={!!detailsReceipt}
+                onClose={() => setDetailsReceipt(null)}
+            />
 
             {/* Create Modal */}
             {isModalOpen && (
                 <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
                     {modalType === 'create' ? (
-                        <CreateReceiptForm
+                        <ReceiptForm
                             onSuccess={handleCreateSuccess}
                             onCancel={handleCloseModal}
                         />
@@ -631,7 +522,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
             {/* Update Modal - Creates Pending Receipt */}
             {isUpdateModalOpen && selectedReceipt && (
                 <Modal isOpen={isUpdateModalOpen} onClose={handleCloseModal}>
-                    <CreateReceiptForm
+                    <ReceiptForm
                         originalReceipt={selectedReceipt}
                         onSuccess={handleUpdateSuccess}
                         onCancel={handleCloseModal}

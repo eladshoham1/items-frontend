@@ -205,130 +205,374 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
 
   return (
     <>
-      <div className="item-form-container">
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '32px',
+        backdropFilter: 'blur(10px)',
+        maxWidth: '600px',
+        margin: '0 auto'
+      }}>
         {!item && !isAdmin && (
-          <div className="alert alert-warning mb-4" style={{ fontSize: '0.9rem' }}>
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            <strong>הערה:</strong> רק מנהלי מערכת יכולים ליצור פריטים חדשים.
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05))',
+            borderRadius: '12px',
+            border: '1px solid rgba(245, 158, 11, 0.2)',
+            padding: '16px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <i className="fas fa-exclamation-triangle" style={{ color: '#f59e0b', fontSize: '16px' }}></i>
+            <div>
+              <strong style={{ color: 'rgba(255, 255, 255, 0.9)' }}>הערה:</strong>
+              <span style={{ color: 'rgba(255, 255, 255, 0.8)', marginRight: '8px' }}>
+                רק מנהלי מערכת יכולים ליצור פריטים חדשים.
+              </span>
+            </div>
           </div>
         )}
         
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">שם פריט</label>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              שם פריט <span style={{ color: '#ef4444' }}>*</span>
+            </label>
             <select 
-              className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-              name="name" 
               value={formData.name} 
               onChange={e => handleInputChange('name', e.target.value)} 
               required
               disabled={managementLoading}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${errors.name ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: 'left 12px center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '16px 16px',
+                paddingLeft: '40px',
+                cursor: 'pointer'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = errors.name ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
             >
-              <option value="">בחר שם פריט</option>
+              <option value="" style={{
+                background: '#1f2937',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                בחר שם פריט
+              </option>
               {itemNames.map(itemName => (
-                <option key={itemName.id} value={itemName.name}>{itemName.name}</option>
+                <option 
+                  key={itemName.id} 
+                  value={itemName.name}
+                  style={{
+                    background: '#1f2937',
+                    color: 'rgba(255, 255, 255, 0.9)'
+                  }}
+                >
+                  {itemName.name}
+                </option>
               ))}
             </select>
-            {errors.name && <div className="form-error">{errors.name}</div>}
+            {errors.name && (
+              <div style={{
+                color: '#ef4444',
+                fontSize: '12px',
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <i className="fas fa-exclamation-circle"></i>
+                {errors.name}
+              </div>
+            )}
           </div>
 
-          <div className="form-group">
-            <label className="form-label">מיקום מוקצה (אופציונלי)</label>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              מיקום מוקצה (אופציונלי)
+            </label>
             <select 
-              className="form-control"
-              name="allocatedLocationId" 
               value={formData.allocatedLocationId || ''} 
               onChange={e => handleInputChange('allocatedLocationId', e.target.value)} 
               disabled={managementLoading}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: 'left 12px center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '16px 16px',
+                paddingLeft: '40px',
+                cursor: 'pointer'
+              }}
+              onFocus={(e) => {
+                (e.target as HTMLSelectElement).style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onBlur={(e) => {
+                (e.target as HTMLSelectElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
             >
-              <option value="">ללא מיקום מוקצה</option>
+              <option value="" style={{
+                background: '#1f2937',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                ללא מיקום מוקצה
+              </option>
               {locations.map(location => (
-                <option key={location.id} value={location.id}>
+                <option 
+                  key={location.id} 
+                  value={location.id}
+                  style={{
+                    background: '#1f2937',
+                    color: 'rgba(255, 255, 255, 0.9)'
+                  }}
+                >
                   {location.name}
                 </option>
               ))}
             </select>
           </div>
 
-        <div className="form-group">
-          <div className="custom-checkbox-wrapper">
-            <label className="custom-checkbox">
-              <input
-                type="checkbox"
-                className="custom-checkbox-input"
-                checked={formData.isOperational}
-                onChange={e => setFormData(prev => ({ ...prev, isOperational: e.target.checked }))}
-              />
-              <span className="custom-checkbox-checkmark">
-                <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path 
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <span className="custom-checkbox-label">
-                <strong>תקין?</strong>
-                <small className="checkbox-description">האם הפריט תקין?</small>
-              </span>
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '16px',
+            transition: 'all 0.2s ease'
+          }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              gap: '12px'
+            }}>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.isOperational}
+                  onChange={e => setFormData(prev => ({ ...prev, isOperational: e.target.checked }))}
+                  style={{
+                    position: 'absolute',
+                    opacity: 0,
+                    cursor: 'pointer'
+                  }}
+                />
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '4px',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: formData.isOperational ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {formData.isOperational && (
+                    <i className="fas fa-check" style={{ 
+                      color: 'white', 
+                      fontSize: '12px' 
+                    }}></i>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div style={{
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}>
+                  תקין?
+                </div>
+                <div style={{
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '12px'
+                }}>
+                  האם הפריט תקין?
+                </div>
+              </div>
             </label>
           </div>
         </div>
 
-        <div className="form-group">
-          <div className="custom-checkbox-wrapper">
-            <label className="custom-checkbox">
-              <input
-                type="checkbox"
-                className="custom-checkbox-input"
-                checked={formData.requiresReporting}
-                onChange={e => setFormData(prev => ({ 
-                  ...prev, 
-                  requiresReporting: e.target.checked,
-                  // Clear idNumber when switching off requiresReporting
-                  idNumber: e.target.checked ? prev.idNumber : ''
-                }))}
-              />
-              <span className="custom-checkbox-checkmark">
-                <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path 
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                    fill="currentColor"
-                  />
-                </svg>
-              </span>
-              <span className="custom-checkbox-label">
-                <strong>צופן?</strong>
-                <small className="checkbox-description">האם הפריט דורש דיווח?</small>
-              </span>
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '16px',
+            transition: 'all 0.2s ease'
+          }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+              gap: '12px'
+            }}>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="checkbox"
+                  checked={formData.requiresReporting}
+                  onChange={e => setFormData(prev => ({ 
+                    ...prev, 
+                    requiresReporting: e.target.checked,
+                    idNumber: e.target.checked ? prev.idNumber : ''
+                  }))}
+                  style={{
+                    position: 'absolute',
+                    opacity: 0,
+                    cursor: 'pointer'
+                  }}
+                />
+                <div style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '4px',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: formData.requiresReporting ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {formData.requiresReporting && (
+                    <i className="fas fa-check" style={{ 
+                      color: 'white', 
+                      fontSize: '12px' 
+                    }}></i>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div style={{
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontWeight: '600',
+                  fontSize: '14px'
+                }}>
+                  צופן?
+                </div>
+                <div style={{
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '12px'
+                }}>
+                  האם הפריט דורש דיווח?
+                </div>
+              </div>
             </label>
           </div>
         </div>
 
         {/* ID Number field - only when requiresReporting is true */}
         {formData.requiresReporting && (
-          <div className="form-group">
-            <label className="form-label">מספר צ'</label>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              מספר צ' <span style={{ color: '#ef4444' }}>*</span>
+            </label>
             <input 
-              className={`form-control ${errors.idNumber ? 'is-invalid' : ''}`}
-              name="idNumber" 
+              type="text"
               value={formData.idNumber || ''} 
               onChange={e => handleInputChange('idNumber', e.target.value)} 
               placeholder="הזן מספר צ'"
               required={formData.requiresReporting}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${errors.idNumber ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                outline: 'none'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = errors.idNumber ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
             />
-            {errors.idNumber && <div className="form-error">{errors.idNumber}</div>}
+            {errors.idNumber && (
+              <div style={{
+                color: '#ef4444',
+                fontSize: '12px',
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <i className="fas fa-exclamation-circle"></i>
+                {errors.idNumber}
+              </div>
+            )}
           </div>
         )}
 
         {/* Quantity selector - only for new items and when requiresReporting is false */}
         {!item && !formData.requiresReporting && (
-          <div className="form-group">
-            <label className="form-label">כמות ליצירה</label>
-            <div className="d-flex align-items-center gap-3">
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              כמות ליצירה
+            </label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <input
                 type="number"
-                className="form-control"
                 value={quantity}
                 onChange={(e) => {
                   const value = parseInt(e.target.value) || 1;
@@ -336,36 +580,139 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
                 }}
                 min="1"
                 max="100"
-                style={{ 
-                  direction: 'ltr',
-                  width: '100px'
-                }}
                 placeholder="1"
+                style={{
+                  width: '100px',
+                  padding: '12px 16px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '14px',
+                  transition: 'all 0.2s ease',
+                  outline: 'none',
+                  textAlign: 'center',
+                  direction: 'ltr'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
               />
-              <span className="text-muted" style={{ fontSize: '13px' }}>
+              <span style={{ 
+                color: 'rgba(255, 255, 255, 0.6)', 
+                fontSize: '13px' 
+              }}>
                 פריטים (1-100)
               </span>
             </div>
           </div>
         )}
         
-        <div className="form-group">
-          <label className="form-label">הערה</label>
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.9)',
+            marginBottom: '8px'
+          }}>
+            הערה
+          </label>
           <textarea 
-            className={`form-control ${errors.note ? 'is-invalid' : ''}`}
-            name="note" 
             value={formData.note || ''} 
             onChange={e => handleInputChange('note', e.target.value)} 
             rows={3}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: `1px solid ${errors.note ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+              borderRadius: '8px',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              resize: 'vertical',
+              minHeight: '80px',
+              maxHeight: '120px',
+              fontFamily: 'inherit'
+            }}
+            onFocus={(e) => {
+              (e.target as HTMLTextAreaElement).style.borderColor = 'rgba(59, 130, 246, 0.5)';
+              (e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.15)';
+            }}
+            onBlur={(e) => {
+              (e.target as HTMLTextAreaElement).style.borderColor = errors.note ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+              (e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
           />
-          {errors.note && <div className="form-error">{errors.note}</div>}
+          {errors.note && (
+            <div style={{
+              color: '#ef4444',
+              fontSize: '12px',
+              marginTop: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <i className="fas fa-exclamation-circle"></i>
+              {errors.note}
+            </div>
+          )}
         </div>
         
-          <div className="btn-group btn-group-end">
-            <button type="button" className="btn btn-ghost" onClick={onCancel}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '12px',
+            marginTop: '32px',
+            paddingTop: '24px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <button 
+              type="button" 
+              onClick={onCancel}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+            >
               ביטול
             </button>
-            <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              style={{
+                background: isSubmitting ? 'rgba(255, 255, 255, 0.1)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: isSubmitting ? 'none' : '0 4px 16px rgba(59, 130, 246, 0.3)'
+              }}
+            >
               {isSubmitting ? 'שומר...' : (
                 item ? 'עדכן' : (
                   (!formData.requiresReporting && quantity > 1) ? `צור ${quantity} פריטים` : 'צור פריט'

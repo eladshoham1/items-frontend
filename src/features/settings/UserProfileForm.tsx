@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, UpdateUserRequest, ranks } from '../../types';
 import { useManagement } from '../../contexts';
-import { useColdStartLoader } from '../../hooks';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
 
 interface UserProfileFormProps {
@@ -30,7 +29,6 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
   isAdmin = false // Default to false
 }) => {
   const { locations, loading: managementLoading, loadLocations } = useManagement();
-  const { showColdStartMessage } = useColdStartLoader();
   
   const [formData, setFormData] = useState({
     name: userProfile.name,
@@ -234,7 +232,7 @@ const UserProfileForm: React.FC<UserProfileFormProps> = ({
           {isUpdating ? (
             <>
               <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              {showColdStartMessage ? 'מעורר את השרת...' : 'שומר...'}
+              שומר...
             </>
           ) : (
             'שמור שינויים'

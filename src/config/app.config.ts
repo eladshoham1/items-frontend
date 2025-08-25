@@ -21,7 +21,7 @@ const constructBaseURL = () => {
 export const API_CONFIG = {
   API_PREFIX,
   BASE_URL: constructBaseURL(),
-  TIMEOUT: 30000, // Increased timeout to 30 seconds for serverless cold starts
+  TIMEOUT: 10000, // Reduced timeout since server is always running
   HEADERS: {
     'Content-Type': 'application/json',
   },
@@ -32,7 +32,6 @@ export const UI_CONFIG = {
   TABLE_PAGE_SIZE: 20,
   DATE_LOCALE: 'he-IL',
   TIME_ZONE: 'Asia/Jerusalem',
-  COLD_START_THRESHOLD: 3000, // Show cold start message after 3 seconds
 } as const;
 
 // Feature flags or environment-specific settings

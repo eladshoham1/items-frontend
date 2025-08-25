@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ServerError, SmartPagination, ErrorNotificationModal, TabNavigation } from '../../shared/components';
+import { ServerError, SmartPagination, ErrorNotificationModal, TabNavigation, LoadingSpinner } from '../../shared/components';
 import { useDailyReports } from '../../hooks';
 import { getCurrentDate, paginate } from '../../utils';
 import { User } from '../../types';
@@ -285,16 +285,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           size="md"
         />
         
-        <div className="card">
-          <div className="card-header">
-            <h2 className="mb-0">דוח יומי - {getCurrentDate()}</h2>
-          </div>
-          <div className="card-body">
-            <div className="alert alert-info">
-              <div className="spinner"></div>
-              <span>טוען נתונים...</span>
-            </div>
-          </div>
+        <div className="management-container">
+          <LoadingSpinner message="טוען נתוני דוח יומי..." />
         </div>
       </div>
     );
@@ -317,7 +309,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   }
 
   return (
-    <div>
+    <div className="page-container">
       {/* Tab Navigation */}
       <TabNavigation
         tabs={availableReportTabs}
@@ -327,368 +319,701 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         size="md"
       />
 
-      <div className="card">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h2 className="mb-0">דוח יומי - {getCurrentDate()}</h2>
-        </div>
-        <div className="card-body">
+      {activeReportTab === 'current' ? (
+        <div className="management-container">
           {/* Handle case when no daily report exists or report has no items */}
-          {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) && (
-            <div>
-              <div className="alert alert-info text-center">
-                <h4><i className="fas fa-clock me-2"></i>אין פריטים לדיווח</h4>
-                <p>כרגע אין פריטים הדורשים דיווח או שהם כבר דווחו.</p>
-                <p>הפריטים מתעדכנים אוטומטית כאשר יש צורך בדיווח.</p>
-              </div>
-            </div>
-          )}
-
-          {/* Show report content only when dailyReportData exists and has items */}
-          {dailyReportData && dailyReportData.items && dailyReportData.items.length > 0 && (
-            <>
-              {/* Reporting Progress Indicator - For All Users */}
-          <div className="mb-4 p-3" style={{ 
-            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-            borderRadius: '15px',
-            border: '2px solid #dee2e6'
-          }}>
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <h5 className="mb-0" style={{ color: '#495057', fontWeight: '600' }}>
-                📊 {isAdmin ? 'סטטוס דיווח יומי' : 'הדיווח שלי היום'}
-              </h5>
-              <span className="badge" style={{ 
-                background: reportingStats.percentage === 100 ? '#28a745' : 
-                           reportingStats.percentage >= 70 ? '#ffc107' : '#dc3545',
-                color: 'white',
-                fontSize: '16px',
-                padding: '8px 12px',
-                borderRadius: '20px'
+          {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) ? (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: '400px',
+              textAlign: 'center',
+              background: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '12px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              padding: '40px'
+            }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '24px',
+                boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)'
               }}>
-                {reportingStats.total} / {reportingStats.reported}
-              </span>
+                <i className="fas fa-clipboard-check" style={{ 
+                  fontSize: '32px', 
+                  color: 'white'
+                }}></i>
+              </div>
+              <h3 style={{ 
+                color: 'rgba(255, 255, 255, 0.9)', 
+                marginBottom: '12px',
+                fontWeight: '600',
+                fontSize: '24px'
+              }}>
+                אין פריטים לדיווח
+              </h3>
+              <p style={{ 
+                color: 'rgba(255, 255, 255, 0.7)', 
+                fontSize: '16px',
+                lineHeight: '1.5',
+                maxWidth: '400px'
+              }}>
+                כרגע אין פריטים הדורשים דיווח או שהם כבר דווחו.
+                הפריטים מתעדכנים אוטומטית כאשר יש צורך בדיווח.
+              </p>
             </div>
-            
-            {/* Visual Pipe Progress */}
-            <div className="d-flex align-items-center mb-2">
-              <div style={{ 
-                width: '100%',
-                height: '40px',
-                backgroundColor: '#e9ecef',
-                borderRadius: '25px',
-                overflow: 'hidden',
-                border: '3px solid #dee2e6',
-                position: 'relative',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+          ) : (
+            <>
+              {/* Modern Progress Card */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05))',
+                borderRadius: '16px',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                padding: '24px',
+                marginBottom: '24px',
+                backdropFilter: 'blur(10px)'
               }}>
                 <div style={{
-                  width: `${reportingStats.percentage}%`,
-                  height: '100%',
-                  background: reportingStats.percentage === 100 ? 
-                    'linear-gradient(90deg, #28a745 0%, #20c997 100%)' :
-                    reportingStats.percentage >= 70 ?
-                    'linear-gradient(90deg, #ffc107 0%, #fd7e14 100%)' :
-                    'linear-gradient(90deg, #dc3545 0%, #e83e8c 100%)',
-                  transition: 'width 0.8s ease-in-out',
-                  borderRadius: '25px',
-                  position: 'relative',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '20px'
                 }}>
-                  {/* Shine effect */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '48px',
+                      height: '48px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)'
+                    }}>
+                      <i className="fas fa-chart-line" style={{ 
+                        color: 'white', 
+                        fontSize: '20px' 
+                      }}></i>
+                    </div>
+                    <div>
+                      <h3 style={{ 
+                        color: 'rgba(255, 255, 255, 0.9)', 
+                        margin: '0',
+                        fontSize: '20px',
+                        fontWeight: '600'
+                      }}>
+                        {isAdmin ? 'סטטוס דיווח יומי' : 'הדיווח שלי היום'}
+                      </h3>
+                      <p style={{ 
+                        color: 'rgba(255, 255, 255, 0.6)', 
+                        margin: '4px 0 0 0',
+                        fontSize: '14px'
+                      }}>
+                        {getCurrentDate()}
+                      </p>
+                    </div>
+                  </div>
+                  
                   <div style={{
-                    position: 'absolute',
-                    top: '0',
-                    left: '0',
-                    right: '0',
-                    height: '50%',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%)',
-                    borderRadius: '25px 25px 0 0'
-                  }}></div>
+                    background: reportingStats.percentage === 100 ? 
+                      'linear-gradient(135deg, #10b981, #059669)' : 
+                      reportingStats.percentage >= 70 ? 
+                      'linear-gradient(135deg, #f59e0b, #d97706)' : 
+                      'linear-gradient(135deg, #ef4444, #dc2626)',
+                    borderRadius: '12px',
+                    padding: '8px 16px',
+                    color: 'white',
+                    fontWeight: '600',
+                    fontSize: '16px',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
+                  }}>
+                    {reportingStats.total} / {reportingStats.reported}
+                  </div>
                 </div>
                 
-                {/* Percentage text overlay */}
+                {/* Modern Progress Bar */}
                 <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  color: '#495057',
-                  textShadow: '1px 1px 2px rgba(255,255,255,0.8)',
-                  zIndex: 10
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  height: '12px',
+                  overflow: 'hidden',
+                  position: 'relative'
                 }}>
-                  {reportingStats.percentage}%
+                  <div style={{
+                    width: `${reportingStats.percentage}%`,
+                    height: '100%',
+                    background: reportingStats.percentage === 100 ? 
+                      'linear-gradient(90deg, #10b981, #059669)' :
+                      reportingStats.percentage >= 70 ?
+                      'linear-gradient(90deg, #f59e0b, #d97706)' :
+                      'linear-gradient(90deg, #ef4444, #dc2626)',
+                    borderRadius: '12px',
+                    transition: 'width 0.8s ease-in-out',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      right: '0',
+                      height: '100%',
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                      animation: 'shimmer 2s infinite'
+                    }}></div>
+                  </div>
+                </div>
+                
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '16px'
+                }}>
+                  <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px' }}>
+                    {reportingStats.percentage.toFixed(1)}% הושלם
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    {reportingStats.percentage === 100 ? (
+                      <>
+                        <i className="fas fa-check-circle" style={{ color: '#10b981' }}></i>
+                        <span style={{ color: '#10b981' }}>מוכן להשלמה</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-clock" style={{ color: '#f59e0b' }}></i>
+                        <span>נותרו {reportingStats.total - reportingStats.reported} פריטים</span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="d-flex justify-content-between align-items-center">
-              <small style={{ color: '#6c757d', fontWeight: '500' }}>
-                {reportingStats.percentage === 100 ? 
-                  '🎉 כל הפריטים דווחו!' : 
-                  `נותרו ${reportingStats.total - reportingStats.reported} פריטים לדיווח`
-                }
-              </small>
-              <small style={{ 
-                color: reportingStats.percentage >= 70 ? '#28a745' : 
-                       reportingStats.percentage >= 30 ? '#ffb000' : '#dc3545',
-                fontWeight: 'bold'
-              }}>
-                {reportingStats.percentage >= 70 ? '✅ סטטוס מעולה' : 
-                 reportingStats.percentage >= 30 ? '⚠️ סטטוס בינוני' : '🚨 דרושה תשומת לב'}
-              </small>
-            </div>
-          </div>
-          
-          {/* Search Bar */}
-          <div className="mb-4">
-            <div className="row">
-              <div className="col-md-6">
-                <div className="input-group">
-                  <span className="input-group-text">
-                    <i className="fas fa-search"></i>
-                  </span>
+
+              {/* Modern Search Bar */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '4px',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <i className="fas fa-search" style={{
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    paddingLeft: '12px'
+                  }}></i>
                   <input
                     type="text"
-                    className="form-control"
                     placeholder="חיפוש לפי שם פריט, מספר צ', חתימה, מיקום, מי דיווח או הערות..."
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
-                      setCurrentPage(1); // Reset to first page when searching
+                      setCurrentPage(1);
                     }}
-                    style={{ direction: 'rtl' }}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      outline: 'none',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontSize: '14px',
+                      flex: 1,
+                      padding: '12px 8px',
+                      direction: 'rtl'
+                    }}
                   />
                   {searchTerm && (
                     <button
-                      className="btn btn-outline-secondary"
                       type="button"
                       onClick={() => {
                         setSearchTerm('');
                         setCurrentPage(1);
                       }}
                       title="נקה חיפוש"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        cursor: 'pointer',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.target as HTMLButtonElement).style.background = 'none';
+                      }}
                     >
                       <i className="fas fa-times"></i>
                     </button>
                   )}
                 </div>
                 {searchTerm && (
-                  <small className="text-muted mt-1 d-block">
+                  <div style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontSize: '14px',
+                    marginTop: '8px'
+                  }}>
                     נמצאו {sortedReportItems.length} תוצאות עבור "{searchTerm}"
-                  </small>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="table-responsive">
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th 
-                    className="sortable-header"
-                    onClick={() => handleSort('itemName')}
-                    title="לחץ למיון לפי שם פריט"
-                    data-sorted={sortConfig?.key === 'itemName' ? 'true' : 'false'}
-                  >
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span>פריט</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('itemName')}
-                      </div>
-                    </div>
-                  </th>
-                  <th 
-                    className="sortable-header"
-                    onClick={() => handleSort('idNumber')}
-                    title="לחץ למיון לפי מספר צ'"
-                    data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
-                  >
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span>מספר צ'</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('idNumber')}
-                      </div>
-                    </div>
-                  </th>
-                  <th 
-                    className="sortable-header"
-                    onClick={() => handleSort('signedBy')}
-                    title="לחץ למיון לפי מי חתם על הפריט"
-                    data-sorted={sortConfig?.key === 'signedBy' ? 'true' : 'false'}
-                  >
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span>חתום על ידי</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('signedBy')}
-                      </div>
-                    </div>
-                  </th>
-                  <th 
-                    className="sortable-header"
-                    onClick={() => handleSort('location')}
-                    title="לחץ למיון לפי מיקום"
-                    data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
-                  >
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span>מיקום</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('location')}
-                      </div>
-                    </div>
-                  </th>
-                  <th 
-                    className="sortable-header"
-                    onClick={() => handleSort('reportedAt')}
-                    title="לחץ למיון לפי תאריך דיווח"
-                    data-sorted={sortConfig?.key === 'reportedAt' ? 'true' : 'false'}
-                  >
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span>תאריך דיווח</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('reportedAt')}
-                      </div>
-                    </div>
-                  </th>
-                  <th 
-                    className="sortable-header"
-                    onClick={() => handleSort('reportedBy')}
-                    title="לחץ למיון לפי מי דיווח"
-                    data-sorted={sortConfig?.key === 'reportedBy' ? 'true' : 'false'}
-                  >
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span>מי דיווח</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('reportedBy')}
-                      </div>
-                    </div>
-                  </th>
-                  <th 
-                    className="sortable-header"
-                    onClick={() => handleSort('isReported')}
-                    title="לחץ למיון לפי סטטוס דיווח"
-                    data-sorted={sortConfig?.key === 'isReported' ? 'true' : 'false'}
-                  >
-                    <div className="d-flex align-items-center justify-content-between">
-                      <span>דיווח</span>
-                      <div className="d-flex align-items-center gap-2">
-                        <input
-                          type="checkbox"
-                          ref={headerCheckboxRef}
-                          onChange={handleHeaderCheckboxChange}
-                          title="סמן/נקה הכל בכל הדפים"
-                          className="form-check-input"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div className="sort-indicator">{getSortIcon('isReported')}</div>
-                      </div>
-                    </div>
-                  </th>
-                  <th>הערות</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedItems.map(item => (
-                  <tr key={item.id}>
-                    <td>{item.itemName}</td>
-                    <td>{item.idNumber || '-'}</td>
-                    <td>{item.signedByUserName || '-'}</td>
-                    <td>{item.location || '-'}</td>
-                    <td>{item.reportedAt ? (() => {
-                      const date = new Date(item.reportedAt);
-                      return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL') : 'תאריך לא תקין';
-                    })() : '-'}</td>
-                    <td>{item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '-'}</td>
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={item.isReported || false}
-                        onChange={() => handleCheckboxChange(item.id)}
-                        className="form-check-input"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        value={item.notes || ''}
-                        onChange={(e) => {
-                          updateItemNotes(item.id, e.target.value);
-                        }}
-                        className="form-control form-control-sm"
-                        placeholder="הערות..."
-                        style={{ minWidth: '150px' }}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          
-          {totalPages > 1 && (
-            <SmartPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          )}
-          
-          {/* Action Buttons */}
-          {sortedReportItems.length > 0 && (
-            <div className="d-flex justify-content-between align-items-center mt-4">
-              <div className="d-flex gap-2">
-                <button 
-                  className="btn btn-primary" 
-                  onClick={handleSubmitReport}
-                >
-                  <i className="fas fa-save me-1"></i>
-                  שמור דיווח
-                </button>
-                
-                {isAdmin && (
-                  <div className="d-flex flex-column gap-2">
-                    <button 
-                      className="btn btn-success" 
-                      onClick={handleCompleteReport}
-                      disabled={completing || !allItemsReported}
-                      title={!allItemsReported ? "לא ניתן להשלים דוח כאשר יש פריטים שלא דווחו" : "השלם מחזור דיווח נוכחי"}
-                    >
-                      {completing ? (
-                        <>
-                          <i className="fas fa-spinner fa-spin me-1"></i>
-                          מושלם...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-check-circle me-1"></i>
-                          השלם מחזור דיווח
-                        </>
-                      )}
-                    </button>
-                    {!allItemsReported && (
-                      <small className="text-warning">
-                        <i className="fas fa-exclamation-triangle me-1"></i>
-                        יש לדווח על כל הפריטים לפני השלמת המחזור
-                      </small>
-                    )}
                   </div>
                 )}
               </div>
-            </div>
-          )}
-          
-          {sortedReportItems.length === 0 && (
-            <div className="alert alert-info text-center">
-              <i className="fas fa-calendar-alt fa-2x mb-3"></i>
-              <h4>אין פריטים לדיווח</h4>
-              <p>לא נמצאו פריטים בדוח היומי</p>
-            </div>
-          )}
+
+              {/* Modern Table */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                overflow: 'hidden',
+                backdropFilter: 'blur(10px)'
+              }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    margin: 0
+                  }}>
+                    <thead>
+                      <tr style={{
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(29, 78, 216, 0.1))',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                      }}>
+                        <th 
+                          className="sortable-header"
+                          onClick={() => handleSort('itemName')}
+                          title="לחץ למיון לפי שם פריט"
+                          data-sorted={sortConfig?.key === 'itemName' ? 'true' : 'false'}
+                          style={{
+                            padding: '16px',
+                            textAlign: 'right',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>פריט</span>
+                            <div>{getSortIcon('itemName')}</div>
+                          </div>
+                        </th>
+                        <th 
+                          className="sortable-header"
+                          onClick={() => handleSort('idNumber')}
+                          title="לחץ למיון לפי מספר צ'"
+                          data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
+                          style={{
+                            padding: '16px',
+                            textAlign: 'right',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>מספר צ'</span>
+                            <div>{getSortIcon('idNumber')}</div>
+                          </div>
+                        </th>
+                        <th 
+                          className="sortable-header"
+                          onClick={() => handleSort('signedBy')}
+                          title="לחץ למיון לפי מי חתם על הפריט"
+                          data-sorted={sortConfig?.key === 'signedBy' ? 'true' : 'false'}
+                          style={{
+                            padding: '16px',
+                            textAlign: 'right',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>חתום על ידי</span>
+                            <div>{getSortIcon('signedBy')}</div>
+                          </div>
+                        </th>
+                        <th 
+                          className="sortable-header"
+                          onClick={() => handleSort('location')}
+                          title="לחץ למיון לפי מיקום"
+                          data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
+                          style={{
+                            padding: '16px',
+                            textAlign: 'right',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>מיקום</span>
+                            <div>{getSortIcon('location')}</div>
+                          </div>
+                        </th>
+                        <th 
+                          className="sortable-header"
+                          onClick={() => handleSort('reportedAt')}
+                          title="לחץ למיון לפי תאריך דיווח"
+                          data-sorted={sortConfig?.key === 'reportedAt' ? 'true' : 'false'}
+                          style={{
+                            padding: '16px',
+                            textAlign: 'right',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>תאריך דיווח</span>
+                            <div>{getSortIcon('reportedAt')}</div>
+                          </div>
+                        </th>
+                        <th 
+                          className="sortable-header"
+                          onClick={() => handleSort('reportedBy')}
+                          title="לחץ למיון לפי מי דיווח"
+                          data-sorted={sortConfig?.key === 'reportedBy' ? 'true' : 'false'}
+                          style={{
+                            padding: '16px',
+                            textAlign: 'right',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>מי דיווח</span>
+                            <div>{getSortIcon('reportedBy')}</div>
+                          </div>
+                        </th>
+                        <th 
+                          className="sortable-header"
+                          onClick={() => handleSort('isReported')}
+                          title="לחץ למיון לפי סטטוס דיווח"
+                          data-sorted={sortConfig?.key === 'isReported' ? 'true' : 'false'}
+                          style={{
+                            padding: '16px',
+                            textAlign: 'right',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>דיווח</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <input
+                                type="checkbox"
+                                ref={headerCheckboxRef}
+                                onChange={handleHeaderCheckboxChange}
+                                title="סמן/נקה הכל בכל הדפים"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  accentColor: '#3b82f6',
+                                  cursor: 'pointer'
+                                }}
+                              />
+                              <div>{getSortIcon('isReported')}</div>
+                            </div>
+                          </div>
+                        </th>
+                        <th style={{
+                          padding: '16px',
+                          textAlign: 'right',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                        }}>
+                          הערות
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedItems.map((item, index) => (
+                        <tr key={item.id} style={{
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                          background: index % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
+                          transition: 'all 0.2s ease'
+                        }}>
+                          <td style={{
+                            padding: '16px',
+                            color: 'rgba(255, 255, 255, 0.9)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            {item.itemName}
+                          </td>
+                          <td style={{
+                            padding: '16px',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            {item.idNumber || '-'}
+                          </td>
+                          <td style={{
+                            padding: '16px',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            {item.signedByUserName || '-'}
+                          </td>
+                          <td style={{
+                            padding: '16px',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            {item.location || '-'}
+                          </td>
+                          <td style={{
+                            padding: '16px',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            {item.reportedAt ? (() => {
+                              const date = new Date(item.reportedAt);
+                              return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL') : 'תאריך לא תקין';
+                            })() : '-'}
+                          </td>
+                          <td style={{
+                            padding: '16px',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            {item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '-'}
+                          </td>
+                          <td style={{
+                            padding: '16px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={item.isReported || false}
+                              onChange={() => handleCheckboxChange(item.id)}
+                              style={{
+                                accentColor: '#3b82f6',
+                                cursor: 'pointer',
+                                transform: 'scale(1.2)'
+                              }}
+                            />
+                          </td>
+                          <td style={{
+                            padding: '16px',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                          }}>
+                            <input
+                              type="text"
+                              value={item.notes || ''}
+                              onChange={(e) => updateItemNotes(item.id, e.target.value)}
+                              placeholder="הערות..."
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.1)',
+                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                borderRadius: '8px',
+                                padding: '8px 12px',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                fontSize: '14px',
+                                minWidth: '150px',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onFocus={(e) => {
+                                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                              }}
+                              onBlur={(e) => {
+                                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                                e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
+                  <SmartPagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              {sortedReportItems.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '24px',
+                  padding: '20px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button 
+                      onClick={handleSubmitReport}
+                      style={{
+                        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '12px 24px',
+                        color: 'white',
+                        fontWeight: '600',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)'
+                      }}
+                    >
+                      <i className="fas fa-save" style={{ marginLeft: '8px' }}></i>
+                      שמור דיווח
+                    </button>
+                    
+                    {isAdmin && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <button 
+                          onClick={handleCompleteReport}
+                          disabled={completing || !allItemsReported}
+                          title={!allItemsReported ? "לא ניתן להשלים דוח כאשר יש פריטים שלא דווחו" : "השלם מחזור דיווח נוכחי"}
+                          style={{
+                            background: completing || !allItemsReported ? 
+                              'rgba(255, 255, 255, 0.1)' : 
+                              'linear-gradient(135deg, #10b981, #059669)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '12px 24px',
+                            color: 'white',
+                            fontWeight: '600',
+                            fontSize: '14px',
+                            cursor: completing || !allItemsReported ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s ease',
+                            boxShadow: completing || !allItemsReported ? 'none' : '0 4px 16px rgba(16, 185, 129, 0.3)'
+                          }}
+                        >
+                          {completing ? (
+                            <>
+                              <i className="fas fa-spinner fa-spin" style={{ marginLeft: '8px' }}></i>
+                              מושלם...
+                            </>
+                          ) : (
+                            <>
+                              <i className="fas fa-check-circle" style={{ marginLeft: '8px' }}></i>
+                              השלם מחזור דיווח
+                            </>
+                          )}
+                        </button>
+                        {!allItemsReported && (
+                          <div style={{
+                            color: '#f59e0b',
+                            fontSize: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            <i className="fas fa-exclamation-triangle"></i>
+                            יש לדווח על כל הפריטים לפני השלמת המחזור
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {sortedReportItems.length === 0 && searchTerm && (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minHeight: '300px',
+                  textAlign: 'center',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '40px'
+                }}>
+                  <div style={{
+                    width: '80px',
+                    height: '80px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #6b7280, #4b5563)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: '24px'
+                  }}>
+                    <i className="fas fa-search" style={{ fontSize: '32px', color: 'white' }}></i>
+                  </div>
+                  <h3 style={{ 
+                    color: 'rgba(255, 255, 255, 0.9)', 
+                    marginBottom: '12px',
+                    fontWeight: '600',
+                    fontSize: '24px'
+                  }}>
+                    לא נמצאו תוצאות
+                  </h3>
+                  <p style={{ 
+                    color: 'rgba(255, 255, 255, 0.7)', 
+                    fontSize: '16px',
+                    lineHeight: '1.5'
+                  }}>
+                    לא נמצאו פריטים התואמים לחיפוש "{searchTerm}"
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>
-      </div>
+      ) : (
+        activeReportTab === 'history' && <div>History reports would go here</div>
+      )}
 
       {/* Error Notification Modal */}
       <ErrorNotificationModal

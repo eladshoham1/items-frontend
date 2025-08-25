@@ -6,7 +6,6 @@ import { useReceipts } from '../../hooks/useReceipts';
 import { receiptService } from '../../services';
 import { User, Receipt } from '../../types';
 import './ReceiptsTab.css';
-import './CreatePendingReceiptForm.css';
 
 type SortField = 'name' | 'idNumber' | 'location';
 type SortDirection = 'asc' | 'desc';
@@ -16,7 +15,7 @@ interface SortConfig {
   direction: SortDirection;
 }
 
-interface CreateReceiptFormProps {
+interface ReceiptFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   originalReceipt?: Receipt | null; // Optional prop for updating existing receipt
@@ -98,112 +97,281 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
   // Get sort icon for a field
   const getSortIcon = (field: SortField) => {
     if (sortConfig?.field !== field) {
-      return <i className="fas fa-sort text-muted"></i>;
+      return <i className="fas fa-sort" style={{ color: 'rgba(255, 255, 255, 0.4)' }}></i>;
     }
     return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up text-primary"></i>
-      : <i className="fas fa-sort-down text-primary"></i>;
+      ? <i className="fas fa-sort-up" style={{ color: '#3b82f6' }}></i>
+      : <i className="fas fa-sort-down" style={{ color: '#3b82f6' }}></i>;
   };
 
   if (items.length === 0) {
     return (
-      <div className="selected-items-empty-state">
-        <div className="empty-state-content">
-          <i className="fas fa-inbox fa-3x text-muted mb-3"></i>
-          <h5 className="text-muted mb-2">לא נבחרו פריטים</h5>
-          <p className="text-muted mb-0">השתמש בחיפוש למעלה כדי להוסיף פריטים לקבלה</p>
-        </div>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '12px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '32px',
+        textAlign: 'center',
+        marginTop: '16px'
+      }}>
+        <i className="fas fa-inbox" style={{ 
+          fontSize: '48px', 
+          color: 'rgba(255, 255, 255, 0.3)', 
+          marginBottom: '16px' 
+        }}></i>
+        <h5 style={{ color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px' }}>
+          לא נבחרו פריטים
+        </h5>
+        <p style={{ color: 'rgba(255, 255, 255, 0.5)', margin: 0 }}>
+          השתמש בחיפוש למעלה כדי להוסיף פריטים לקבלה
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="selected-items-table-container">
-      <div className="table-header">
-        <i className="fas fa-list-ul me-2"></i>
-        פריטים נבחרים ({items.length})
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: '12px',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      marginTop: '16px',
+      overflow: 'hidden'
+    }}>
+      <div style={{
+        padding: '16px 20px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        direction: 'rtl'
+      }}>
+        <i className="fas fa-list-ul" style={{ 
+          marginLeft: '8px', 
+          color: '#3b82f6',
+          fontSize: '16px'
+        }}></i>
+        <span style={{ 
+          color: 'rgba(255, 255, 255, 0.9)', 
+          fontWeight: '600',
+          fontSize: '16px'
+        }}>
+          פריטים נבחרים ({items.length})
+        </span>
       </div>
       
-      <div className="table-responsive">
-        <table className="table table-hover mb-0">
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{
+          width: '100%',
+          borderCollapse: 'collapse',
+          direction: 'rtl'
+        }}>
           <thead>
-            <tr>
-              <th scope="col" style={{ width: '8%' }} className="text-center">#</th>
+            <tr style={{ background: 'rgba(255, 255, 255, 0.05)' }}>
+              <th style={{ 
+                width: '8%', 
+                textAlign: 'center',
+                padding: '12px 8px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontWeight: '600',
+                fontSize: '14px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                #
+              </th>
               <th 
-                scope="col" 
-                style={{ width: '42%', cursor: 'pointer' }} 
-                className="sortable-header"
+                style={{ 
+                  width: '42%', 
+                  cursor: 'pointer',
+                  padding: '12px 16px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.2s ease'
+                }}
                 onClick={() => handleSort('name')}
-                data-sorted={sortConfig?.field === 'name'}
               >
-                <div className="d-flex align-items-center justify-content-between">
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  direction: 'rtl'
+                }}>
                   <span>פריט</span>
-                  <div className="sort-indicator">{getSortIcon('name')}</div>
+                  <div style={{ marginLeft: '8px' }}>{getSortIcon('name')}</div>
                 </div>
               </th>
               <th 
-                scope="col" 
-                style={{ width: '18%', cursor: 'pointer' }} 
-                className="text-center sortable-header"
+                style={{ 
+                  width: '18%', 
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  padding: '12px 8px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.2s ease'
+                }}
                 onClick={() => handleSort('idNumber')}
-                data-sorted={sortConfig?.field === 'idNumber'}
               >
-                <div className="d-flex align-items-center justify-content-center">
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center'
+                }}>
                   <span>מספר צ'</span>
-                  <div className="sort-indicator ms-1">{getSortIcon('idNumber')}</div>
+                  <div style={{ marginRight: '4px' }}>{getSortIcon('idNumber')}</div>
                 </div>
               </th>
               <th 
-                scope="col" 
-                style={{ width: '22%', cursor: 'pointer' }} 
-                className="text-center sortable-header"
+                style={{ 
+                  width: '22%', 
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  padding: '12px 8px',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                  transition: 'all 0.2s ease'
+                }}
                 onClick={() => handleSort('location')}
-                data-sorted={sortConfig?.field === 'location'}
               >
-                <div className="d-flex align-items-center justify-content-center">
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center'
+                }}>
                   <span>הקצאה</span>
-                  <div className="sort-indicator ms-1">{getSortIcon('location')}</div>
+                  <div style={{ marginRight: '4px' }}>{getSortIcon('location')}</div>
                 </div>
               </th>
-              <th scope="col" style={{ width: '10%' }} className="text-center">פעולות</th>
+              <th style={{ 
+                width: '10%', 
+                textAlign: 'center',
+                padding: '12px 8px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontWeight: '600',
+                fontSize: '14px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                פעולות
+              </th>
             </tr>
           </thead>
           <tbody>
             {sortedItems.map((item, index) => (
-              <tr key={`${item.id}-${index}`} className="selected-item-row">
-                <td className="text-center">
-                  <span className="row-number">{index + 1}</span>
+              <tr 
+                key={`${item.id}-${index}`}
+                style={{ 
+                  transition: 'all 0.2s ease',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
+                }}
+              >
+                <td style={{ 
+                  textAlign: 'center', 
+                  padding: '12px 8px'
+                }}>
+                  <span style={{
+                    background: 'rgba(59, 130, 246, 0.2)',
+                    color: '#3b82f6',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '600'
+                  }}>
+                    {index + 1}
+                  </span>
                 </td>
-                <td>
-                  <div className="item-name-cell">
-                    <span className="item-name">{item.name}</span>
+                <td style={{ padding: '12px 16px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    direction: 'rtl'
+                  }}>
+                    <span style={{ 
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontWeight: '500'
+                    }}>
+                      {item.name}
+                    </span>
                     {item.requiresReporting && (
-                      <span className="cipher-indicator ms-2">
-                        <i className="fas fa-shield-alt text-danger" title="פריט צופן"></i>
+                      <span style={{ marginLeft: '8px' }}>
+                        <i 
+                          className="fas fa-shield-alt" 
+                          style={{ 
+                            color: '#ef4444',
+                            fontSize: '14px'
+                          }} 
+                          title="פריט צופן"
+                        ></i>
                       </span>
                     )}
                   </div>
                 </td>
-                <td className="text-center">
+                <td style={{ 
+                  textAlign: 'center', 
+                  padding: '12px 8px'
+                }}>
                   {item.idNumber ? (
-                    <span className="id-number-badge">{item.idNumber}</span>
+                    <span style={{
+                      background: 'rgba(34, 197, 94, 0.2)',
+                      color: '#22c55e',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      {item.idNumber}
+                    </span>
                   ) : (
-                    <span className="text-muted">ללא</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>ללא</span>
                   )}
                 </td>
-                <td className="text-center">
+                <td style={{ 
+                  textAlign: 'center', 
+                  padding: '12px 8px'
+                }}>
                   {item.allocatedLocation?.name ? (
-                    <span className="location-badge">{item.allocatedLocation.name}</span>
+                    <span style={{
+                      background: 'rgba(168, 85, 247, 0.2)',
+                      color: '#a855f7',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600'
+                    }}>
+                      {item.allocatedLocation.name}
+                    </span>
                   ) : (
-                    <span className="text-muted">ללא הקצאה</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.4)' }}>ללא הקצאה</span>
                   )}
                 </td>
-                <td className="text-center">
+                <td style={{ 
+                  textAlign: 'center', 
+                  padding: '12px 8px'
+                }}>
                   <button 
                     type="button" 
-                    className="btn btn-outline-danger btn-sm remove-btn-icon"
                     onClick={() => onRemove(item.id)}
                     title="הסר פריט"
+                    style={{
+                      background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                      border: 'none',
+                      borderRadius: '6px',
+                      width: '32px',
+                      height: '32px',
+                      color: 'white',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
                   >
                     ×
                   </button>
@@ -214,9 +382,20 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
         </table>
       </div>
       
-      <div className="table-footer">
-        <small className="text-muted">
-          <i className="fas fa-info-circle me-1"></i>
+      <div style={{
+        padding: '12px 20px',
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        display: 'flex',
+        justifyContent: 'flex-end',
+        direction: 'rtl'
+      }}>
+        <small style={{ 
+          color: 'rgba(255, 255, 255, 0.6)',
+          display: 'flex',
+          alignItems: 'center'
+        }}>
+          <i className="fas fa-info-circle" style={{ marginLeft: '6px' }}></i>
           סה"כ {items.length} פריטים נבחרו
         </small>
       </div>
@@ -237,7 +416,7 @@ interface AvailableItemForForm {
   };
 }
 
-const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
+const ReceiptForm: React.FC<ReceiptFormProps> = ({
   onSuccess,
   onCancel,
   originalReceipt = null,
@@ -612,96 +791,251 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   };
 
   return (
-    <div className="receipts-modal" style={{ direction: 'rtl', padding: '20px' }}>
-      <h3 style={{ marginBottom: '20px', color: '#2980b9' }}>
+    <div style={{
+      background: 'rgba(255, 255, 255, 0.05)',
+      borderRadius: '16px',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      padding: '32px',
+      backdropFilter: 'blur(10px)',
+      maxWidth: '900px',
+      margin: '0 auto',
+      direction: 'rtl'
+    }}>
+      <h3 style={{ 
+        marginBottom: '24px', 
+        color: 'rgba(255, 255, 255, 0.9)',
+        fontSize: '24px',
+        fontWeight: '600',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <i className="fas fa-file-plus" style={{ color: 'white', fontSize: '18px' }}></i>
+        </div>
         {isUpdateMode ? 'עדכון קבלה' : 'יצירת קבלה חדשה'}
       </h3>
       
       {(error || itemsError) && (
-        <div className="alert alert-danger">
-          {error || itemsError}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05))',
+          borderRadius: '12px',
+          border: '1px solid rgba(239, 68, 68, 0.2)',
+          padding: '16px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <i className="fas fa-exclamation-triangle" style={{ color: '#ef4444', fontSize: '16px' }}></i>
+          <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+            {error || itemsError}
+          </span>
         </div>
       )}
 
       {itemsLoading && (
-        <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '20px', 
+          color: 'rgba(255, 255, 255, 0.7)',
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '12px',
+          marginBottom: '24px'
+        }}>
+          <i className="fas fa-spinner fa-spin" style={{ marginLeft: '8px' }}></i>
           טוען פריטים זמינים...
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
         {/* User Selection */}
-        <div className="form-group">
-          <label className="form-label required">בחר משתמש:</label>
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.9)',
+            marginBottom: '8px'
+          }}>
+            בחר משתמש <span style={{ color: '#ef4444' }}>*</span>
+          </label>
           <select
-            className="form-control"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
             required
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              appearance: 'none',
+              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+              backgroundPosition: 'left 12px center',
+              backgroundRepeat: 'no-repeat',
+              backgroundSize: '16px 16px',
+              paddingLeft: '40px',
+              cursor: 'pointer'
+            }}
+            onFocus={(e) => {
+              (e.target as HTMLSelectElement).style.borderColor = 'rgba(59, 130, 246, 0.5)';
+              (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.15)';
+            }}
+            onBlur={(e) => {
+              (e.target as HTMLSelectElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
           >
-            <option value="">בחר משתמש...</option>
+            <option value="" style={{
+              background: '#1f2937',
+              color: 'rgba(255, 255, 255, 0.7)'
+            }}>
+              בחר משתמש...
+            </option>
             {users
-              .filter(user => user.id !== userProfile?.id) // Exclude current admin user
+              .filter(user => user.id !== userProfile?.id)
               .map((user: User) => (
-                <option key={user.id} value={user.id}>
+                <option 
+                  key={user.id} 
+                  value={user.id}
+                  style={{
+                    background: '#1f2937',
+                    color: 'rgba(255, 255, 255, 0.9)'
+                  }}
+                >
                   {user.name} ({user.personalNumber})
                 </option>
               ))}
           </select>
           {users.length === 0 && (
-            <small style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+            <div style={{
+              color: '#ef4444',
+              fontSize: '12px',
+              marginTop: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <i className="fas fa-exclamation-circle"></i>
               לא נמצאו משתמשים זמינים
-            </small>
+            </div>
           )}
           {users.length > 0 && users.filter(user => user.id !== userProfile?.id).length === 0 && (
-            <small style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+            <div style={{
+              color: '#ef4444',
+              fontSize: '12px',
+              marginTop: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <i className="fas fa-exclamation-circle"></i>
               אין משתמשים אחרים זמינים
-            </small>
+            </div>
           )}
         </div>
 
         {/* Items Selection */}
-        <div className="form-group">
-          <label className="form-label required">הוסף פריטים:</label>
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.9)',
+            marginBottom: '8px'
+          }}>
+            הוסף פריטים <span style={{ color: '#ef4444' }}>*</span>
+          </label>
           
           {/* Warning about items in other receipts */}
           {!itemsLoading && itemsInOtherReceipts.size > 0 && (
-            <div className="alert alert-warning" style={{ fontSize: '14px', marginBottom: '15px' }}>
-              <i className="fas fa-exclamation-triangle me-2"></i>
-              <strong>שים לב:</strong> חלק מהפריטים אינם זמינים כיוון שהם כבר נמצאים בקבלות אחרות. 
-              כל פריט יכול להיות רק בקבלה אחת בכל זמן נתון.
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05))',
+              borderRadius: '12px',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              padding: '16px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <i className="fas fa-exclamation-triangle" style={{ color: '#f59e0b', fontSize: '16px' }}></i>
+              <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '14px' }}>
+                <strong>שים לב:</strong> חלק מהפריטים אינם זמינים כיוון שהם כבר נמצאים בקבלות אחרות. 
+                כל פריט יכול להיות רק בקבלה אחת בכל זמן נתון.
+              </div>
             </div>
           )}
           
           {/* Searchable Item Selection */}
-          <div className="item-select-row">
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className={`fas ${selectedItemId ? 'fa-check text-success' : 'fa-search'}`}></i>
-              </span>
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
+              border: `1px solid ${selectedItemId ? 'rgba(34, 197, 94, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
+              padding: '4px',
+              transition: 'all 0.2s ease'
+            }}>
+              <div style={{
+                padding: '8px 12px',
+                color: selectedItemId ? '#22c55e' : 'rgba(255, 255, 255, 0.5)'
+              }}>
+                <i className={`fas ${selectedItemId ? 'fa-check' : 'fa-search'}`}></i>
+              </div>
               <input
                 type="text"
-                className={`form-control ${selectedItemId ? 'border-success' : ''}`}
                 placeholder="חפש ובחר פריט לפי שם או מספר צ'..."
                 value={itemSearchQuery}
                 onChange={(e) => setItemSearchQuery(e.target.value)}
                 disabled={itemsLoading}
                 onFocus={() => {
-                  // Clear selection when focusing on search to show all filtered results
                   if (selectedItemId) {
                     setSelectedItemId('');
                   }
+                }}
+                style={{
+                  flex: 1,
+                  background: 'none',
+                  border: 'none',
+                  outline: 'none',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '14px',
+                  padding: '8px 4px'
                 }}
               />
               {(itemSearchQuery || selectedItemId) && (
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
                   onClick={() => {
                     setItemSearchQuery('');
                     setSelectedItemId('');
                   }}
                   title={selectedItemId ? "נקה בחירה" : "נקה חיפוש"}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    cursor: 'pointer',
+                    padding: '8px 12px',
+                    borderRadius: '4px',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   <i className="fas fa-times"></i>
                 </button>
@@ -710,40 +1044,55 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
             
             {/* Show dropdown results only when there's a search query and no item is selected */}
             {itemSearchQuery && !selectedItemId && (
-              <div className="dropdown-results mt-2" style={{
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                backgroundColor: 'white',
+              <div style={{
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
                 maxHeight: '300px',
                 overflowY: 'auto',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                marginTop: '8px'
               }}>
                 {itemsLoading && (
-                  <div className="dropdown-item text-center" style={{ padding: '12px', color: '#666' }}>
+                  <div style={{ 
+                    padding: '12px', 
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    textAlign: 'center'
+                  }}>
+                    <i className="fas fa-spinner fa-spin" style={{ marginLeft: '8px' }}></i>
                     טוען פריטים...
                   </div>
                 )}
                 
                 {!itemsLoading && filteredAvailableItems.length === 0 && itemSearchQuery && (
-                  <div className="dropdown-item text-center" style={{ padding: '12px', color: '#e74c3c' }}>
+                  <div style={{ 
+                    padding: '12px', 
+                    color: '#ef4444',
+                    textAlign: 'center'
+                  }}>
                     לא נמצאו פריטים התואמים לחיפוש "{itemSearchQuery}"
                   </div>
                 )}
                 
                 {!itemsLoading && availableItems.length === 0 && !itemSearchQuery && (
-                  <div className="dropdown-item text-center" style={{ padding: '12px', color: '#e74c3c' }}>
+                  <div style={{ 
+                    padding: '12px', 
+                    color: '#ef4444',
+                    textAlign: 'center'
+                  }}>
                     אין פריטים זמינים
                   </div>
                 )}
                 
                 {!itemsLoading && filteredAvailableItems.length > 0 && (
                   <>
-                    <div className="dropdown-header" style={{ 
+                    <div style={{ 
                       padding: '8px 12px', 
-                      backgroundColor: '#f8f9fa', 
-                      borderBottom: '1px solid #ddd',
+                      background: 'rgba(255, 255, 255, 0.1)', 
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                       fontSize: '12px',
-                      color: '#666'
+                      color: 'rgba(255, 255, 255, 0.7)'
                     }}>
                       {itemSearchQuery ? 
                         `נמצאו ${filteredAvailableItems.length} פריטים מתוך ${availableItems.length}` :
@@ -752,48 +1101,47 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
                     </div>
                     {filteredAvailableItems.map(item => {
                       const itemName = item.itemName?.name || 'ללא שם';
-                      const cipherSuffix = item.requiresReporting ? ' (צופן)' : '';
-                      const idSuffix = item.idNumber ? ` - ${item.idNumber}` : '';
-                      const locationSuffix = item.allocatedLocation?.name ? ` | ${item.allocatedLocation.name}` : '';
                       
                       return (
                         <div
                           key={item.id}
-                          className={`dropdown-item ${selectedItemId === item.id ? 'active' : ''}`}
                           style={{
                             padding: '12px',
                             cursor: 'pointer',
-                            borderBottom: '1px solid #f0f0f0',
-                            backgroundColor: selectedItemId === item.id ? '#007bff' : 'transparent',
-                            color: selectedItemId === item.id ? 'white' : 'black'
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            transition: 'all 0.2s ease',
+                            color: 'rgba(255, 255, 255, 0.9)'
                           }}
                           onClick={() => {
                             // Immediately add the item to the receipt
                             const quantityToAdd = item.requiresReporting ? 1 : selectedQuantity;
                             addItemDirectly(item, quantityToAdd);
                           }}
-                          onMouseEnter={(e) => {
-                            if (selectedItemId !== item.id) {
-                              e.currentTarget.style.backgroundColor = '#f8f9fa';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (selectedItemId !== item.id) {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }
-                          }}
                         >
-                          <div style={{ fontWeight: 'bold' }}>
-                            {itemName}{cipherSuffix}
+                          <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                            {itemName}
+                            {item.requiresReporting && (
+                              <span style={{
+                                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                color: 'white',
+                                fontSize: '10px',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                marginRight: '8px',
+                                fontWeight: '600'
+                              }}>
+                                צופן
+                              </span>
+                            )}
                           </div>
-                          {idSuffix && (
-                            <div style={{ fontSize: '12px', opacity: '0.8' }}>
+                          {item.idNumber && (
+                            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '2px' }}>
                               מספר צ': {item.idNumber}
                             </div>
                           )}
-                          {locationSuffix && (
-                            <div style={{ fontSize: '12px', opacity: '0.8' }}>
-                              הקצאה: {item.allocatedLocation?.name}
+                          {item.allocatedLocation?.name && (
+                            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                              הקצאה: {item.allocatedLocation.name}
                             </div>
                           )}
                         </div>
@@ -807,26 +1155,66 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
           
           {/* Add button - only show if an item is selected but not immediately added */}
           {selectedItem && (
-            <div className="add-item-actions mt-3">
-              <div className="alert alert-info d-flex align-items-center" style={{ fontSize: '14px' }}>
-                <i className="fas fa-info-circle me-2"></i>
-                <span>פריט נבחר: <strong>{selectedItem.itemName?.name}</strong></span>
-                {selectedItem.requiresReporting && <span className="me-2 badge bg-warning">צופן</span>}
+            <div style={{ marginTop: '16px' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05))',
+                borderRadius: '12px',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+                padding: '16px',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <i className="fas fa-info-circle" style={{ color: '#3b82f6', fontSize: '16px' }}></i>
+                  <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                    פריט נבחר: <strong>{selectedItem.itemName?.name}</strong>
+                    {selectedItem.requiresReporting && (
+                      <span style={{
+                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                        color: 'white',
+                        fontSize: '10px',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        marginRight: '8px',
+                        fontWeight: '600'
+                      }}>
+                        צופן
+                      </span>
+                    )}
+                  </span>
+                </div>
               </div>
               <button 
                 type="button" 
-                className="btn btn-primary"
                 onClick={addItem}
                 disabled={!selectedItem || itemsLoading}
+                style={{
+                  background: (!selectedItem || itemsLoading) ? 
+                    'rgba(255, 255, 255, 0.1)' : 
+                    'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 24px',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: (!selectedItem || itemsLoading) ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: (!selectedItem || itemsLoading) ? 
+                    'none' : 
+                    '0 4px 16px rgba(59, 130, 246, 0.3)'
+                }}
               >
-                <i className="fas fa-plus me-2"></i>
+                <i className="fas fa-plus" style={{ marginLeft: '8px' }}></i>
                 הוסף פריט
               </button>
             </div>
           )}
 
           {/* Selected items table */}
-          <div className="selected-items-section mt-4">
+          <div style={{ marginTop: '24px' }}>
             <SelectedItemsTable 
               items={receiptItems}
               onRemove={(id) => {
@@ -838,9 +1226,49 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="form-actions mt-4" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>ביטול</button>
-          <button type="submit" className="btn btn-primary" disabled={isLoading}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '12px',
+          marginTop: '32px',
+          paddingTop: '24px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          <button 
+            type="button" 
+            onClick={onCancel}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              color: 'rgba(255, 255, 255, 0.8)',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            ביטול
+          </button>
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            style={{
+              background: isLoading ? 
+                'rgba(255, 255, 255, 0.1)' : 
+                'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 24px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: isLoading ? 'none' : '0 4px 16px rgba(59, 130, 246, 0.3)'
+            }}
+          >
             {isUpdateMode ? 'עדכן קבלה' : 'צור קבלה'}
           </button>
         </div>
@@ -849,4 +1277,4 @@ const CreateReceiptForm: React.FC<CreateReceiptFormProps> = ({
   );
 };
 
-export default CreateReceiptForm;
+export default ReceiptForm;

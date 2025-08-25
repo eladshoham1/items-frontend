@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { managementService } from '../../services/management.service';
+import { LoadingSpinner } from '../../shared/components';
 import './ManagementSettingsTab.css';
 
 interface ManagementSettings {
@@ -70,80 +71,195 @@ const ManagementSettingsTab: React.FC = () => {
   if (loading) {
     return (
       <div className="management-container">
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <div className="loading-spinner"></div>
-          <p>טוען הגדרות...</p>
-        </div>
+        <LoadingSpinner message="טוען הגדרות..." />
       </div>
     );
   }
 
   return (
     <div className="management-container">
-      <div className="management-header">
-        <h2>ניהול הגדרות</h2>
-        <div className="management-actions">
+      {/* Compact Header with Actions */}
+      <div className="management-header-compact">
+        <div className="management-search-section">
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '16px',
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontSize: '14px'
+          }}>
+            <i className="fas fa-cog" style={{ fontSize: '16px' }}></i>
+            <span>הגדרות ניהול</span>
+          </div>
+        </div>
+        
+        <div className="management-actions-compact">
           <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             onClick={handleUpdateSettings}
             disabled={saving}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 16px'
+            }}
           >
-            עדכן
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={loadSettings}
-            disabled={loading}
-          >
-            רענן
+            {saving ? (
+              <div className="saving-spinner" style={{ width: '13px', height: '13px' }}></div>
+            ) : (
+              <i className="fas fa-save" style={{ fontSize: '13px' }}></i>
+            )}
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>
+              {saving ? 'שומר...' : 'שמור'}
+            </span>
           </button>
         </div>
       </div>
 
+      {/* Status Messages */}
       {error && (
-        <div className="error-message">
-          <span className="error-icon">⚠️</span>
-          {error}
+        <div style={{ 
+          padding: '12px 16px',
+          margin: '16px 0',
+          background: 'rgba(239, 68, 68, 0.1)',
+          border: '1px solid rgba(239, 68, 68, 0.2)',
+          borderRadius: '8px',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <i className="fas fa-exclamation-triangle"></i>
+          <span>{error}</span>
         </div>
       )}
 
       {successMessage && (
-        <div className="success-message">
-          <span className="success-icon">✅</span>
-          {successMessage}
+        <div style={{ 
+          padding: '12px 16px',
+          margin: '16px 0',
+          background: 'rgba(34, 197, 94, 0.1)',
+          border: '1px solid rgba(34, 197, 94, 0.2)',
+          borderRadius: '8px',
+          color: '#22c55e',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          <i className="fas fa-check-circle"></i>
+          <span>{successMessage}</span>
         </div>
       )}
 
-      <div className="management-content">
-        <div className="settings-section">
-          <h3>התראות במייל</h3>
-          <p className="section-description">קבל התראות על פעילויות חשובות במערכת</p>
-          
-          <div className="toggle-container">
-            <div className="toggle-wrapper">
-              <span className="toggle-label">התראות במייל</span>
+      {/* Settings Content */}
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '12px',
+        padding: '0',
+        overflow: 'hidden'
+      }}>
+        {/* Settings Section */}
+        <div style={{
+          padding: '24px 28px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '16px'
+          }}>
+            <div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '6px'
+              }}>
+                <i className="fas fa-envelope" style={{ 
+                  color: 'rgba(255, 255, 255, 0.7)', 
+                  fontSize: '18px' 
+                }}></i>
+                <span style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#ffffff'
+                }}>
+                  התראות במייל
+                </span>
+              </div>
+              <p style={{
+                fontSize: '14px',
+                color: 'rgba(255, 255, 255, 0.6)',
+                margin: '0',
+                paddingRight: '30px'
+              }}>
+                קבל התראות על פעילויות חשובות במערכת
+              </p>
+            </div>
+
+            {/* Modern Toggle Switch */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{
+                fontSize: '13px',
+                fontWeight: '500',
+                color: settings.emailNotificationsEnabled ? '#22c55e' : 'rgba(255, 255, 255, 0.5)'
+              }}>
+                {settings.emailNotificationsEnabled ? 'פעיל' : 'כבוי'}
+              </span>
+              
               <button
-                className={`toggle-switch ${settings.emailNotificationsEnabled ? 'active' : ''}`}
                 onClick={handleToggleSwitch}
                 disabled={saving}
-                aria-label={`${settings.emailNotificationsEnabled ? 'השבת' : 'הפעל'} התראות במייל`}
+                style={{
+                  position: 'relative',
+                  width: '48px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  background: settings.emailNotificationsEnabled 
+                    ? 'linear-gradient(45deg, #22c55e, #16a34a)' 
+                    : 'rgba(255, 255, 255, 0.2)',
+                  transition: 'all 0.3s ease',
+                  outline: 'none',
+                  opacity: saving ? 0.6 : 1
+                }}
               >
-                <span className="toggle-slider"></span>
+                <div style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: settings.emailNotificationsEnabled ? '26px' : '2px',
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: '#ffffff',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                }} />
               </button>
             </div>
-            <p className={`toggle-status ${settings.emailNotificationsEnabled ? 'active' : 'inactive'}`}>
-              {settings.emailNotificationsEnabled ? 'פעיל' : 'כבוי'}
-            </p>
           </div>
         </div>
-      </div>
 
-      {saving && (
-        <div className="saving-indicator">
-          <div className="saving-spinner"></div>
-          <span>שומר הגדרות...</span>
+        {/* Additional Settings Section (placeholder for future settings) */}
+        <div style={{
+          padding: '20px 28px',
+          textAlign: 'center',
+          color: 'rgba(255, 255, 255, 0.5)',
+          fontSize: '14px'
+        }}>
+          <i className="fas fa-plus-circle" style={{ 
+            marginLeft: '8px', 
+            fontSize: '16px',
+            opacity: 0.6 
+          }}></i>
+          הגדרות נוספות יתווספו בעתיד
         </div>
-      )}
+      </div>
     </div>
   );
 };

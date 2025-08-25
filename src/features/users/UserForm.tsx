@@ -188,155 +188,513 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label">שם</label>
-          <input 
-            className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-            name="name" 
-            value={formData.name} 
-            onChange={e => handleInputChange('name', e.target.value)} 
-            required 
-          />
-          {errors.name && <div className="form-error">{errors.name}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">מספר אישי</label>
-          <input 
-            type="number"
-            className={`form-control ${errors.personalNumber ? 'is-invalid' : ''}`}
-            name="personalNumber" 
-            value={formData.personalNumber || ''} 
-            onChange={e => {
-              const value = e.target.value;
-              // Only allow exactly 7 digits
-              if (value === '' || (/^[0-9]{1,7}$/.test(value) && value.length <= 7)) {
-                handleInputChange('personalNumber', value);
-              }
-            }}
-            onInput={e => {
-              const target = e.target as HTMLInputElement;
-              // Prevent input of more than 7 characters
-              if (target.value.length > 7) {
-                target.value = target.value.slice(0, 7);
-              }
-            }}
-            placeholder="הזן 7 ספרות"
-            min="1000000"
-            max="9999999"
-            style={{ textAlign: 'right', direction: 'rtl' }}
-            required 
-          />
-          {errors.personalNumber && <div className="form-error">{errors.personalNumber}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">מספר טלפון</label>
-          <input 
-            className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
-            name="phoneNumber" 
-            value={formData.phoneNumber} 
-            onChange={e => handleInputChange('phoneNumber', e.target.value)} 
-            required 
-          />
-          {errors.phoneNumber && <div className="form-error">{errors.phoneNumber}</div>}
-        </div>
-        
-        <div className="form-group">
-          <label className="form-label">דרגה</label>
-          <select 
-            className={`form-control ${errors.rank ? 'is-invalid' : ''}`}
-            name="rank" 
-            value={formData.rank} 
-            onChange={e => handleInputChange('rank', e.target.value)} 
-            required
-          >
-            <option value="">בחר דרגה</option>
-            {ranks.map(rank => (
-              <option key={rank} value={rank}>{rank}</option>
-            ))}
-          </select>
-          {errors.rank && <div className="form-error">{errors.rank}</div>}
-        </div>
-        
-        {isAdmin && (
-          <div className="form-group">
-            <label className="form-label">מיקום</label>
-            <select 
-              className={`form-control ${errors.locationId ? 'is-invalid' : ''}`}
-              name="locationId" 
-              value={formData.locationId} 
-              onChange={e => handleInputChange('locationId', e.target.value)} 
-              disabled={managementLoading}
-            >
-              <option value="">בחר מיקום</option>
-              {availableLocations.map(location => (
-                <option key={location.id} value={location.id}>{location.name}</option>
-              ))}
-            </select>
-            {errors.locationId && <div className="form-error">{errors.locationId}</div>}
-            <small className="form-text text-muted">רק מנהלים יכולים להקצות מיקום למשתמשים</small>
-          </div>
-        )}
-        
-        {!isAdmin && user && user.location && (
-          <div className="form-group">
-            <label className="form-label">מיקום נוכחי</label>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '16px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: '32px',
+        backdropFilter: 'blur(10px)',
+        maxWidth: '600px',
+        margin: '0 auto'
+      }}>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              שם <span style={{ color: '#ef4444' }}>*</span>
+            </label>
             <input 
               type="text"
-              className="form-control"
-              value={user.location}
-              disabled
-              readOnly
+              value={formData.name} 
+              onChange={e => handleInputChange('name', e.target.value)} 
+              required
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${errors.name ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                outline: 'none'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = errors.name ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
             />
-            <small className="form-text text-muted">פנה למנהל המערכת לשינוי מיקום</small>
+            {errors.name && (
+              <div style={{
+                color: '#ef4444',
+                fontSize: '12px',
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <i className="fas fa-exclamation-circle"></i>
+                {errors.name}
+              </div>
+            )}
           </div>
-        )}
-        
-        {!isAdmin && user && !user.location && (
-          <div className="alert alert-warning">
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            לא הוקצה מיקום עדיין. פנה למנהל המערכת להקצאת מיקום.
+          
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              מספר אישי <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <input 
+              type="number"
+              value={formData.personalNumber || ''} 
+              onChange={e => {
+                const value = e.target.value;
+                if (value === '' || (/^[0-9]{1,7}$/.test(value) && value.length <= 7)) {
+                  handleInputChange('personalNumber', value);
+                }
+              }}
+              onInput={e => {
+                const target = e.target as HTMLInputElement;
+                if (target.value.length > 7) {
+                  target.value = target.value.slice(0, 7);
+                }
+              }}
+              placeholder="הזן 7 ספרות"
+              min="1000000"
+              max="9999999"
+              required
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${errors.personalNumber ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                textAlign: 'right',
+                direction: 'rtl'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = errors.personalNumber ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+            />
+            {errors.personalNumber && (
+              <div style={{
+                color: '#ef4444',
+                fontSize: '12px',
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <i className="fas fa-exclamation-circle"></i>
+                {errors.personalNumber}
+              </div>
+            )}
           </div>
-        )}
-        
-        {isAdmin && user && (
-          <div className="form-group">
-            <div className="custom-checkbox-wrapper">
-              <label className="custom-checkbox">
-                <input
-                  type="checkbox"
-                  className="custom-checkbox-input"
-                  checked={formData.isAdmin || false}
-                  onChange={e => handleInputChange('isAdmin', e.target.checked)}
-                />
-                <span className="custom-checkbox-checkmark">
-                  <svg className="checkmark-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path 
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                      fill="currentColor"
-                    />
-                  </svg>
-                </span>
-                <span className="custom-checkbox-label">
-                  <strong>מנהל מערכת?</strong>
-                  <small className="checkbox-description">האם המשתמש הוא מנהל מערכת?</small>
-                </span>
+          
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              מספר טלפון <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <input 
+              type="text"
+              value={formData.phoneNumber} 
+              onChange={e => handleInputChange('phoneNumber', e.target.value)} 
+              required
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${errors.phoneNumber ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                outline: 'none'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = errors.phoneNumber ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+            />
+            {errors.phoneNumber && (
+              <div style={{
+                color: '#ef4444',
+                fontSize: '12px',
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <i className="fas fa-exclamation-circle"></i>
+                {errors.phoneNumber}
+              </div>
+            )}
+          </div>
+          
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px'
+            }}>
+              דרגה <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <select 
+              value={formData.rank} 
+              onChange={e => handleInputChange('rank', e.target.value)} 
+              required
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${errors.rank ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                borderRadius: '8px',
+                color: 'rgba(255, 255, 255, 0.9)',
+                fontSize: '14px',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                backgroundPosition: 'left 12px center',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '16px 16px',
+                paddingLeft: '40px',
+                cursor: 'pointer'
+              }}
+              onFocus={(e) => {
+                (e.target as HTMLSelectElement).style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onBlur={(e) => {
+                (e.target as HTMLSelectElement).style.borderColor = errors.rank ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+                (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+            >
+              <option value="" style={{
+                background: '#1f2937',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                בחר דרגה
+              </option>
+              {ranks.map(rank => (
+                <option 
+                  key={rank} 
+                  value={rank}
+                  style={{
+                    background: '#1f2937',
+                    color: 'rgba(255, 255, 255, 0.9)'
+                  }}
+                >
+                  {rank}
+                </option>
+              ))}
+            </select>
+            {errors.rank && (
+              <div style={{
+                color: '#ef4444',
+                fontSize: '12px',
+                marginTop: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <i className="fas fa-exclamation-circle"></i>
+                {errors.rank}
+              </div>
+            )}
+          </div>
+          
+          {isAdmin && (
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.9)',
+                marginBottom: '8px'
+              }}>
+                מיקום
               </label>
+              <select 
+                value={formData.locationId} 
+                onChange={e => handleInputChange('locationId', e.target.value)} 
+                disabled={managementLoading}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: `1px solid ${errors.locationId ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                  borderRadius: '8px',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                  fontSize: '14px',
+                  transition: 'all 0.2s ease',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                  backgroundPosition: 'left 12px center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: '16px 16px',
+                  paddingLeft: '40px',
+                  cursor: 'pointer'
+                }}
+                onFocus={(e) => {
+                  (e.target as HTMLSelectElement).style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                  (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLSelectElement).style.borderColor = errors.locationId ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
+                  (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.1)';
+                }}
+              >
+                <option value="" style={{
+                  background: '#1f2937',
+                  color: 'rgba(255, 255, 255, 0.7)'
+                }}>
+                  בחר מיקום
+                </option>
+                {availableLocations.map(location => (
+                  <option 
+                    key={location.id} 
+                    value={location.id}
+                    style={{
+                      background: '#1f2937',
+                      color: 'rgba(255, 255, 255, 0.9)'
+                    }}
+                  >
+                    {location.name}
+                  </option>
+                ))}
+              </select>
+              {errors.locationId && (
+                <div style={{
+                  color: '#ef4444',
+                  fontSize: '12px',
+                  marginTop: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
+                  <i className="fas fa-exclamation-circle"></i>
+                  {errors.locationId}
+                </div>
+              )}
+              <div style={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '12px',
+                marginTop: '4px'
+              }}>
+                רק מנהלים יכולים להקצות מיקום למשתמשים
+              </div>
             </div>
-          </div>
-        )}
+          )}
+          
+          {!isAdmin && user && user.location && (
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.9)',
+                marginBottom: '8px'
+              }}>
+                מיקום נוכחי
+              </label>
+              <input 
+                type="text"
+                value={user.location}
+                disabled
+                readOnly
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '8px',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  fontSize: '14px',
+                  cursor: 'not-allowed'
+                }}
+              />
+              <div style={{
+                color: 'rgba(255, 255, 255, 0.6)',
+                fontSize: '12px',
+                marginTop: '4px'
+              }}>
+                פנה למנהל המערכת לשינוי מיקום
+              </div>
+            </div>
+          )}
+          
+          {!isAdmin && user && !user.location && (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05))',
+              borderRadius: '12px',
+              border: '1px solid rgba(245, 158, 11, 0.2)',
+              padding: '16px',
+              marginBottom: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <i className="fas fa-exclamation-triangle" style={{ color: '#f59e0b', fontSize: '16px' }}></i>
+              <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                לא הוקצה מיקום עדיין. פנה למנהל המערכת להקצאת מיקום.
+              </span>
+            </div>
+          )}
+          
+          {isAdmin && user && (
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '16px',
+                transition: 'all 0.2s ease'
+              }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  gap: '12px'
+                }}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="checkbox"
+                      checked={formData.isAdmin || false}
+                      onChange={e => handleInputChange('isAdmin', e.target.checked)}
+                      style={{
+                        position: 'absolute',
+                        opacity: 0,
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '4px',
+                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      background: formData.isAdmin ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      {formData.isAdmin && (
+                        <i className="fas fa-check" style={{ 
+                          color: 'white', 
+                          fontSize: '12px' 
+                        }}></i>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontWeight: '600',
+                      fontSize: '14px'
+                    }}>
+                      מנהל מערכת?
+                    </div>
+                    <div style={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      fontSize: '12px'
+                    }}>
+                      האם המשתמש הוא מנהל מערכת?
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
 
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'שומר...' : 'שמור'}
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>
-            ביטול
-          </button>
-        </div>
-      </form>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '12px',
+            marginTop: '32px',
+            paddingTop: '24px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+          }}>
+            <button 
+              type="button" 
+              onClick={onCancel}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.1)';
+              }}
+            >
+              ביטול
+            </button>
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              style={{
+                background: isSubmitting ? 'rgba(255, 255, 255, 0.1)' : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 24px',
+                color: 'white',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: isSubmitting ? 'none' : '0 4px 16px rgba(59, 130, 246, 0.3)'
+              }}
+            >
+              {isSubmitting ? 'שומר...' : 'שמור'}
+            </button>
+          </div>
+        </form>
+      </div>
 
       <ConflictErrorModal 
         isOpen={showConflictModal} 

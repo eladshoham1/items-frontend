@@ -1,18 +1,21 @@
-/* Tab Navigation Component Styles */
+/* ===================================
+   MODERN TAB NAVIGATION COMPONENT
+   Clean, Professional, Accessible
+   =================================== */
+
+/* Container */
 .tab-navigation-container {
-  margin-bottom: 0;
+  margin-bottom: 24px;
 }
 
+/* Main navigation wrapper */
 .tab-navigation {
   display: flex;
-  align-items: center;
-  background: #ffffff;
-  border-radius: 12px 12px 0 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border-bottom: 2px solid #e9ecef;
-  padding: 0 8px;
-  gap: 2px;
   position: relative;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0;
+  margin: 0;
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -22,275 +25,271 @@
   display: none;
 }
 
-/* Variants */
-.tab-navigation--primary {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border-bottom-color: #dee2e6;
-}
-
-.tab-navigation--secondary {
-  background: #f8f9fa;
-  border-bottom-color: #dee2e6;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.tab-navigation--minimal {
-  background: transparent;
-  box-shadow: none;
-  border-bottom: 1px solid #dee2e6;
-  padding: 0;
-}
-
-/* Sizes */
-.tab-navigation--sm {
-  padding: 0 4px;
-  gap: 1px;
-}
-
-.tab-navigation--lg {
-  padding: 0 12px;
-  gap: 4px;
-}
-
-/* Full width */
+/* Layout variants */
 .tab-navigation--full-width {
-  justify-content: space-between;
+  justify-content: stretch;
 }
 
 .tab-navigation--full-width .tab-navigation__item {
   flex: 1;
-  justify-content: center;
 }
 
-/* Tab Items */
+/* Tab item (button) */
 .tab-navigation__item {
   position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  background: transparent;
+  justify-content: center;
+  padding: 12px 20px;
+  margin: 0;
+  background: none;
   border: none;
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 8px 8px 0 0;
-  outline: none;
-  white-space: nowrap;
-  min-height: 48px;
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 14px;
   font-weight: 500;
-  color: #6c757d;
+  color: rgba(255, 255, 255, 0.4);
   text-decoration: none;
-  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0s ease;
+  outline: none !important;
+  box-shadow: none !important;
+  user-select: none;
+  border-bottom: 2px solid transparent;
 }
 
+/* Hover state */
 .tab-navigation__item:hover:not(.tab-navigation__item--disabled) {
-  background: rgba(13, 110, 253, 0.08);
-  color: #0d6efd;
-  transform: translateY(-1px);
+  font-weight: 550;
+  color: #ffffff;
 }
 
-.tab-navigation__item:focus-visible {
-  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
-  z-index: 1;
-}
-
+/* Active state */
 .tab-navigation__item--active {
-  background: rgba(13, 110, 253, 0.1);
-  color: #0d6efd;
-  font-weight: 600;
+  color: #ffffff;
+  font-weight: 550;
+  border-bottom-color: #ffffff;
 }
 
-.tab-navigation__item--active:hover {
-  background: rgba(13, 110, 253, 0.15);
-}
-
+/* Disabled state */
 .tab-navigation__item--disabled {
-  color: #adb5bd;
+  opacity: 0.4;
   cursor: not-allowed;
-  opacity: 0.6;
+  pointer-events: none;
 }
 
-.tab-navigation__item--disabled:hover {
-  background: transparent;
-  transform: none;
+/* Focus state for accessibility */
+.tab-navigation__item:focus,
+.tab-navigation__item:focus-visible,
+.tab-navigation__item:active {
+  outline: none !important;
+  box-shadow: none !important;
+  border-left: none !important;
+  border-right: none !important;
 }
 
-/* Tab Content */
+/* Content wrapper */
 .tab-navigation__content {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
-  position: relative;
-  z-index: 1;
 }
 
-.tab-navigation--sm .tab-navigation__content {
-  padding: 8px 12px;
-  gap: 6px;
-}
-
-.tab-navigation--lg .tab-navigation__content {
-  padding: 16px 20px;
-  gap: 10px;
-}
-
-/* Icons */
+/* Icon */
 .tab-navigation__icon {
-  font-size: 1em;
+  font-size: 16px;
   line-height: 1;
-  flex-shrink: 0;
+  transition: transform 0.2s ease;
 }
 
-.tab-navigation--sm .tab-navigation__icon {
-  font-size: 0.875em;
+.tab-navigation__item--active .tab-navigation__icon {
+  transform: scale(1.05);
 }
 
-.tab-navigation--lg .tab-navigation__icon {
-  font-size: 1.125em;
-}
-
-/* Labels */
+/* Label */
 .tab-navigation__label {
-  font-size: 0.9rem;
-  line-height: 1.2;
   font-weight: inherit;
+  line-height: 1.2;
 }
 
-.tab-navigation--sm .tab-navigation__label {
-  font-size: 0.8rem;
-}
-
-.tab-navigation--lg .tab-navigation__label {
-  font-size: 1rem;
-}
-
-/* Count Badges */
+/* Count badge */
 .tab-navigation__count {
-  background: #6c757d;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 18px;
-  height: 18px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
   line-height: 1;
 }
 
 .tab-navigation__item--active .tab-navigation__count {
-  background: #0d6efd;
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
-.tab-navigation--sm .tab-navigation__count {
-  font-size: 0.7rem;
-  padding: 1px 4px;
-  min-width: 16px;
-  height: 16px;
+/* Size variants */
+.tab-navigation--sm .tab-navigation__item {
+  padding: 8px 16px;
+  font-size: 13px;
 }
 
-.tab-navigation--lg .tab-navigation__count {
-  font-size: 0.8rem;
-  padding: 3px 8px;
-  min-width: 20px;
-  height: 20px;
+.tab-navigation--sm .tab-navigation__icon {
+  font-size: 14px;
 }
 
-/* Active Indicator */
-.tab-navigation__indicator {
-  position: absolute;
-  bottom: -2px;
-  left: 8px;
-  right: 8px;
-  height: 3px;
-  background: linear-gradient(90deg, #0d6efd 0%, #0056b3 100%);
-  border-radius: 2px 2px 0 0;
-  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.tab-navigation--lg .tab-navigation__item {
+  padding: 16px 24px;
+  font-size: 16px;
 }
 
-.tab-navigation--minimal .tab-navigation__indicator {
-  bottom: -1px;
+.tab-navigation--lg .tab-navigation__icon {
+  font-size: 18px;
 }
 
-.tab-navigation--sm .tab-navigation__indicator {
-  left: 4px;
-  right: 4px;
-  height: 2px;
-}
-
-.tab-navigation--lg .tab-navigation__indicator {
-  left: 12px;
-  right: 12px;
-  height: 4px;
-}
-
-/* Animations */
-@keyframes slideIn {
-  from {
-    transform: scaleX(0);
-    opacity: 0;
-  }
-  to {
-    transform: scaleX(1);
-    opacity: 1;
-  }
-}
-
-/* Responsive Design removed - keeping desktop view only */
-
-/* Dark mode support (if needed in the future) */
-@media (prefers-color-scheme: dark) {
-  .tab-navigation--primary {
-    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-    border-bottom-color: #495057;
+/* Responsive design */
+@media (max-width: 768px) {
+  .tab-navigation {
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .tab-navigation__item {
-    color: #adb5bd;
+    padding: 10px 16px;
+    font-size: 13px;
   }
   
-  .tab-navigation__item--active {
-    color: #74b9ff;
-    background: rgba(116, 185, 255, 0.1);
+  .tab-navigation__label {
+    display: none;
   }
   
-  .tab-navigation__indicator {
-    background: linear-gradient(90deg, #74b9ff 0%, #0984e3 100%);
+  .tab-navigation__icon {
+    font-size: 18px;
+  }
+  
+  .tab-navigation--lg .tab-navigation__item {
+    padding: 12px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-navigation__item {
+    padding: 8px 12px;
+  }
+  
+  .tab-navigation__count {
+    font-size: 10px;
+    min-width: 16px;
+    height: 16px;
   }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
   .tab-navigation {
-    border-bottom-width: 3px;
+    border-bottom-color: #ffffff;
   }
   
   .tab-navigation__item {
-    border: 1px solid transparent;
+    color: #ffffff;
   }
   
   .tab-navigation__item--active {
-    border-color: currentColor;
-  }
-  
-  .tab-navigation__indicator {
-    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
   }
 }
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .tab-navigation__item {
-    transition: color 0.1s ease;
+  .tab-navigation__item,
+  .tab-navigation__icon,
+  .tab-navigation__count {
+    transition: none;
+  }
+}
+
+/* Right-to-left support */
+[dir="rtl"] .tab-navigation__content {
+  direction: rtl;
+}
+
+[dir="rtl"] .tab-navigation__icon {
+  margin-left: 8px;
+  margin-right: 0;
+}
+
+/* Tab navigation compact variant for management tables */
+.tab-navigation--compact {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 2px;
+  margin-bottom: 0;
+}
+
+.tab-navigation--compact .tab-navigation__item {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 32px;
+}
+
+.tab-navigation--compact .tab-navigation__item:hover:not(.tab-navigation__item--disabled):not(.tab-navigation__item--active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tab-navigation--compact .tab-navigation__item--active {
+  background: #ffffff;
+  color: #2d2d2d;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tab-navigation--compact .tab-navigation__icon {
+  font-size: 12px;
+  margin-right: 6px;
+}
+
+.tab-navigation--compact .tab-navigation__label {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.tab-navigation--compact .tab-navigation__count {
+  font-size: 11px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  min-width: 18px;
+  height: 18px;
+}
+
+/* Compact variant responsive adjustments */
+@media (max-width: 768px) {
+  .tab-navigation--compact .tab-navigation__item {
+    padding: 6px 12px;
+    font-size: 12px;
   }
   
-  .tab-navigation__item:hover {
-    transform: none;
+  .tab-navigation--compact .tab-navigation__icon {
+    font-size: 11px;
+    margin-right: 4px;
   }
   
-  .tab-navigation__indicator {
-    animation: none;
+  .tab-navigation--compact .tab-navigation__label {
+    font-size: 12px;
   }
 }

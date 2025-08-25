@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, ConflictErrorModal, SmartPagination } from '../../shared/components';
+import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 
@@ -190,9 +190,8 @@ export function ManagementTable<T extends BaseEntity>({
 
   if (loading) {
     return (
-      <div className="alert alert-info">
-        <div className="spinner"></div>
-        <span>טוען {title}...</span>
+      <div className="management-container">
+        <LoadingSpinner message={`טוען ${title}...`} />
       </div>
     );
   }
@@ -210,52 +209,90 @@ export function ManagementTable<T extends BaseEntity>({
 
   return (
     <div className="management-container">
-      <div className="management-header">
-        <h2>ניהול {title}</h2>
-        <div className="management-actions">
+      {/* Compact Header with Actions */}
+      <div className="management-header-compact">
+        <div className="management-search-section">
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="text"
+              className="management-search-input"
+              placeholder={`חיפוש ${title}...`}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              style={{ flex: 1 }}
+            />
+            {searchTerm && (
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setCurrentPage(1);
+                }}
+                title="נקה חיפוש"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  padding: '0 12px',
+                  minWidth: 'auto'
+                }}
+              >
+                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
+              </button>
+            )}
+          </div>
+        </div>
+        
+        <div className="management-actions-compact">
           <button
-            className="btn btn-primary"
+            className="btn btn-primary btn-sm"
             onClick={() => setIsAddModalOpen(true)}
             disabled={loading}
+            title={`הוסף ${title} חדש`}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              padding: '0 16px'
+            }}
           >
-            הוסף {title}
+            <i className="fas fa-plus" style={{ fontSize: '13px' }}></i>
+            <span style={{ fontSize: '13px', fontWeight: '600' }}>הוסף חדש</span>
           </button>
+          
           {selectedIds.length > 0 && (
             <button
-              className="btn btn-danger"
+              className="btn btn-danger btn-sm"
               onClick={handleDelete}
               disabled={isSubmitting}
+              title={`מחק ${selectedIds.length} פריטים נבחרים`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0 12px'
+              }}
             >
-              מחק נבחרים ({selectedIds.length})
+              <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
+              <span style={{ fontSize: '12px', fontWeight: '500' }}>מחק ({selectedIds.length})</span>
             </button>
           )}
-          <button
-            className="btn btn-ghost"
-            onClick={onRefresh}
-            disabled={loading}
-          >
-            רענן
-          </button>
         </div>
-      </div>
-
-      <div className="management-controls">
-        <input
-          type="text"
-          className="form-control search-input"
-          placeholder={`חיפוש ${title}...`}
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
       </div>
 
       {loading ? (
-        <div className="loading-container">
-          <p>טוען {title}...</p>
-        </div>
+        <LoadingSpinner 
+          message={`טוען ${title}...`} 
+          padding="80px 20px"
+          minHeight="400px"
+        />
       ) : (
         <>
           <div className="table-container">
