@@ -7,7 +7,7 @@ import { UsersTab } from './features/users';
 import { ItemsTab } from './features/items';
 import { ManagementTab } from './features/management';
 import { SettingsTab } from './features/settings';
-import { GoogleAuth } from './features/auth';
+import GoogleAuth from './features/auth/GoogleAuth';
 import { ManagementProvider } from './contexts';
 import { useAuth, useUserProfile } from './hooks';
 import { UserProfileSetup } from './components/auth';
