@@ -1,0 +1,185 @@
+/* Mobile Touch Optimization - Comprehensive */
+
+/* Reset aggressive touch prevention */
+body {
+  touch-action: auto !important;
+  overflow: visible !important;
+  position: static !important;
+}
+
+/* Debug mode - uncomment to visualize touch targets */
+/*
+@media (max-width: 768px) {
+  button, .btn, [role="button"], .clickable {
+    outline: 2px dashed rgba(255, 0, 0, 0.5) !important;
+  }
+  
+  input, select, textarea {
+    outline: 2px dashed rgba(0, 255, 0, 0.5) !important;
+  }
+  
+  a, .nav-link {
+    outline: 2px dashed rgba(0, 0, 255, 0.5) !important;
+  }
+}
+*/
+
+/* Global mobile touch improvements */
+@media (max-width: 768px) {
+  /* Ensure all interactive elements are touch-friendly */
+  button,
+  .btn,
+  [role="button"],
+  [tabindex="0"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  .clickable {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
+  }
+  
+  /* Form controls */
+  input,
+  select,
+  textarea {
+    min-height: 48px !important;
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Links and navigation */
+  a,
+  .nav-link,
+  .nav-item {
+    min-height: 44px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+  
+  /* Tab navigation */
+  .tab-button,
+  .tab-nav-item,
+  .tab-item {
+    min-height: 50px !important;
+    min-width: 60px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Table interactions */
+  .table td,
+  .table th {
+    touch-action: manipulation !important;
+  }
+  
+  /* Modal elements */
+  .modal *[role="button"],
+  .modal button,
+  .modal .btn {
+    min-height: 48px !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Scroll containers */
+  .scroll-container,
+  .table-responsive,
+  .modal-body,
+  .content-container {
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: auto !important;
+  }
+  
+  /* Prevent iOS rubber-band effect only at document level */
+  html {
+    overflow: hidden;
+  }
+  
+  body {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
+  }
+  
+  /* Fix for sticky elements on mobile */
+  .sticky,
+  .fixed,
+  .position-fixed {
+    transform: translateZ(0); /* Force hardware acceleration */
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  /* Larger touch targets for small screens */
+  button,
+  .btn,
+  [role="button"] {
+    min-height: 52px !important;
+    padding: 12px 16px !important;
+  }
+  
+  input,
+  select,
+  textarea {
+    min-height: 52px !important;
+    padding: 14px 12px !important;
+  }
+  
+  .nav-link,
+  .nav-item {
+    min-height: 56px !important;
+    padding: 16px 12px !important;
+  }
+}
+
+/* High DPI screens (Retina) */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Ensure crisp rendering on high DPI mobile screens */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific fixes */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix for iOS input zoom */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    transform: translateZ(0);
+  }
+  
+  /* Prevent iOS bounce scrolling on the body */
+  body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Android specific fixes */
+@media (max-width: 768px) and (-webkit-min-device-pixel-ratio: 1) {
+  /* Android Chrome specific optimizations */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  input {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}

@@ -473,10 +473,39 @@ body {
 
 /* Mobile touch improvements */
 @media (max-width: 768px) {
-  /* Improve touch targets for buttons */
-  .btn {
-    min-height: 44px;
+  /* Enhanced touch targets for all interactive elements */
+  .btn,
+  button,
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"],
+  [role="button"],
+  .clickable {
+    min-height: 48px !important;
+    min-width: 48px !important;
     touch-action: manipulation;
+    padding: 12px 16px !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Navigation improvements */
+  .nav-item,
+  .nav-link,
+  .sidebar-item,
+  .navigation-item {
+    min-height: 52px !important;
+    touch-action: manipulation;
+    padding: 14px 16px !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Tab navigation */
+  .tab-button,
+  .tab-nav-item {
+    min-height: 50px !important;
+    min-width: 60px !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   
   /* Prevent iOS Safari from adding tap highlight */
@@ -489,7 +518,7 @@ body {
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Prevent zoom on input focus */
+  /* Prevent zoom on input focus for iOS */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -499,7 +528,10 @@ body {
   select,
   textarea {
     font-size: 16px !important;
+    min-height: 48px !important;
+    padding: 12px !important;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

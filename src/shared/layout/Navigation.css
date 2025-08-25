@@ -445,6 +445,51 @@
   }
 }
 
+/* Enhanced Mobile Touch Targets and Interactions */
+@media (max-width: 768px) {
+  /* Better touch targets for navigation items */
+  .nav-item,
+  .nav-link {
+    min-height: 52px !important;
+    padding: 14px var(--spacing-lg) !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Tab navigation improvements */
+  .tab-button,
+  .tab-nav-item {
+    min-height: 50px !important;
+    min-width: 60px !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Mobile menu button */
+  .mobile-menu-button,
+  .mobile-toggle {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* User profile section */
+  .user-profile {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Logout button */
+  .logout-link,
+  .logout-button {
+    min-height: 52px !important;
+    padding: 14px var(--spacing-lg) !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 /* Focus styles for accessibility */
 .nav-link:focus,
 .mobile-menu-button:focus {

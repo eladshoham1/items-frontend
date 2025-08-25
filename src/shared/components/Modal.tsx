@@ -89,7 +89,7 @@ const Modal: React.FC<ModalProps> = ({
     }
 
     return () => {
-      // Cleanup function - always restore normal state
+      // Cleanup function - always restore normal state and ensure mobile accessibility
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
@@ -97,6 +97,10 @@ const Modal: React.FC<ModalProps> = ({
       document.body.style.height = '';
       document.body.style.touchAction = '';
       document.body.removeAttribute('data-scroll-y');
+      
+      // Ensure body is fully interactive on mobile
+      document.body.style.pointerEvents = '';
+      document.body.style.userSelect = '';
     };
   }, [isOpen]);
 

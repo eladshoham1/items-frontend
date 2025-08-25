@@ -115,14 +115,20 @@
 }
 
 /* Mobile responsiveness */
+/* Mobile responsiveness - Enhanced Touch Interactions */
 @media (max-width: 768px) {
   .mobile-menu-toggle {
     display: block;
+    min-height: 48px !important;
+    min-width: 48px !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .mobile-overlay {
     display: block;
     z-index: 1001; /* Above navigation */
+    touch-action: manipulation;
   }
 
   .layout-sidebar {
@@ -131,6 +137,8 @@
     top: 60px;
     height: calc(100vh - 60px);
     z-index: 1000;
+    touch-action: auto; /* Allow scrolling in sidebar */
+    -webkit-overflow-scrolling: touch;
   }
   
   .layout-sidebar.mobile-open {
@@ -141,10 +149,14 @@
     margin-right: 0;
     margin-top: 60px;
     min-height: calc(100vh - 60px);
+    touch-action: auto; /* Allow scrolling in main content */
+    -webkit-overflow-scrolling: touch;
   }
   
   .layout-content {
     padding: var(--spacing-md);
+    touch-action: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

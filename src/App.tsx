@@ -41,12 +41,28 @@ const App: React.FC = () => {
       }
     };
 
-    // Prevent pull-to-refresh on mobile
+    // Prevent pull-to-refresh on mobile - more targeted approach
     const preventPullToRefresh = (e: TouchEvent) => {
+      // Only prevent if we're truly at the top and pulling down
       if (e.touches.length !== 1) return;
       
       const touch = e.touches[0];
-      if (touch.clientY > 0 && window.scrollY === 0) {
+      const target = e.target as HTMLElement;
+      
+      // Don't prevent if it's an interactive element
+      if (target.tagName === 'BUTTON' || 
+          target.tagName === 'INPUT' || 
+          target.tagName === 'TEXTAREA' || 
+          target.tagName === 'SELECT' ||
+          target.closest('button') ||
+          target.closest('.btn') ||
+          target.closest('[role="button"]') ||
+          target.closest('.clickable')) {
+        return;
+      }
+      
+      // Only prevent at the very top of the page
+      if (window.scrollY === 0 && touch.clientY > 60) {
         e.preventDefault();
       }
     };
