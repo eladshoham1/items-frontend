@@ -249,34 +249,31 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
   }
 
   return (
-    <div className="card">
-      <div className="card-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="mb-0">ציוד</h2>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            {selectedItemIds.length > 0 && (
-              <>
-                <span className="badge bg-primary">
-                  {selectedItemIds.length} נבחרו
-                </span>
-                <button 
-                  className="btn btn-danger btn-sm" 
-                  onClick={handleBulkDelete}
-                  disabled={selectedItemIds.length === 0}
-                >
-                  <i className="fas fa-trash me-1"></i>
-                  מחק נבחרים ({selectedItemIds.length})
-                </button>
-              </>
-            )}
-            <button className="btn btn-primary" onClick={handleAddClick}>
-              הוסף פריט חדש
-            </button>
-          </div>
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          {selectedItemIds.length > 0 && (
+            <>
+              <span className="badge bg-primary">
+                {selectedItemIds.length} נבחרו
+              </span>
+              <button 
+                className="btn btn-danger btn-sm" 
+                onClick={handleBulkDelete}
+                disabled={selectedItemIds.length === 0}
+              >
+                <i className="fas fa-trash me-1"></i>
+                מחק נבחרים ({selectedItemIds.length})
+              </button>
+            </>
+          )}
+          <button className="btn btn-primary" onClick={handleAddClick}>
+            הוסף פריט חדש
+          </button>
         </div>
       </div>
 
-      <div className="card-body">
+      <div>
         {/* Search Input */}
         <div className="row mb-3">
           <div className="col-md-6">

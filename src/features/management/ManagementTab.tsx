@@ -38,7 +38,7 @@ const ManagementTab: React.FC = () => {
   };
 
   return (
-    <div>
+    <>
       {/* Tab Navigation */}
       <TabNavigation
         tabs={subTabs}
@@ -48,19 +48,10 @@ const ManagementTab: React.FC = () => {
         size="md"
       />
       
-      <div className="card">
-        <div className="card-header">
-          <h2 className="mb-0">ניהול מערכת</h2>
-          <p className="text-muted mb-0">
-            ניהול נתוני בסיס: יחידות, מיקומים ושמות פריטים
-          </p>
-        </div>
-        
-        <div className="card-body">
-          {renderActiveTab()}
-        </div>
+      <div style={{ padding: '20px 0' }}>
+        {renderActiveTab()}
       </div>
-    </div>
+    </>
   );
 };
 

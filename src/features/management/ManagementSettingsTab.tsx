@@ -80,24 +80,21 @@ const ManagementSettingsTab: React.FC = () => {
 
   return (
     <div className="management-container">
-      <div className="management-header">
-        <h2>ניהול הגדרות</h2>
-        <div className="management-actions">
-          <button
-            className="btn btn-primary"
-            onClick={handleUpdateSettings}
-            disabled={saving}
-          >
-            עדכן
-          </button>
-          <button
-            className="btn btn-ghost"
-            onClick={loadSettings}
-            disabled={loading}
-          >
-            רענן
-          </button>
-        </div>
+      <div className="management-actions" style={{ marginBottom: '20px' }}>
+        <button
+          className="btn btn-primary"
+          onClick={handleUpdateSettings}
+          disabled={saving}
+        >
+          עדכן
+        </button>
+        <button
+          className="btn btn-ghost"
+          onClick={loadSettings}
+          disabled={loading}
+        >
+          רענן
+        </button>
       </div>
 
       {error && (

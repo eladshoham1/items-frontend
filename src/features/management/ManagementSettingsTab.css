@@ -1,4 +1,4 @@
-/* Management Settings Tab - Following management table styling */
+/* Management Settings Tab - Modern Gray Theme */
 .management-container {
   width: 100%;
   padding: 0;
@@ -16,7 +16,7 @@
   margin: 0;
   font-size: var(--text-xl);
   font-weight: 600;
-  color: var(--text-primary);
+  color: #495057;
 }
 
 .management-actions {
@@ -27,7 +27,7 @@
 .management-content {
   background: white;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #dee2e6;
   padding: 0;
   direction: rtl;
   text-align: right;
@@ -41,13 +41,13 @@
 .settings-section h3 {
   font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
+  color: #495057;
   margin: 0 0 8px 0;
 }
 
 .section-description {
   font-size: 14px;
-  color: #6b7280;
+  color: #6c757d;
   margin: 0 0 24px 0;
   line-height: 1.5;
 }
@@ -127,13 +127,13 @@
 }
 
 .toggle-switch.active {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  background: #6c757d;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
 }
 
 .toggle-switch.active:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb, #1e40af);
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+  background: #495057;
+  box-shadow: 0 6px 16px rgba(108, 117, 125, 0.5);
 }
 
 .toggle-switch:disabled {

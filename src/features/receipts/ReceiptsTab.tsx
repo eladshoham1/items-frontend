@@ -477,7 +477,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     }
 
     return (
-        <div className="surface receipts-tab-container">
+        <>
             <TabNavigation
                 tabs={receiptTabs}
                 activeTab={activeTab}
@@ -649,7 +649,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                     isLoading={isDeleting}
                 />
             )}
-        </div>
+        </>
     );
 };
 

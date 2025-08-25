@@ -12,9 +12,8 @@ export const checkApiHealth = async (): Promise<{
   const startTime = Date.now();
   
   try {
-    // Extended timeout for serverless cold starts
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout for cold starts
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
     
     const response = await fetch(healthUrl, {
       method: 'GET',
@@ -30,7 +29,7 @@ export const checkApiHealth = async (): Promise<{
     
     clearTimeout(timeoutId);
     const responseTime = Date.now() - startTime;
-    const isSlowResponse = responseTime > 5000; // Consider 5+ seconds as slow (cold start)
+    const isSlowResponse = responseTime > 2000; // Consider 2+ seconds as slow
     
     return {
       isHealthy: response.ok,

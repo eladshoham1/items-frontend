@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Navigation } from './shared/layout';
+import { Layout, Navigation, TopHeader } from './shared/layout';
 import { Dashboard } from './features/dashboard';
 import { DailyReport } from './features/reports';
 import { ReceiptsTab } from './features/receipts';
@@ -9,9 +9,8 @@ import { ManagementTab } from './features/management';
 import { SettingsTab } from './features/settings';
 import { GoogleAuth } from './features/auth';
 import { ManagementProvider } from './contexts';
-import { useAuth, useUserProfile, useColdStartLoader } from './hooks';
+import { useAuth, useUserProfile } from './hooks';
 import { UserProfileSetup } from './components/auth';
-import { ColdStartLoader, ServerWarmupIndicator } from './shared/components';
 import { User } from 'firebase/auth';
 import './shared/styles';
 
@@ -29,7 +28,6 @@ const App: React.FC = () => {
     isAdmin,
     createUserProfile
   } = useUserProfile();
-  const { showColdStartMessage, serverState } = useColdStartLoader();
 
   const handleAuthSuccess = (user: User) => {
     setAuthError(null);
@@ -148,16 +146,16 @@ const App: React.FC = () => {
 
   const getAvailableTabs = (): Tab[] => {
     if (isAdmin) {
-      return ['dashboard', 'dailyReport', 'receipts', 'users', 'items', 'management', 'settings'];
+      return ['dashboard', 'dailyReport', 'receipts', 'users', 'items', 'management'];
     } else {
-      return ['dailyReport', 'receipts', 'settings'];
+      return ['dailyReport', 'receipts'];
     }
   };
 
   const availableTabs = getAvailableTabs();
   
   // Redirect to available tab if current tab is not accessible
-  if (!availableTabs.includes(activeTab)) {
+  if (!availableTabs.includes(activeTab) && activeTab !== 'settings') {
     setActiveTab(availableTabs[0]);
   }
 
@@ -185,28 +183,31 @@ const App: React.FC = () => {
   return (
     <>
       <ManagementProvider>
-        <Layout>
-          <Navigation 
-            activeTab={activeTab}
-            availableTabs={availableTabs}
-            onTabChange={(tab) => setActiveTab(tab as Tab)}
-            user={firebaseUser}
-            userProfile={userProfile}
-            isAdmin={isAdmin}
-            onLogout={handleLogout}
-          />
-          <div className="content-container">
-            {renderTabContent()}
-          </div>
+        <Layout 
+          topHeader={
+            <TopHeader
+              user={firebaseUser}
+              userProfile={userProfile}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+              onSettingsClick={() => setActiveTab('settings')}
+            />
+          }
+          sidebar={
+            <Navigation 
+              activeTab={activeTab}
+              availableTabs={[...availableTabs, 'settings']}
+              onTabChange={(tab: string) => setActiveTab(tab as Tab)}
+              user={firebaseUser}
+              userProfile={userProfile}
+              isAdmin={isAdmin}
+              onLogout={handleLogout}
+            />
+          }
+        >
+          {renderTabContent()}
         </Layout>
       </ManagementProvider>
-      
-      {/* Server State Indicators */}
-      <ServerWarmupIndicator serverState={serverState} />
-      <ColdStartLoader 
-        isVisible={showColdStartMessage} 
-        serverState={serverState}
-      />
     </>
   );
 };

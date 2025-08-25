@@ -3,7 +3,7 @@ import { useDashboardStats } from '../../hooks';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { reportService, managementService } from '../../services';
 import ServerError from '../../shared/components/ServerError';
-import { SmartPagination } from '../../shared/components';
+import { SmartPagination, TabNavigation } from '../../shared/components';
 import { SignUser, UnitEntity } from '../../types';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
@@ -47,6 +47,16 @@ const Dashboard: React.FC = () => {
 
   // State for units table sorting and search
   const [unitsSearchTerm, setUnitsSearchTerm] = useState('');
+
+  // Dashboard tab configuration
+  const dashboardTabs = [
+    { id: 'units', label: 'תצוגה לפי יחידות' },
+    { id: 'locations', label: 'תצוגה לפי מיקומים' }
+  ];
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as 'units' | 'locations');
+  };
 
   // Extract unique units and items from the data
   const { items, units } = useMemo(() => {
@@ -543,13 +553,13 @@ const Dashboard: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h2 className="mb-0">לוח בקרה</h2>
-        </div>
+      </div>
         <div className="card-body">
           <div className="alert alert-warning">
             <h4>אין לך גישה למערכת</h4>
             <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
-          </div>
         </div>
+      </div>
       </div>
     );
   }
@@ -559,13 +569,13 @@ const Dashboard: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h2 className="mb-0">לוח בקרה</h2>
-        </div>
+      </div>
         <div className="card-body">
           <div className="alert alert-info">
             <div className="spinner"></div>
             <span>טוען נתונים...</span>
-          </div>
         </div>
+      </div>
       </div>
     );
   }
@@ -576,119 +586,38 @@ const Dashboard: React.FC = () => {
 
   return (
     <>
-      <div className="card shadow-lg border-0" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-        <div 
-          className="card-header border-0" 
-          style={{ 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            padding: '20px 24px',
-            display: 'block',
-            textAlign: 'right',
-            direction: 'rtl'
-          }}
-        >
-          <div style={{ display: 'inline-block', verticalAlign: 'middle' }}>
-            <span style={{ fontSize: '28px', display: 'inline-block', verticalAlign: 'middle', marginLeft: '12px' }}>📊</span>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: '700', 
-              margin: 0, 
-              display: 'inline-block', 
-              verticalAlign: 'middle',
-              marginLeft: '16px'
-            }}>
-              לוח בקרה
-            </h2>
-            <span 
-              style={{ 
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: '500',
-                display: 'inline-block',
-                verticalAlign: 'middle',
-                marginLeft: '16px'
-              }}
-            >
-              {(items && Array.isArray(items) ? items.length : 0)} פריטים • {(units && Array.isArray(units) ? units.length : 0)} יחידות
-            </span>
-          </div>
-        </div>
+      {/* Tab Navigation */}
+      <TabNavigation
+        tabs={dashboardTabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        variant="primary"
+        size="md"
+      />
 
-        {/* Tab Navigation */}
-        <div className="card-body p-0">
-          <div style={{ 
-            borderBottom: '2px solid #e9ecef',
-            padding: '0',
-            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'
-          }}>
-            <ul className="nav nav-tabs" style={{ 
-              border: 'none', 
-              margin: 0,
-              display: 'flex',
-              justifyContent: 'flex-start',
-              gap: '0'
-            }}>
-              <li className="nav-item" style={{ flex: '1', maxWidth: '300px' }}>
-                <button
-                  className={`nav-link ${activeTab === 'units' ? 'active' : ''}`}
-                  style={{
-                    backgroundColor: activeTab === 'units' ? 'white' : 'transparent',
-                    color: activeTab === 'units' ? '#495057' : '#6c757d',
-                    border: 'none',
-                    borderBottom: activeTab === 'units' ? '3px solid #007bff' : '3px solid transparent',
-                    padding: '16px 24px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    transition: 'all 0.3s ease',
-                    direction: 'rtl',
-                    width: '100%',
-                    textAlign: 'center'
-                  }}
-                  onClick={() => setActiveTab('units')}
-                >
-                  📊 תצוגה לפי יחידות
-                </button>
-              </li>
-              <li className="nav-item" style={{ flex: '1', maxWidth: '300px' }}>
-                <button
-                  className={`nav-link ${activeTab === 'locations' ? 'active' : ''}`}
-                  style={{
-                    backgroundColor: activeTab === 'locations' ? 'white' : 'transparent',
-                    color: activeTab === 'locations' ? '#495057' : '#6c757d',
-                    border: 'none',
-                    borderBottom: activeTab === 'locations' ? '3px solid #007bff' : '3px solid transparent',
-                    padding: '16px 24px',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    transition: 'all 0.3s ease',
-                    direction: 'rtl',
-                    width: '100%',
-                    textAlign: 'center'
-                  }}
-                  onClick={() => setActiveTab('locations')}
-                >
-                  📍 תצוגה לפי מיקומים
-                </button>
-              </li>
-            </ul>
-
-            {/* Unit Selection for Locations Tab */}
-            {activeTab === 'locations' && (
+      {/* Content Area */}
+      <div style={{
+        flex: 1,
+        backgroundColor: 'var(--color-bg)',
+        overflowY: 'auto'
+      }}>
+        <div style={{
+          padding: '0',
+          position: 'relative'
+        }}>
+          {/* Unit Selection for Locations Tab */}
+          {activeTab === 'locations' && (
               <div style={{ 
                 padding: '20px 24px',
-                backgroundColor: 'white',
-                borderBottom: '1px solid #e9ecef',
+                backgroundColor: 'var(--color-surface)',
+                borderBottom: '1px solid var(--color-border)',
                 direction: 'rtl'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <label htmlFor="unitSelect" style={{ 
                     fontSize: '16px',
                     fontWeight: '600',
-                    color: '#495057',
+                    color: 'var(--color-text)',
                     marginBottom: 0
                   }}>
                     בחר יחידה:
@@ -700,11 +629,11 @@ const Dashboard: React.FC = () => {
                     style={{
                       padding: '10px 16px',
                       borderRadius: '8px',
-                      border: '2px solid #e9ecef',
+                      border: '2px solid var(--color-border)',
                       fontSize: '14px',
                       fontWeight: '500',
-                      backgroundColor: 'white',
-                      color: '#495057',
+                      backgroundColor: 'var(--color-bg)',
+                      color: 'var(--color-text)',
                       minWidth: '200px',
                       direction: 'rtl'
                     }}
@@ -716,8 +645,8 @@ const Dashboard: React.FC = () => {
                   </select>
                   {selectedUnit && (
                     <span style={{
-                      backgroundColor: '#e3f2fd',
-                      color: '#1976d2',
+                      backgroundColor: 'var(--color-accent)',
+                      color: 'var(--color-text)',
                       padding: '8px 16px',
                       borderRadius: '20px',
                       fontSize: '12px',
@@ -726,24 +655,24 @@ const Dashboard: React.FC = () => {
                       {locations.length} מיקומים
                     </span>
                   )}
-                </div>
               </div>
+            </div>
             )}
-          </div>
+        </div>
 
           {/* Search Input for Units Tab */}
           {activeTab === 'units' && (
             <div style={{ 
               padding: '20px 24px',
-              backgroundColor: 'white',
-              borderBottom: '1px solid #e9ecef',
+              backgroundColor: 'var(--color-surface)',
+              borderBottom: '1px solid var(--color-border)',
               direction: 'rtl'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <label htmlFor="unitsSearch" style={{ 
                   fontSize: '16px',
                   fontWeight: '600',
-                  color: '#495057',
+                  color: 'var(--color-text)',
                   marginBottom: 0
                 }}>
                   חיפוש פריטים:
@@ -757,11 +686,11 @@ const Dashboard: React.FC = () => {
                   style={{
                     padding: '10px 16px',
                     borderRadius: '8px',
-                    border: '2px solid #e9ecef',
+                    border: '2px solid var(--color-border)',
                     fontSize: '14px',
                     fontWeight: '500',
-                    backgroundColor: 'white',
-                    color: '#495057',
+                    backgroundColor: 'var(--color-bg)',
+                    color: 'var(--color-text)',
                     minWidth: '300px',
                     direction: 'rtl'
                   }}
@@ -773,7 +702,7 @@ const Dashboard: React.FC = () => {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#6c757d',
+                      color: 'var(--color-text-secondary)',
                       fontSize: '16px',
                       cursor: 'pointer',
                       padding: '5px'
@@ -784,8 +713,8 @@ const Dashboard: React.FC = () => {
                   </button>
                 )}
                 <span style={{
-                  backgroundColor: '#e3f2fd',
-                  color: '#1976d2',
+                  backgroundColor: 'var(--color-accent)',
+                  color: 'var(--color-text)',
                   padding: '8px 16px',
                   borderRadius: '20px',
                   fontSize: '12px',
@@ -793,12 +722,12 @@ const Dashboard: React.FC = () => {
                 }}>
                   {filteredAndSortedItems.length} פריטים
                 </span>
-              </div>
             </div>
+          </div>
           )}
 
           {activeTab === 'units' && (
-            <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px' }}>
+            <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px', backgroundColor: 'white' }}>
             <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
                 <tr>
@@ -806,14 +735,14 @@ const Dashboard: React.FC = () => {
                     style={{ 
                       position: 'sticky', 
                       right: 0, 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                      background: '#495057', 
                       color: 'white',
                       zIndex: 10, 
                       minWidth: '180px',
                       padding: '16px 12px',
                       fontSize: '14px',
                       fontWeight: '600',
-                      borderBottom: '3px solid #3498db',
+                      borderBottom: '2px solid #6c757d',
                       textAlign: 'center',
                       boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
                       cursor: 'pointer'
@@ -829,12 +758,12 @@ const Dashboard: React.FC = () => {
                       className="text-center" 
                       style={{ 
                         minWidth: '120px', 
-                        background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
+                        background: '#495057',
                         color: 'white',
                         padding: '16px 8px',
                         fontSize: '13px',
                         fontWeight: '600',
-                        borderBottom: '3px solid #3498db',
+                        borderBottom: '2px solid #6c757d',
                         cursor: 'pointer'
                       }}
                       onClick={() => handleSort(`unit_${unit}`)}
@@ -847,12 +776,12 @@ const Dashboard: React.FC = () => {
                     className="text-center" 
                     style={{ 
                       minWidth: '120px', 
-                      background: 'linear-gradient(135deg, #16a085 0%, #1abc9c 100%)',
+                      background: '#6c757d',
                       color: 'white',
                       padding: '16px 8px',
                       fontSize: '13px',
                       fontWeight: '600',
-                      borderBottom: '3px solid #2ecc71',
+                      borderBottom: '2px solid #868e96',
                       cursor: 'pointer'
                     }}
                     onClick={() => handleSort('signed')}
@@ -1039,7 +968,7 @@ const Dashboard: React.FC = () => {
                                   ⏳ {waitingQuantity}
                                 </span>
                               )}
-                            </div>
+                          </div>
                           ) : (
                             <span 
                               className="badge" 
@@ -1305,7 +1234,7 @@ const Dashboard: React.FC = () => {
                 }).filter(Boolean) : null}
               </tbody>
             </table>
-            </div>
+          </div>
           )}
           
           {totalPages > 1 && (
@@ -1330,7 +1259,7 @@ const Dashboard: React.FC = () => {
               }}>
                 <div style={{ marginBottom: '16px', fontSize: '48px' }}>⏳</div>
                 {unitsLoading ? 'טוען רשימת יחידות...' : 'טוען נתוני יחידה...'}
-              </div>
+            </div>
             ) : dashboardError ? (
               <div style={{ 
                 padding: '60px 24px',
@@ -1342,7 +1271,7 @@ const Dashboard: React.FC = () => {
               }}>
                 <div style={{ marginBottom: '16px', fontSize: '48px' }}>❌</div>
                 שגיאה בטעינת נתונים: {dashboardError}
-              </div>
+            </div>
             ) : dashboardData && dashboardData.length > 0 ? (
               <>
                 {/* Search Input */}
@@ -1406,10 +1335,10 @@ const Dashboard: React.FC = () => {
                     }}>
                       {getFilteredAndSortedLocationsData().items.length} פריטים
                     </span>
-                  </div>
                 </div>
+              </div>
 
-                <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px' }}>
+                <div className="table-responsive" style={{ maxHeight: '75vh', overflowY: 'auto', borderRadius: '0 0 8px 8px', backgroundColor: 'white' }}>
                 <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
                   <thead style={{ position: 'sticky', top: 0, zIndex: 5 }}>
                     <tr>
@@ -1417,14 +1346,14 @@ const Dashboard: React.FC = () => {
                         style={{ 
                           position: 'sticky', 
                           right: 0, 
-                          background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
+                          background: '#495057', 
                           color: 'white',
                           zIndex: 10, 
                           minWidth: '180px',
                           padding: '16px 12px',
                           fontSize: '14px',
                           fontWeight: '600',
-                          borderBottom: '3px solid #3498db',
+                          borderBottom: '2px solid #6c757d',
                           textAlign: 'center',
                           boxShadow: '2px 0 4px rgba(0,0,0,0.1)',
                           cursor: 'pointer'
@@ -1440,12 +1369,12 @@ const Dashboard: React.FC = () => {
                           className="text-center" 
                           style={{ 
                             minWidth: '150px', 
-                            background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
+                            background: '#495057',
                             color: 'white',
                             padding: '16px 8px',
                             fontSize: '13px',
                             fontWeight: '600',
-                            borderBottom: '3px solid #3498db',
+                            borderBottom: '2px solid #6c757d',
                             cursor: 'pointer'
                           }}
                           onClick={() => handleLocationsSort(`location_${location}`)}
@@ -1577,7 +1506,7 @@ const Dashboard: React.FC = () => {
                                       📋 {locationData.allocation}
                                     </span>
                                   )}
-                                </div>
+                              </div>
                               ) : (
                                 <span 
                                   className="badge" 
@@ -1601,7 +1530,7 @@ const Dashboard: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
+            </div>
               </>
             ) : (
               <div style={{ 
@@ -1614,7 +1543,7 @@ const Dashboard: React.FC = () => {
               }}>
                 <div style={{ marginBottom: '16px', fontSize: '48px' }}>📊</div>
                 אין נתונים זמינים עבור יחידה זו
-              </div>
+            </div>
             )}
           </>
         )}
@@ -1631,7 +1560,7 @@ const Dashboard: React.FC = () => {
           }}>
             <div style={{ marginBottom: '16px', fontSize: '48px' }}>📍</div>
             אנא בחר יחידה כדי להציג את המיקומים
-          </div>
+        </div>
         )}
 
         {/* Pagination for units tab */}
@@ -1642,8 +1571,6 @@ const Dashboard: React.FC = () => {
             onPageChange={setCurrentPage}
           />
         )}
-        </div>
-      </div>
 
       {/* User Details Table - Appears below main table when clicked */}
       {tooltipData.show && (
@@ -1673,7 +1600,7 @@ const Dashboard: React.FC = () => {
               }}>
                 פרטי משתמשים רשומים ({tooltipData.users.length})
               </h5>
-            </div>
+          </div>
             <button 
               type="button" 
               onClick={handleCloseTooltip}
@@ -1700,7 +1627,7 @@ const Dashboard: React.FC = () => {
             >
               ×
             </button>
-          </div>
+        </div>
           <div className="card-body p-0">
             <div className="table-responsive">
               <table className="table table-hover mb-0" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
@@ -2021,7 +1948,7 @@ const Dashboard: React.FC = () => {
                   ).flat()}
                 </tbody>
               </table>
-            </div>
+          </div>
             <div 
               className="card-footer border-0"
               style={{ 
@@ -2036,10 +1963,11 @@ const Dashboard: React.FC = () => {
               סה"כ פריטים מוקצים: <span style={{ fontSize: '18px', fontWeight: '700' }}>
                 {tooltipData.users.reduce((sum, user) => sum + (user.items?.length || 1), 0)}
               </span>
-            </div>
           </div>
         </div>
+      </div>
       )}
+      </div>
     </>
   );
 };

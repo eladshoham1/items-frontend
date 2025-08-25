@@ -317,7 +317,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   }
 
   return (
-    <div>
+    <>
       {/* Tab Navigation */}
       <TabNavigation
         tabs={availableReportTabs}
@@ -327,17 +327,13 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         size="md"
       />
 
-      <div className="card">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h2 className="mb-0">דוח יומי - {getCurrentDate()}</h2>
-        </div>
-        <div className="card-body">
-          {/* Handle case when no daily report exists or report has no items */}
-          {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) && (
-            <div>
-              <div className="alert alert-info text-center">
-                <h4><i className="fas fa-clock me-2"></i>אין פריטים לדיווח</h4>
-                <p>כרגע אין פריטים הדורשים דיווח או שהם כבר דווחו.</p>
+      <div style={{ padding: '20px 0' }}>
+        {/* Handle case when no daily report exists or report has no items */}
+        {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) && (
+          <div>
+            <div className="alert alert-info text-center">
+              <h4><i className="fas fa-clock me-2"></i>אין פריטים לדיווח</h4>
+              <p>כרגע אין פריטים הדורשים דיווח או שהם כבר דווחו.</p>
                 <p>הפריטים מתעדכנים אוטומטית כאשר יש צורך בדיווח.</p>
               </div>
             </div>
@@ -688,7 +684,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
             </>
           )}
         </div>
-      </div>
 
       {/* Error Notification Modal */}
       <ErrorNotificationModal
@@ -697,7 +692,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         title={errorModal.title}
         message={errorModal.message}
       />
-    </div>
+    </>
   );
 };
 

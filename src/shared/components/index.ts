@@ -4,7 +4,6 @@ export { default as ConflictErrorModal } from './ConflictErrorModal';
 export { default as BulkDeleteErrorModal } from './BulkDeleteErrorModal';
 export { default as ErrorNotificationModal } from './ErrorNotificationModal';
 export { SmartPagination } from './SmartPagination';
-export { default as ColdStartLoader } from './ColdStartLoader';
-export { default as ServerWarmupIndicator } from './ServerWarmupIndicator';
 export { default as TabNavigation } from './TabNavigation';
 export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as PageContainer } from './PageContainer';

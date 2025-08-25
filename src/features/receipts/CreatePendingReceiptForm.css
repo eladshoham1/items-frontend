@@ -1,12 +1,14 @@
-/* Create Pending Receipt Form Styling */
+/* Create Pending Receipt Form Styling - Dark Theme */
 .receipts-modal {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
+  background: #1a1a1a;
+  color: #e9ecef;
 }
 
 /* Selected Items Empty State */
 .selected-items-empty-state {
-  background: linear-gradient(135deg, #f8f9fc 0%, #f1f3f8 100%);
-  border: 2px dashed #e3e6f0;
+  background: #2d2d2d;
+  border: 2px dashed #404040;
   border-radius: 12px;
   padding: 40px 20px;
   text-align: center;
@@ -15,33 +17,33 @@
 }
 
 .selected-items-empty-state:hover {
-  border-color: #d1d3e2;
+  border-color: #555555;
   transform: translateY(-1px);
 }
 
 .empty-state-content i {
-  color: #b7bcc8;
+  color: #6c757d;
   margin-bottom: 16px;
 }
 
 /* Selected Items Table Container */
 .selected-items-table-container {
-  background: #ffffff;
-  border: 1px solid #e3e6f0;
+  background: #2d2d2d;
+  border: 1px solid #404040;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
   margin: 20px 0;
   transition: all 0.3s ease;
 }
 
 .selected-items-table-container:hover {
-  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
 }
 
 /* Table Header */
 .selected-items-table-container .table-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #404040;
   color: white;
   padding: 16px 20px;
   font-weight: 600;
