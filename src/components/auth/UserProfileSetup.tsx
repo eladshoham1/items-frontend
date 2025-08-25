@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CreateUserRequest, ranks } from '../../types';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
+import './UserProfileSetup.css';
 
 interface UserProfileSetupProps {
   onComplete: (profileData: Omit<CreateUserRequest, 'firebaseUid'>) => void;
@@ -31,6 +32,18 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
     rank: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [completedFields, setCompletedFields] = useState<Set<string>>(new Set());
+
+  // Calculate form progress
+  const totalFields = 4;
+  const filledFields = [
+    formData.name,
+    formData.personalNumber,
+    formData.phoneNumber,
+    formData.rank
+  ].filter(field => field && field.toString().trim() !== '').length;
+  const progress = (filledFields / totalFields) * 100;
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -74,6 +87,36 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
         [field]: undefined,
       }));
     }
+    
+    // Track completed fields
+    if (value && value.toString().trim() !== '') {
+      setCompletedFields(prev => {
+        const newSet = new Set(prev);
+        newSet.add(field);
+        return newSet;
+      });
+    } else {
+      setCompletedFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(field);
+        return newSet;
+      });
+    }
+  };
+
+  const handleFocus = (field: string) => {
+    setFocusedField(field);
+  };
+
+  const handleBlur = () => {
+    setFocusedField(null);
+  };
+
+  const getFieldIcon = (field: string) => {
+    if (completedFields.has(field)) {
+      return <span className="success-checkmark"></span>;
+    }
+    return null;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -87,129 +130,167 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: '#f8f9fa',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      margin: 0,
-      padding: '20px',
-      zIndex: 1000,
-      direction: 'rtl'
-    }}>
-      <div className="card shadow-lg" style={{ 
-        maxWidth: '500px', 
-        width: '100%', 
-        maxHeight: '90vh',
-        overflowY: 'auto'
-      }}>
-        <div className="card-header text-center bg-primary text-white">
-          <h2 className="mb-0">השלמת פרטים אישיים</h2>
-          <p className="mb-0 mt-2">שלום {userEmail}</p>
-          <small>נדרשת השלמת פרטים להמשך השימוש במערכת</small>
+    <div className="profile-setup-container">
+      <div className="profile-setup-card">
+        <div className="profile-setup-header">
+          <h1 className="profile-setup-title">ברוכים הבאים למערכת</h1>
+          <p className="profile-setup-subtitle">שלום {userEmail}</p>
+          <p className="profile-setup-email">נדרש להשלים את הפרטים האישיים להמשך השימוש</p>
         </div>
         
-        <div className="card-body">
+        <div className="profile-setup-body">
+          {/* Progress Indicator */}
+          <div className="progress-indicator">
+            {[...Array(totalFields)].map((_, index) => (
+              <div
+                key={index}
+                className={`progress-dot ${index < filledFields ? 'active' : ''}`}
+              />
+            ))}
+          </div>
+          
           {error && (
-            <div className="alert alert-danger mb-3">
+            <div className="error-message">
+              <i className="fas fa-exclamation-triangle"></i>
               {error}
             </div>
           )}
           
           <form onSubmit={handleSubmit}>
-            <div className="form-group mb-3">
+            <div className={`form-group ${focusedField === 'name' ? 'focused' : ''}`}>
               <label className="form-label required">שם מלא</label>
-              <input 
-                className={`form-control ${errors.name ? 'is-invalid' : ''}`}
-                name="name" 
-                value={formData.name} 
-                onChange={e => handleInputChange('name', e.target.value)} 
-                required 
-                placeholder="הזן את שמך המלא"
-              />
-              {errors.name && <div className="form-error">{errors.name}</div>}
+              <div style={{ position: 'relative' }}>
+                <input 
+                  className={`form-input ${errors.name ? 'error' : ''}`}
+                  name="name" 
+                  value={formData.name} 
+                  onChange={e => handleInputChange('name', e.target.value)}
+                  onFocus={() => handleFocus('name')}
+                  onBlur={handleBlur}
+                  required 
+                  placeholder="הזן את שמך המלא"
+                />
+                {getFieldIcon('name')}
+              </div>
+              {errors.name && (
+                <div className="form-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {errors.name}
+                </div>
+              )}
             </div>
             
-            <div className="form-group mb-3">
+            <div className={`form-group ${focusedField === 'personalNumber' ? 'focused' : ''}`}>
               <label className="form-label required">מספר אישי</label>
-              <input 
-                type="number"
-                className={`form-control ${errors.personalNumber ? 'is-invalid' : ''}`}
-                name="personalNumber" 
-                value={formData.personalNumber || ''} 
-                onChange={e => {
-                  const value = e.target.value;
-                  if (value === '' || (/^[0-9]{1,7}$/.test(value) && value.length <= 7)) {
-                    handleInputChange('personalNumber', value);
-                  }
-                }}
-                onInput={e => {
-                  const target = e.target as HTMLInputElement;
-                  if (target.value.length > 7) {
-                    target.value = target.value.slice(0, 7);
-                  }
-                }}
-                placeholder="הזן 7 ספרות"
-                min="1000000"
-                max="9999999"
-                required 
-                style={{ textAlign: 'right', direction: 'rtl' }}
-              />
-              {errors.personalNumber && <div className="form-error">{errors.personalNumber}</div>}
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="number"
+                  className={`form-input ${errors.personalNumber ? 'error' : ''}`}
+                  name="personalNumber" 
+                  value={formData.personalNumber || ''} 
+                  onChange={e => {
+                    const value = e.target.value;
+                    if (value === '' || (/^[0-9]{1,7}$/.test(value) && value.length <= 7)) {
+                      handleInputChange('personalNumber', value);
+                    }
+                  }}
+                  onInput={e => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.value.length > 7) {
+                      target.value = target.value.slice(0, 7);
+                    }
+                  }}
+                  onFocus={() => handleFocus('personalNumber')}
+                  onBlur={handleBlur}
+                  placeholder="הזן 7 ספרות"
+                  min="1000000"
+                  max="9999999"
+                  required 
+                />
+                {getFieldIcon('personalNumber')}
+              </div>
+              {errors.personalNumber && (
+                <div className="form-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {errors.personalNumber}
+                </div>
+              )}
             </div>
             
-            <div className="form-group mb-3">
+            <div className={`form-group ${focusedField === 'phoneNumber' ? 'focused' : ''}`}>
               <label className="form-label required">מספר טלפון</label>
-              <input 
-                className={`form-control ${errors.phoneNumber ? 'is-invalid' : ''}`}
-                name="phoneNumber" 
-                value={formData.phoneNumber} 
-                onChange={e => handleInputChange('phoneNumber', e.target.value)} 
-                required 
-                placeholder="05xxxxxxxx"
-              />
-              {errors.phoneNumber && <div className="form-error">{errors.phoneNumber}</div>}
+              <div style={{ position: 'relative' }}>
+                <input 
+                  className={`form-input ${errors.phoneNumber ? 'error' : ''}`}
+                  name="phoneNumber" 
+                  value={formData.phoneNumber} 
+                  onChange={e => handleInputChange('phoneNumber', e.target.value)}
+                  onFocus={() => handleFocus('phoneNumber')}
+                  onBlur={handleBlur}
+                  required 
+                  placeholder="05xxxxxxxx"
+                />
+                {getFieldIcon('phoneNumber')}
+              </div>
+              {errors.phoneNumber && (
+                <div className="form-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {errors.phoneNumber}
+                </div>
+              )}
             </div>
             
-            <div className="form-group mb-3">
+            <div className={`form-group ${focusedField === 'rank' ? 'focused' : ''}`}>
               <label className="form-label required">דרגה</label>
-              <select 
-                className={`form-control ${errors.rank ? 'is-invalid' : ''}`}
-                name="rank" 
-                value={formData.rank} 
-                onChange={e => handleInputChange('rank', e.target.value)} 
-                required
-              >
-                <option value="">בחר דרגה</option>
-                {ranks.map(rank => (
-                  <option key={rank} value={rank}>{rank}</option>
-                ))}
-              </select>
-              {errors.rank && <div className="form-error">{errors.rank}</div>}
+              <div style={{ position: 'relative' }}>
+                <select 
+                  className={`form-select ${errors.rank ? 'error' : ''}`}
+                  name="rank" 
+                  value={formData.rank} 
+                  onChange={e => handleInputChange('rank', e.target.value)}
+                  onFocus={() => handleFocus('rank')}
+                  onBlur={handleBlur}
+                  required
+                >
+                  <option value="">בחר דרגה</option>
+                  {ranks.map(rank => (
+                    <option key={rank} value={rank}>{rank}</option>
+                  ))}
+                </select>
+                {getFieldIcon('rank')}
+              </div>
+              {errors.rank && (
+                <div className="form-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {errors.rank}
+                </div>
+              )}
             </div>
             
-            <div className="alert alert-info mb-4" style={{ fontSize: '0.9rem' }}>
-              <i className="fas fa-info-circle me-2"></i>
-              <strong>הערה:</strong> מיקום יוקצה לך על ידי מנהל המערכת לאחר הרישום.
+            <div className="info-message">
+              <i className="fas fa-info-circle info-icon"></i>
+              <div>
+                <strong>הערה חשובה:</strong> מיקום יוקצה לך על ידי מנהל המערכת לאחר השלמת הרישום.
+                <br />
+                הפרטים ניתנים לעדכון בעתיד דרך הגדרות המשתמש.
+              </div>
             </div>
             
             <button 
               type="submit" 
-              className="btn btn-primary w-100" 
-              disabled={isLoading}
+              className="submit-button" 
+              disabled={isLoading || progress < 100}
             >
               {isLoading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  שומר...
-                </>
+                <div className="loading-spinner">
+                  <div className="spinner"></div>
+                  שומר פרטים...
+                </div>
               ) : (
-                'השלם רישום'
+                <>
+                  השלם רישום
+                  <i className="fas fa-arrow-left" style={{ marginRight: '8px' }}></i>
+                </>
               )}
             </button>
           </form>
