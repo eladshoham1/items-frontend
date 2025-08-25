@@ -3,6 +3,9 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--color-bg);
+  /* Ensure layout doesn't prevent scrolling on mobile */
+  overflow-y: auto;
+  touch-action: auto;
 }
 
 /* Top Header */
@@ -77,6 +80,10 @@
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 60px);
+  /* Ensure content area allows vertical scrolling */
+  overflow-y: auto;
+  touch-action: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Content */

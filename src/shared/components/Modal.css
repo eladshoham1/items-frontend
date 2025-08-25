@@ -1,4 +1,4 @@
-/* Modern Modal Styles - Dark Theme */
+/* Modern Modal Styles - Dark Theme - Mobile Optimized */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -10,10 +10,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1002;
+  z-index: 1003; /* Higher than mobile navigation (1002) */
   padding: var(--spacing-lg);
   animation: modalFadeIn var(--transition-smooth);
-  touch-action: none;
+  touch-action: auto; /* Allow touch interactions */
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -167,20 +167,37 @@
   background: var(--color-text-muted);
 }
 
-/* Mobile responsiveness */
+/* Mobile responsiveness - ENHANCED */
 @media (max-width: 768px) {
   .modal-overlay {
-    padding: var(--spacing-sm);
-    align-items: flex-start;
-    padding-top: 2vh;
+    padding: 8px !important; /* Use fixed values as fallback */
+    align-items: center !important; /* Keep centered, not flex-start */
+    justify-content: center !important;
+    padding-top: 8px !important;
+    z-index: 1003 !important; /* Ensure visibility above all mobile elements */
+    background: rgba(0, 0, 0, 0.9) !important; /* Darker background for better contrast */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
   }
   
   .modal-content {
-    width: 100% !important;
-    min-width: auto !important;
-    max-width: 100% !important;
-    max-height: 96vh !important;
-    margin: 0 !important;
+    width: calc(100vw - 20px) !important; /* Use viewport units */
+    min-width: 280px !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 85vh !important;
+    margin: 10px auto !important;
+    transform: none !important; /* Reset any transforms that might hide modal */
+    position: relative !important;
+    z-index: 1004 !important;
+    background: #2a2a2a !important; /* Fallback dark background */
+    border: 2px solid #007bff !important; /* Visible blue border for debugging */
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
   }
   
   .modal-content--sm,
@@ -188,25 +205,40 @@
   .modal-content--lg,
   .modal-content--xl,
   .modal-content--full {
-    width: 100% !important;
-    min-width: auto !important;
-    max-width: 100% !important;
+    width: calc(100vw - 20px) !important;
+    min-width: 280px !important;
+    max-width: calc(100vw - 20px) !important;
+    margin: 10px auto !important;
+    transform: none !important; /* Prevent modal from being hidden by transforms */
+    background: #2a2a2a !important; /* Fallback background */
+    border: 2px solid #007bff !important; /* Visible border for debugging */
+    display: flex !important;
+    flex-direction: column !important;
   }
   
   .modal-header {
-    padding: var(--spacing-md) var(--spacing-sm) var(--spacing-sm);
+    padding: 12px 8px 8px !important; /* Use fixed values */
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 1005;
+    background: #2a2a2a !important; /* Fallback header background */
+    color: white !important;
+    border-bottom: 1px solid #007bff !important;
   }
   
   .modal-title {
-    font-size: var(--font-size-lg);
+    font-size: 18px !important;
+    color: white !important;
+    margin: 0 !important;
   }
   
   .modal-body {
-    padding: var(--spacing-md) var(--spacing-sm);
-    max-height: calc(96vh - 80px);
+    padding: 12px 8px !important;
+    max-height: calc(85vh - 120px);
+    overflow-y: auto;
+    background: #2a2a2a !important;
+    color: white !important;
+    flex: 1;
   }
   
   .modal-close-button {

@@ -1,10 +1,11 @@
 /* Mobile Touch Optimization - Comprehensive */
 
-/* Reset aggressive touch prevention */
+/* Reset aggressive touch prevention - CRITICAL FOR SCROLLING */
 body {
-  touch-action: auto !important;
-  overflow: visible !important;
-  position: static !important;
+  touch-action: auto !important; /* Allow vertical scrolling */
+  overflow-y: auto !important; /* Allow vertical scrolling */
+  overflow-x: hidden !important; /* Prevent horizontal overflow only */
+  position: static !important; /* Reset any fixed positioning */
 }
 
 /* Debug mode - uncomment to visualize touch targets */
@@ -26,6 +27,29 @@ body {
 
 /* Global mobile touch improvements */
 @media (max-width: 768px) {
+  /* CRITICAL: Ensure all major containers allow vertical scrolling */
+  html, body, #root, .layout, .layout-main, .layout-content {
+    overflow-y: auto !important;
+    touch-action: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
+  /* Force minimum height to ensure there's content to scroll */
+  .layout-content,
+  .content-container,
+  main {
+    min-height: 150vh !important; /* Force scrollable content for testing */
+  }
+  
+  /* Specifically reset any modal-induced scroll blocking */
+  body[style*="overflow: hidden"] {
+    overflow-y: auto !important;
+  }
+  
+  body[style*="position: fixed"] {
+    position: static !important;
+  }
+  
   /* Ensure all interactive elements are touch-friendly */
   button,
   .btn,
@@ -97,15 +121,18 @@ body {
     touch-action: auto !important;
   }
   
-  /* Prevent iOS rubber-band effect only at document level */
+  /* Allow vertical scrolling on mobile - CRITICAL FIX */
   html {
-    overflow: hidden;
+    overflow-x: hidden; /* Prevent horizontal overflow only */
+    overflow-y: auto; /* Allow vertical scrolling */
+    -webkit-overflow-scrolling: touch;
   }
   
   body {
-    overflow: auto;
+    overflow-x: hidden; /* Prevent horizontal overflow only */
+    overflow-y: auto; /* Allow vertical scrolling */
     -webkit-overflow-scrolling: touch;
-    touch-action: manipulation;
+    touch-action: auto; /* Allow all touch gestures including vertical scrolling */
   }
   
   /* Fix for sticky elements on mobile */

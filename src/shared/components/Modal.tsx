@@ -67,15 +67,32 @@ const Modal: React.FC<ModalProps> = ({
         document.body.setAttribute('data-scroll-y', scrollY.toString());
       }
     } else {
-      // Always restore all styles regardless of device
+      // ENHANCED CLEANUP - Always restore all styles regardless of device
       const scrollY = document.body.getAttribute('data-scroll-y');
+      
+      // Force reset all possible scroll-blocking styles
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.width = '';
       document.body.style.height = '';
       document.body.style.touchAction = '';
+      document.body.style.pointerEvents = '';
+      document.body.style.userSelect = '';
       document.body.removeAttribute('data-scroll-y');
+      
+      // Force enable scrolling on mobile
+      if (window.innerWidth <= 768) {
+        document.body.style.overflowY = 'auto';
+        document.body.style.touchAction = 'auto';
+        document.documentElement.style.overflowY = 'auto';
+        document.documentElement.style.touchAction = 'auto';
+        
+        // Remove any style attributes that might be blocking scrolling
+        setTimeout(() => {
+          document.body.removeAttribute('style');
+        }, 100);
+      }
       
       // Restore scroll position only on desktop
       if (scrollY && window.innerWidth > 768) {
@@ -122,9 +139,9 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Force full size on very small screens
+  // Use medium size on mobile instead of full to avoid sizing issues
   const isMobile = window.innerWidth <= 768;
-  const effectiveSize = isMobile ? 'full' : size;
+  const effectiveSize = isMobile ? 'md' : size;
 
   return (
     <div 
@@ -134,6 +151,20 @@ const Modal: React.FC<ModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}
+      style={{
+        // Force inline styles for debugging on mobile
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.9)',
+        zIndex: 1003,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '10px'
+      }}
     >
       <div 
         ref={modalRef}
@@ -141,6 +172,19 @@ const Modal: React.FC<ModalProps> = ({
         onClick={handleContentClick}
         onTouchStart={handleContentClick}
         tabIndex={-1}
+        style={{
+          // Force inline styles for debugging on mobile
+          background: '#2a2a2a',
+          border: '2px solid #007bff',
+          borderRadius: '8px',
+          maxWidth: 'calc(100vw - 20px)',
+          maxHeight: '85vh',
+          width: '100%',
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)'
+        }}
       >
         {(title || showCloseButton) && (
           <div className="modal-header">

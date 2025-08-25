@@ -99,7 +99,8 @@ class ApiService {
   async getBlob(url: string, config?: AxiosRequestConfig): Promise<Blob> {
     const response = await this.api.get(url, { 
       ...config, 
-      responseType: 'blob' 
+      responseType: 'blob',
+      timeout: 60000 // 60 seconds timeout for blob downloads
     });
     return response.data;
   }

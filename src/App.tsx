@@ -41,8 +41,11 @@ const App: React.FC = () => {
       }
     };
 
-    // Prevent pull-to-refresh on mobile - more targeted approach
+    // Prevent pull-to-refresh on mobile - very conservative approach
     const preventPullToRefresh = (e: TouchEvent) => {
+      // TEMPORARY: Disable this completely to test scrolling
+      return; 
+      
       // Only prevent if we're truly at the top and pulling down
       if (e.touches.length !== 1) return;
       
@@ -61,8 +64,8 @@ const App: React.FC = () => {
         return;
       }
       
-      // Only prevent at the very top of the page
-      if (window.scrollY === 0 && touch.clientY > 60) {
+      // Only prevent at the very top of the page and with significant downward movement
+      if (window.scrollY === 0 && touch.clientY > 100) {
         e.preventDefault();
       }
     };
