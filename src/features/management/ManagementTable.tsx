@@ -295,8 +295,8 @@ export function ManagementTable<T extends BaseEntity>({
         />
       ) : (
         <>
-          <div className="table-container">
-            <table className="management-table">
+          <div className="table-responsive">
+            <table className="table">
               <thead>
                 <tr>
                   <th>

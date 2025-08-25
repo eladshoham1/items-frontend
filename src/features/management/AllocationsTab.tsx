@@ -404,8 +404,8 @@ export const AllocationsTab: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="table-container">
-        <table className="management-table">
+      <div className="table-responsive">
+        <table className="table">
           <thead>
             <tr>
               <th style={{ width: '40px' }}>

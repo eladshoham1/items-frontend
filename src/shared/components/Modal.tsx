@@ -51,15 +51,30 @@ const Modal: React.FC<ModalProps> = ({
       // Focus the modal
       modalRef.current?.focus();
       
-      // Prevent background scrolling
+      // Prevent background scrolling - mobile friendly approach
+      const scrollY = window.scrollY;
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
+      document.body.style.height = '100vh';
+      
+      // Store scroll position for restoration
+      document.body.setAttribute('data-scroll-y', scrollY.toString());
     } else {
       // Restore background scrolling
+      const scrollY = document.body.getAttribute('data-scroll-y');
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.removeAttribute('data-scroll-y');
+      
+      // Restore scroll position
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY));
+      }
       
       // Restore focus to the previously focused element
       if (previousActiveElement.current) {
@@ -70,7 +85,10 @@ const Modal: React.FC<ModalProps> = ({
     return () => {
       document.body.style.overflow = '';
       document.body.style.position = '';
+      document.body.style.top = '';
       document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.removeAttribute('data-scroll-y');
     };
   }, [isOpen]);
 
@@ -92,6 +110,10 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Force full size on very small screens
+  const isMobile = window.innerWidth <= 768;
+  const effectiveSize = isMobile ? 'full' : size;
+
   return (
     <div 
       className="modal-overlay" 
@@ -103,7 +125,7 @@ const Modal: React.FC<ModalProps> = ({
     >
       <div 
         ref={modalRef}
-        className={`modal-content modal-content--${size} ${className}`}
+        className={`modal-content modal-content--${effectiveSize} ${className}`}
         onClick={handleContentClick}
         onTouchStart={handleContentClick}
         tabIndex={-1}

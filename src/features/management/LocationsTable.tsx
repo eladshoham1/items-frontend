@@ -310,8 +310,8 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
         />
       ) : (
         <>
-          <div className="table-container">
-            <table className="management-table">
+          <div className="table-responsive">
+            <table className="table">
               <thead>
                 <tr>
                   <th>
