@@ -73,7 +73,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({
                   {userProfile?.name || user.displayName || 'משתמש'}
                   {isAdmin && <span className="admin-badge">מנהל</span>}
                 </div>
-                <div className="user-email">{user.email}</div>
+                <div className="user-email">{userProfile?.location || user.email}</div>
               </div>
               <svg className="dropdown-arrow" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M7 10l5 5 5-5z"/>

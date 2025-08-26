@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
+import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
+import { NotificationType } from '../../shared/components/NotificationModal';
 
 interface BaseEntity {
   id: string;
@@ -47,6 +48,15 @@ export function ManagementTable<T extends BaseEntity>({
     isOpen: false,
     message: '',
     itemName: '',
+  });
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    message: string;
+    type: NotificationType;
+  }>({
+    isOpen: false,
+    message: '',
+    type: 'error',
   });
 
   // Filter and sort items
@@ -119,7 +129,11 @@ export function ManagementTable<T extends BaseEntity>({
           itemName: newItemName.trim(),
         });
       } else {
-        alert(result.error || `שגיאה ביצירת ${title}`);
+        setNotification({
+          isOpen: true,
+          message: result.error || `שגיאה ביצירת ${title}`,
+          type: 'error',
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -142,7 +156,11 @@ export function ManagementTable<T extends BaseEntity>({
           itemName: editItemName.trim(),
         });
       } else {
-        alert(result.error || `שגיאה בעדכון ${title}`);
+        setNotification({
+          isOpen: true,
+          message: result.error || `שגיאה בעדכון ${title}`,
+          type: 'error',
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -163,10 +181,18 @@ export function ManagementTable<T extends BaseEntity>({
       if (result.success) {
         setSelectedIds([]);
       } else {
-        alert(result.error || `שגיאה במחיקת ${title}`);
+        setNotification({
+          isOpen: true,
+          message: result.error || `שגיאה במחיקת ${title}`,
+          type: 'error',
+        });
       }
     } catch (error) {
-      alert(`שגיאה במחיקת ${title}`);
+      setNotification({
+        isOpen: true,
+        message: `שגיאה במחיקת ${title}`,
+        type: 'error',
+      });
     }
   };
 
@@ -486,6 +512,14 @@ export function ManagementTable<T extends BaseEntity>({
         message={conflictError.message}
         resolutionMessage={`בחר שם אחר עבור ${title} או ערוך את הקיים.`}
         type="item"
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ isOpen: false, message: '', type: 'error' })}
+        message={notification.message}
+        type={notification.type}
       />
     </div>
   );

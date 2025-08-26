@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { AllocationEntity, CreateAllocationRequest, UpdateAllocationRequest } from '../../types';
 import { managementService } from '../../services';
-import { BulkDeleteErrorModal, Modal, LoadingSpinner } from '../../shared/components';
+import { BulkDeleteErrorModal, Modal, LoadingSpinner, NotificationModal } from '../../shared/components';
+import type { NotificationType } from '../../shared/components/NotificationModal';
 
 interface EditingCell {
   id: string;
@@ -43,6 +44,30 @@ export const AllocationsTab: React.FC = () => {
     key: keyof AllocationEntity;
     direction: 'asc' | 'desc';
   } | null>(null);
+
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: NotificationType;
+    message: string;
+    title?: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showNotification = (type: NotificationType, message: string, title?: string) => {
+    setNotification({
+      isOpen: true,
+      type,
+      message,
+      title
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   useEffect(() => {
     loadAllocations();
@@ -143,10 +168,10 @@ export const AllocationsTab: React.FC = () => {
         ));
         setEditingCell(null);
       } else {
-        window.alert(result.error || 'שגיאה בעדכון השבצק');
+        showNotification('error', result.error || 'שגיאה בעדכון השבצק');
       }
     } catch (err: any) {
-      window.alert('שגיאה בעדכון השבצק');
+      showNotification('error', 'שגיאה בעדכון השבצק');
     }
   };
 
@@ -164,7 +189,7 @@ export const AllocationsTab: React.FC = () => {
 
   const handleCreate = async () => {
     if (!newAllocation.unit || !newAllocation.secondaryUnit || !newAllocation.owner || !newAllocation.standard) {
-      window.alert('יש למלא את כל השדות הדרושים: מסגרת, מסגרת משנה, בעת, תקן');
+      showNotification('warning', 'יש למלא את כל השדות הדרושים: מסגרת, מסגרת משנה, בעת, תקן');
       return;
     }
 
@@ -188,10 +213,10 @@ export const AllocationsTab: React.FC = () => {
         });
         setIsAddModalOpen(false);
       } else {
-        window.alert(result.error || 'שגיאה ביצירת השבצק');
+        showNotification('error', result.error || 'שגיאה ביצירת השבצק');
       }
     } catch (err: any) {
-      window.alert('שגיאה ביצירת השבצק');
+      showNotification('error', 'שגיאה ביצירת השבצק');
     } finally {
       setIsSubmitting(false);
     }
@@ -199,7 +224,7 @@ export const AllocationsTab: React.FC = () => {
 
   const handleDelete = async () => {
     if (selectedIds.length === 0) {
-      window.alert('יש לבחור פריטים למחיקה');
+      showNotification('warning', 'יש לבחור פריטים למחיקה');
       return;
     }
 
@@ -214,7 +239,7 @@ export const AllocationsTab: React.FC = () => {
         if (result.data.deleted) {
           setAllocations(prev => prev.filter(allocation => !selectedIds.includes(allocation.id)));
           setSelectedIds([]);
-          window.alert(`נמחקו בהצלחה ${result.data.deletedCount} שבצק`);
+          showNotification('success', `נמחקו בהצלחה ${result.data.deletedCount} שבצק`);
         } else {
           setBulkDeleteError({
             isOpen: true,
@@ -225,10 +250,10 @@ export const AllocationsTab: React.FC = () => {
           });
         }
       } else {
-        window.alert(result.error || 'שגיאה במחיקת השבצק');
+        showNotification('error', result.error || 'שגיאה במחיקת השבצק');
       }
     } catch (err: any) {
-      window.alert('שגיאה במחיקת השבצק');
+      showNotification('error', 'שגיאה במחיקת השבצק');
     }
   };
 
@@ -693,6 +718,14 @@ export const AllocationsTab: React.FC = () => {
         totalCount={bulkDeleteError.totalCount}
         errors={bulkDeleteError.errors}
         type="item"
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
       />
     </div>
   );

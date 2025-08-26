@@ -6,7 +6,8 @@ import { paginate } from '../../utils';
 import { receiptService } from '../../services';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
-import { SmartPagination, TabNavigation } from '../../shared/components';
+import { SmartPagination, TabNavigation, NotificationModal } from '../../shared/components';
+import { NotificationType } from '../../shared/components/NotificationModal';
 import ReceiptForm from './ReceiptForm';
 import PendingReceiptsList from './PendingReceiptsList';
 import DeleteReceiptModal from './DeleteReceiptModal';
@@ -35,6 +36,15 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
     const [modalType, setModalType] = useState<'create' | 'update'>('create');
     const [activeTab, setActiveTab] = useState<'signed' | 'pending'>('signed');
+    const [notification, setNotification] = useState<{
+        isOpen: boolean;
+        message: string;
+        type: NotificationType;
+    }>({
+        isOpen: false,
+        message: '',
+        type: 'error',
+    });
 
     // Tab configuration
     const receiptTabs = [
@@ -271,13 +281,29 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                     errorMessage = 'שגיאה פנימית בשרת בעת יצירת הקבלה';
                 }
                 
-                alert(errorMessage);
+                setNotification({
+                    isOpen: true,
+                    message: errorMessage,
+                    type: 'error',
+                });
             } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-                alert('פג הזמן הקצוב לחיבור - הקבלה עשויה להיות גדולה מדי');
+                setNotification({
+                    isOpen: true,
+                    message: 'פג הזמן הקצוב לחיבור - הקבלה עשויה להיות גדולה מדי',
+                    type: 'error',
+                });
             } else if (error.message?.includes('Network Error')) {
-                alert('שגיאה בחיבור לשרת - אנא בדוק את החיבור לאינטרנט');
+                setNotification({
+                    isOpen: true,
+                    message: 'שגיאה בחיבור לשרת - אנא בדוק את החיבור לאינטרנט',
+                    type: 'error',
+                });
             } else {
-                alert('שגיאה לא צפויה בהורדת הקבלה');
+                setNotification({
+                    isOpen: true,
+                    message: 'שגיאה לא צפויה בהורדת הקבלה',
+                    type: 'error',
+                });
             }
         } finally {
             setDownloadingReceiptId(null);
@@ -526,6 +552,14 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                     isLoading={isDeleting}
                 />
             )}
+
+            {/* Notification Modal */}
+            <NotificationModal
+                isOpen={notification.isOpen}
+                onClose={() => setNotification({ isOpen: false, message: '', type: 'error' })}
+                message={notification.message}
+                type={notification.type}
+            />
         </div>
     );
 };

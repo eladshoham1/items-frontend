@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Receipt, SignPendingReceiptRequest } from '../../types';
 import { SignaturePad } from './SignaturePad';
-import { Modal, BulkDeleteErrorModal, SmartPagination } from '../../shared/components';
+import { Modal, BulkDeleteErrorModal, SmartPagination, NotificationModal } from '../../shared/components';
 import ReceiptForm from './ReceiptForm';
 import ReceiptDetailsModal from './ReceiptDetailsModal';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
+import type { NotificationType } from '../../shared/components/NotificationModal';
 import './ReceiptsTab.css';
 
 interface PendingReceiptsListProps {
@@ -45,6 +46,30 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   // New: details modal state
   const [detailsReceipt, setDetailsReceipt] = useState<Receipt | null>(null);
+
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: NotificationType;
+    message: string;
+    title?: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showNotification = (type: NotificationType, message: string, title?: string) => {
+    setNotification({
+      isOpen: true,
+      type,
+      message,
+      title
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   // Helper: safely get unit (prefer receiver unit, fallback to issuer)
   const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
@@ -177,7 +202,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
     if (errors.length > 0) {
       setBulkDeleteError({ errors, deletedCount });
     } else {
-      alert(`נמחקו בהצלחה ${deletedCount} קבלות`);
+      showNotification('success', `נמחקו בהצלחה ${deletedCount} קבלות`);
     }
 
     setSelectedReceiptIds([]);
@@ -187,7 +212,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   const handleSignClick = (receipt: Receipt) => {
     // Security check - only allow if user is the designated receiver
     if (!canUserSignReceipt(receipt)) {
-      alert('אין לך הרשאה לחתום על קבלה זו. הקבלה מיועדת למשתמש אחר.');
+      showNotification('error', 'אין לך הרשאה לחתום על קבלה זו. הקבלה מיועדת למשתמש אחר.');
       return;
     }
     
@@ -742,6 +767,14 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
           type="item"
         />
       )}
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
+      />
     </>
   );
 };

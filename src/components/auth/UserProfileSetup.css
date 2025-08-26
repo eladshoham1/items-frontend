@@ -1,18 +1,49 @@
 /* Dark Gray Theme User Profile Setup Styling */
+
+/* Override any global styles that might interfere */
+.profile-setup-container * {
+  box-sizing: border-box !important;
+}
+
 .profile-setup-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 1000;
-  direction: rtl;
-  overflow-y: auto;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 20px !important;
+  z-index: 9999 !important;
+  direction: rtl !important;
+  overflow-y: auto !important;
+  /* Fix for mobile viewport */
+  width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  -webkit-overflow-scrolling: touch !important;
+  /* Fallback for older browsers */
+  width: 100% !important;
+  height: 100% !important;
+  /* Ensure it's always visible */
+  visibility: visible !important;
+  opacity: 1 !important;
+  /* Override any transforms that might hide it */
+  transform: none !important;
+  /* Override any margin/padding from parent */
+  margin: 0 !important;
+}
+
+/* Ensure body doesn't interfere with modal on mobile */
+body.profile-setup-active {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .profile-setup-container::before {
@@ -35,7 +66,7 @@
 }
 
 .profile-setup-card {
-  background: rgba(31, 41, 55, 0.95);
+  background: rgba(31, 41, 55, 0.95) !important;
   backdrop-filter: blur(20px);
   border: 1px solid rgba(75, 85, 99, 0.3);
   border-radius: 24px;
@@ -49,6 +80,11 @@
   position: relative;
   z-index: 1;
   animation: slideInUp 0.6s ease-out;
+  /* Ensure visibility on mobile */
+  min-width: 280px;
+  margin: auto;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 @keyframes slideInUp {
@@ -344,11 +380,21 @@
 @media (max-width: 640px) {
   .profile-setup-container {
     padding: 12px;
+    /* Ensure full viewport coverage on mobile */
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
   }
   
   .profile-setup-card {
     margin: 0;
     border-radius: 20px;
+    max-height: 85vh;
+    min-height: auto;
+    width: 100%;
+    max-width: none;
   }
   
   .profile-setup-header {
@@ -361,12 +407,33 @@
   
   .profile-setup-body {
     padding: 24px 20px 20px;
+    max-height: calc(85vh - 150px);
   }
   
   .form-input,
   .form-select {
     padding: 14px 16px;
     font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Additional mobile fixes */
+@media (max-width: 480px) {
+  .profile-setup-container {
+    padding: 8px;
+  }
+  
+  .profile-setup-card {
+    border-radius: 16px;
+    margin: 0;
+  }
+  
+  .profile-setup-header {
+    padding: 20px 16px 16px;
+  }
+  
+  .profile-setup-body {
+    padding: 20px 16px 16px;
   }
 }
 

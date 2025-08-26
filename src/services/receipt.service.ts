@@ -4,7 +4,6 @@ import { Receipt, CreateReceiptRequest, UpdateReceiptRequest, SignReceiptRequest
 export const receiptService = {
   // Get all receipts
   async getAll(): Promise<Receipt[]> {
-    console.log('🔥 API CALL: GET /receipts - Called from:', new Error().stack);
     return apiService.get<Receipt[]>('/receipts');
   },
 

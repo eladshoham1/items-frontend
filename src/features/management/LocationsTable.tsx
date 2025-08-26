@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
+import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import { LocationEntity, UnitEntity } from '../../types';
+import { NotificationType } from '../../shared/components/NotificationModal';
 
 interface LocationsTableProps {
   locations: LocationEntity[];
@@ -41,6 +42,15 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
     isOpen: false,
     message: '',
     itemName: '',
+  });
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    message: string;
+    type: NotificationType;
+  }>({
+    isOpen: false,
+    message: '',
+    type: 'error',
   });
 
   // Helper function to get unit name
@@ -139,10 +149,18 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
           itemName: newLocationData.name,
         });
       } else {
-        alert(result.error || 'שגיאה ביצירת מיקום');
+        setNotification({
+          isOpen: true,
+          message: result.error || 'שגיאה ביצירת מיקום',
+          type: 'error',
+        });
       }
     } catch (error) {
-      alert('שגיאה ביצירת מיקום');
+      setNotification({
+        isOpen: true,
+        message: 'שגיאה ביצירת מיקום',
+        type: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -167,10 +185,18 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
           itemName: editLocationData.name || editingLocation.name,
         });
       } else {
-        alert(result.error || 'שגיאה בעדכון מיקום');
+        setNotification({
+          isOpen: true,
+          message: result.error || 'שגיאה בעדכון מיקום',
+          type: 'error',
+        });
       }
     } catch (error) {
-      alert('שגיאה בעדכון מיקום');
+      setNotification({
+        isOpen: true,
+        message: 'שגיאה בעדכון מיקום',
+        type: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -188,10 +214,18 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
       if (result.success) {
         setSelectedIds([]);
       } else {
-        alert(result.error || 'שגיאה במחיקת מיקומים');
+        setNotification({
+          isOpen: true,
+          message: result.error || 'שגיאה במחיקת מיקומים',
+          type: 'error',
+        });
       }
     } catch (error) {
-      alert('שגיאה במחיקת מיקומים');
+      setNotification({
+        isOpen: true,
+        message: 'שגיאה במחיקת מיקומים',
+        type: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -489,6 +523,14 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
         message={conflictError.message}
         resolutionMessage="אנא בחר שם אחר למיקום או יחידה אחרת."
         type="item"
+      />
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ isOpen: false, message: '', type: 'error' })}
+        message={notification.message}
+        type={notification.type}
       />
     </div>
   );

@@ -135,7 +135,8 @@ const App: React.FC = () => {
         <UserProfileSetup
           onComplete={handleProfileComplete}
           userEmail={firebaseUser.email || ''}
-          isAdmin={isAdmin}
+          userDisplayName={firebaseUser.displayName || undefined}
+          userPhoneNumber={firebaseUser.phoneNumber || undefined}
           isLoading={profileLoading}
           error={profileError}
         />

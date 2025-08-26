@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import UserForm from './UserForm';
 import { useUsers } from '../../hooks';
 import { User } from '../../types';
 import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
+import type { NotificationType } from '../../shared/components/NotificationModal';
 
 interface UsersTabProps {
   isAdmin?: boolean;
@@ -45,6 +46,30 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
     totalCount: 0,
     errors: [],
   });
+
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: NotificationType;
+    message: string;
+    title?: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showNotification = (type: NotificationType, message: string, title?: string) => {
+    setNotification({
+      isOpen: true,
+      type,
+      message,
+      title
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -196,7 +221,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
         userName: `${selectedUserIds.length} משתמשים`,
       });
     } else {
-      alert(`שגיאה במחיקת המשתמשים: ${result.error || 'שגיאה לא ידועה'}`);
+      showNotification('error', `שגיאה במחיקת המשתמשים: ${result.error || 'שגיאה לא ידועה'}`);
     }
   };
 
@@ -440,6 +465,14 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
         totalCount={bulkDeleteError.totalCount}
         errors={bulkDeleteError.errors}
         type="user"
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
       />
     </div>
   );

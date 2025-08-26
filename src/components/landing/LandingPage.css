@@ -11,7 +11,7 @@
 /* Prevent horizontal scrolling and overscroll */
 html, body {
   overflow-x: hidden;
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
   scroll-behavior: smooth;
 }
 
@@ -890,7 +890,7 @@ body {
   }
   
   .hero-section {
-    padding: 6rem 0.5rem 3rem;
+    padding: 8rem 0.5rem 3rem;
   }
   
   .contact-form-card {
@@ -940,7 +940,7 @@ body {
   }
   
   .hero-section {
-    padding: 5.5rem 0.25rem 2.5rem;
+    padding: 7.5rem 0.25rem 2.5rem;
   }
 }
 

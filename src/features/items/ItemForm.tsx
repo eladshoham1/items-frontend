@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Item, CreateItemRequest, User } from '../../types';
+import { Item, CreateItemRequest } from '../../types';
 import { useItems } from '../../hooks';
 import { useManagement } from '../../contexts';
 import { validateRequired, sanitizeInput, getConflictResolutionMessage } from '../../utils';
-import { ConflictErrorModal } from '../../shared/components';
+import { ConflictErrorModal, NotificationModal } from '../../shared/components';
+import type { NotificationType } from '../../shared/components/NotificationModal';
 import './ItemForm.css';
 
 interface ItemFormProps {
   item: Item | null;
-  userProfile: User;
   isAdmin: boolean;
   onSuccess: () => void;
   onCancel: () => void;
@@ -20,7 +20,7 @@ interface FormErrors {
   note?: string;
 }
 
-const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSuccess, onCancel }) => {
+const ItemForm: React.FC<ItemFormProps> = ({ item, isAdmin, onSuccess, onCancel }) => {
   const { createItem, updateItem } = useItems();
   const { 
     itemNames, 
@@ -50,6 +50,30 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
     message: '',
     itemName: ''
   });
+
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: NotificationType;
+    message: string;
+    title?: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showNotification = (type: NotificationType, message: string, title?: string) => {
+    setNotification({
+      isOpen: true,
+      type,
+      message,
+      title
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   // Load item names and locations when component mounts
   useEffect(() => {
@@ -149,12 +173,12 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
             itemName: formData.name || 'פריט לא ידוע'
           });
         } else {
-          alert(result.error || 'שגיאה בעדכון הפריט');
+          showNotification('error', result.error || 'שגיאה בעדכון הפריט');
         }
       } else {
         // Validate admin permissions for creating new items
         if (!isAdmin) {
-          alert('רק מנהלים יכולים ליצור פריטים חדשים');
+          showNotification('error', 'רק מנהלים יכולים ליצור פריטים חדשים');
           setIsSubmitting(false);
           return;
         }
@@ -176,13 +200,11 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
           requestData.allocatedLocationId = null;
         }
         
-        console.log('Sending item data:', requestData); // Debug log
-        
         const result = await createItem(requestData as CreateItemRequest);
         
         if (result.success) {
           if (!formData.requiresReporting && quantity > 1) {
-            alert(`נוצרו בהצלחה ${quantity} פריטים`);
+            showNotification('success', `נוצרו בהצלחה ${quantity} פריטים`);
           }
           onSuccess();
         } else if (result.isConflict) {
@@ -192,12 +214,12 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
             itemName: formData.name || 'פריט לא ידוע'
           });
         } else {
-          alert(result.error || 'שגיאה בשמירת הפריט');
+          showNotification('error', result.error || 'שגיאה בשמירת הפריט');
         }
       }
     } catch (error) {
       // Removed console.error to avoid noisy logs
-      alert('שגיאה בשמירת הפריט');
+      showNotification('error', 'שגיאה בשמירת הפריט');
     } finally {
       setIsSubmitting(false);
     }
@@ -730,6 +752,14 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, userProfile, isAdmin, onSucce
         message={conflictError.message}
         resolutionMessage={getConflictResolutionMessage('item')}
         type="item"
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
       />
     </>
   );

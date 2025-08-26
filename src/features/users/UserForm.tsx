@@ -3,7 +3,8 @@ import { User, CreateUserRequest, UpdateUserRequest, ranks } from '../../types';
 import { useUsers } from '../../hooks';
 import { useManagement } from '../../contexts';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
-import { ConflictErrorModal } from '../../shared/components';
+import { ConflictErrorModal, NotificationModal } from '../../shared/components';
+import type { NotificationType } from '../../shared/components/NotificationModal';
 
 interface UserFormProps {
   user: User | null;
@@ -45,6 +46,30 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [showLastAdminModal, setShowLastAdminModal] = useState(false);
+
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: NotificationType;
+    message: string;
+    title?: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showNotification = (type: NotificationType, message: string, title?: string) => {
+    setNotification({
+      isOpen: true,
+      type,
+      message,
+      title
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   // All locations are available since we don't filter by unit anymore
   const availableLocations = locations;
@@ -176,11 +201,11 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         // Handle 403 forbidden error (like last admin demotion)
         setShowLastAdminModal(true);
       } else {
-        alert('שגיאה בשמירת המשתמש');
+        showNotification('error', 'שגיאה בשמירת המשתמש');
       }
     } catch (error) {
       // Removed console.error to avoid noisy logs
-      alert('שגיאה בשמירת המשתמש');
+      showNotification('error', 'שגיאה בשמירת המשתמש');
     } finally {
       setIsSubmitting(false);
     }
@@ -712,6 +737,14 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         message="לא ניתן להסיר הרשאות מנהל מהמשתמש האחרון בעל הרשאות מנהל במערכת."
         resolutionMessage="חייב להישאר לפחות מנהל אחד במערכת. הוסף מנהל נוסף לפני הסרת ההרשאות מהמשתמש הנוכחי."
         type="user"
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
       />
     </>
   );

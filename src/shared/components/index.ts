@@ -3,6 +3,7 @@ export { default as Modal } from './Modal';
 export { default as ConflictErrorModal } from './ConflictErrorModal';
 export { default as BulkDeleteErrorModal } from './BulkDeleteErrorModal';
 export { default as ErrorNotificationModal } from './ErrorNotificationModal';
+export { default as NotificationModal } from './NotificationModal';
 export { SmartPagination } from './SmartPagination';
 export { default as TabNavigation } from './TabNavigation';
 export { default as LoadingSpinner } from './LoadingSpinner';

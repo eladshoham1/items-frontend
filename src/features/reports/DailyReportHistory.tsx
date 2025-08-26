@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ServerError, SmartPagination } from '../../shared/components';
+import { ServerError, SmartPagination, NotificationModal } from '../../shared/components';
 import { useDailyReportHistory } from '../../hooks';
 import { DailyReportHistoryItem } from '../../types';
 import { reportService } from '../../services';
+import { NotificationType } from '../../shared/components/NotificationModal';
 
 interface DailyReportHistoryProps {
   userProfile: any;
@@ -17,6 +18,15 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     key: string;
     direction: 'asc' | 'desc';
   } | null>({ key: 'createdAt', direction: 'desc' });
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    message: string;
+    type: NotificationType;
+  }>({
+    isOpen: false,
+    message: '',
+    type: 'error',
+  });
 
   useEffect(() => {
     if (isAdmin) {
@@ -91,13 +101,29 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
           errorMessage = 'שגיאה פנימית בשרת בעת יצירת הדוח';
         }
         
-        alert(errorMessage);
+        setNotification({
+          isOpen: true,
+          message: errorMessage,
+          type: 'error',
+        });
       } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        alert('פג הזמן הקצוב לחיבור - הדוח עשוי להיות גדול מדי');
+        setNotification({
+          isOpen: true,
+          message: 'פג הזמן הקצוב לחיבור - הדוח עשוי להיות גדול מדי',
+          type: 'error',
+        });
       } else if (error.message?.includes('Network Error')) {
-        alert('שגיאה בחיבור לשרת - אנא בדוק את החיבור לאינטרנט');
+        setNotification({
+          isOpen: true,
+          message: 'שגיאה בחיבור לשרת - אנא בדוק את החיבור לאינטרנט',
+          type: 'error',
+        });
       } else {
-        alert('שגיאה לא צפויה בהורדת הקובץ');
+        setNotification({
+          isOpen: true,
+          message: 'שגיאה לא צפויה בהורדת הקובץ',
+          type: 'error',
+        });
       }
     } finally {
       setDownloadingId(null);
@@ -350,6 +376,14 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
           />
         </div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ isOpen: false, message: '', type: 'error' })}
+        message={notification.message}
+        type={notification.type}
+      />
     </div>
   );
 };

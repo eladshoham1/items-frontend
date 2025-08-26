@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import ItemForm from './ItemForm';
 import { useItems } from '../../hooks';
 import { Item, User } from '../../types';
 import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
+import type { NotificationType } from '../../shared/components/NotificationModal';
 
 interface ItemsTabProps {
   userProfile: User;
@@ -46,6 +47,30 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     totalCount: 0,
     errors: [],
   });
+
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: NotificationType;
+    message: string;
+    title?: string;
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: ''
+  });
+
+  const showNotification = (type: NotificationType, message: string, title?: string) => {
+    setNotification({
+      isOpen: true,
+      type,
+      message,
+      title
+    });
+  };
+
+  const closeNotification = () => {
+    setNotification(prev => ({ ...prev, isOpen: false }));
+  };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -198,7 +223,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
         itemName: `${selectedItemIds.length} פריטים`,
       });
     } else {
-      alert(`שגיאה במחיקת הפריטים: ${result.error || 'שגיאה לא ידועה'}`);
+      showNotification('error', `שגיאה במחיקת הפריטים: ${result.error || 'שגיאה לא ידועה'}`);
     }
   };
 
@@ -427,7 +452,6 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
         <ItemForm
           key={selectedItem?.id || 'new'}
           item={selectedItem}
-          userProfile={userProfile}
           isAdmin={isAdmin}
           onSuccess={handleCloseModal}
           onCancel={handleCloseModal}
@@ -458,6 +482,14 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
         totalCount={bulkDeleteError.totalCount}
         errors={bulkDeleteError.errors}
         type="item"
+      />
+
+      <NotificationModal
+        isOpen={notification.isOpen}
+        onClose={closeNotification}
+        type={notification.type}
+        message={notification.message}
+        title={notification.title}
       />
     </div>
   );

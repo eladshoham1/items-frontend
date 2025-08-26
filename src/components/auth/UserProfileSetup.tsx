@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreateUserRequest, ranks } from '../../types';
 import { validateRequired, validatePhoneNumber, validatePersonalNumber, sanitizeInput } from '../../utils';
 import './UserProfileSetup.css';
@@ -6,7 +6,8 @@ import './UserProfileSetup.css';
 interface UserProfileSetupProps {
   onComplete: (profileData: Omit<CreateUserRequest, 'firebaseUid'>) => void;
   userEmail: string;
-  isAdmin: boolean;
+  userDisplayName?: string;
+  userPhoneNumber?: string;
   isLoading?: boolean;
   error?: string | null;
 }
@@ -21,19 +22,46 @@ interface FormErrors {
 const UserProfileSetup: React.FC<UserProfileSetupProps> = ({ 
   onComplete, 
   userEmail,
-  isAdmin,
+  userDisplayName,
+  userPhoneNumber,
   isLoading = false,
   error = null 
 }) => {
   const [formData, setFormData] = useState<Omit<CreateUserRequest, 'firebaseUid'>>({
-    name: '',
+    name: userDisplayName || '',
     personalNumber: 0,
-    phoneNumber: '',
+    phoneNumber: userPhoneNumber || '',
     rank: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [completedFields, setCompletedFields] = useState<Set<string>>(new Set());
+
+  // Manage body class for mobile behavior
+  useEffect(() => {
+    document.body.classList.add('profile-setup-active');
+    
+    // Mark pre-filled fields as completed
+    setCompletedFields(prev => {
+      const newSet = new Set(prev);
+      
+      // Mark name as completed if it was pre-filled
+      if (userDisplayName && userDisplayName.trim() !== '') {
+        newSet.add('name');
+      }
+      
+      // Mark phone number as completed if it was pre-filled
+      if (userPhoneNumber && userPhoneNumber.trim() !== '') {
+        newSet.add('phoneNumber');
+      }
+      
+      return newSet;
+    });
+    
+    return () => {
+      document.body.classList.remove('profile-setup-active');
+    };
+  }, [userDisplayName, userPhoneNumber]);
 
   // Calculate form progress
   const totalFields = 4;
@@ -129,12 +157,34 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
     onComplete(formData);
   };
 
+  // Filter out authentication-related errors that shouldn't be shown during registration
+  const shouldShowError = (error: string | null): boolean => {
+    if (!error) return false;
+    
+    // Don't show these authentication-related errors
+    const authErrors = [
+      'Failed to load user profile',
+      'No authenticated user found',
+      'User not found',
+      'Authentication required',
+      'Unauthorized',
+      'Token expired',
+      'Invalid token',
+      'Please log in',
+      'Session expired'
+    ];
+    
+    return !authErrors.some(authError => 
+      error.toLowerCase().includes(authError.toLowerCase())
+    );
+  };
+
   return (
-    <div className="profile-setup-container">
+    <div className="profile-setup-container" data-testid="profile-setup-modal">
       <div className="profile-setup-card">
         <div className="profile-setup-header">
           <h1 className="profile-setup-title">ברוכים הבאים למערכת</h1>
-          <p className="profile-setup-subtitle">שלום {userEmail}</p>
+          <p className="profile-setup-subtitle">שלום {userDisplayName || userEmail}</p>
           <p className="profile-setup-email">נדרש להשלים את הפרטים האישיים להמשך השימוש</p>
         </div>
         
@@ -149,7 +199,7 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
             ))}
           </div>
           
-          {error && (
+          {shouldShowError(error) && (
             <div className="error-message">
               <i className="fas fa-exclamation-triangle"></i>
               {error}
@@ -168,7 +218,7 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
                   onFocus={() => handleFocus('name')}
                   onBlur={handleBlur}
                   required 
-                  placeholder="הזן את שמך המלא"
+                  placeholder={userDisplayName ? "שם מלא (מתוך החשבון)" : "הזן את שמך המלא"}
                 />
                 {getFieldIcon('name')}
               </div>
@@ -180,6 +230,29 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
               )}
             </div>
             
+            <div className={`form-group ${focusedField === 'phoneNumber' ? 'focused' : ''}`}>
+              <label className="form-label required">מספר טלפון</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  className={`form-input ${errors.phoneNumber ? 'error' : ''}`}
+                  name="phoneNumber" 
+                  value={formData.phoneNumber} 
+                  onChange={e => handleInputChange('phoneNumber', e.target.value)}
+                  onFocus={() => handleFocus('phoneNumber')}
+                  onBlur={handleBlur}
+                  required 
+                  placeholder={userPhoneNumber ? "מספר טלפון (מתוך החשבון)" : "05xxxxxxxx"}
+                />
+                {getFieldIcon('phoneNumber')}
+              </div>
+              {errors.phoneNumber && (
+                <div className="form-error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {errors.phoneNumber}
+                </div>
+              )}
+            </div>
+
             <div className={`form-group ${focusedField === 'personalNumber' ? 'focused' : ''}`}>
               <label className="form-label required">מספר אישי</label>
               <div style={{ position: 'relative' }}>
@@ -213,29 +286,6 @@ const UserProfileSetup: React.FC<UserProfileSetupProps> = ({
                 <div className="form-error">
                   <i className="fas fa-exclamation-circle"></i>
                   {errors.personalNumber}
-                </div>
-              )}
-            </div>
-            
-            <div className={`form-group ${focusedField === 'phoneNumber' ? 'focused' : ''}`}>
-              <label className="form-label required">מספר טלפון</label>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  className={`form-input ${errors.phoneNumber ? 'error' : ''}`}
-                  name="phoneNumber" 
-                  value={formData.phoneNumber} 
-                  onChange={e => handleInputChange('phoneNumber', e.target.value)}
-                  onFocus={() => handleFocus('phoneNumber')}
-                  onBlur={handleBlur}
-                  required 
-                  placeholder="05xxxxxxxx"
-                />
-                {getFieldIcon('phoneNumber')}
-              </div>
-              {errors.phoneNumber && (
-                <div className="form-error">
-                  <i className="fas fa-exclamation-circle"></i>
-                  {errors.phoneNumber}
                 </div>
               )}
             </div>
