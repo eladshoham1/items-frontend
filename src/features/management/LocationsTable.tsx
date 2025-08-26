@@ -301,11 +301,11 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
         />
       ) : (
         <>
-          <div className="table-responsive">
-            <table className="table">
+          <div className="unified-table-container">
+            <table className="unified-table">
               <thead>
                 <tr>
-                  <th>
+                  <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
                     <input
                       type="checkbox"
                       checked={paginatedItems.length > 0 && selectedIds.length === paginatedItems.length}
@@ -313,7 +313,7 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     />
                   </th>
                   <th 
-                    className="sortable-header"
+                    className="unified-table-header unified-table-header-regular sortable"
                     onClick={() => handleSort('name')}
                     title="לחץ למיון לפי שם המיקום"
                     data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
@@ -323,7 +323,7 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     </div>
                   </th>
                   <th 
-                    className="sortable-header"
+                    className="unified-table-header unified-table-header-regular sortable"
                     onClick={() => handleSort('unitName')}
                     title="לחץ למיון לפי יחידה"
                     data-sorted={sortConfig?.key === 'unitName' ? 'true' : 'false'}
@@ -333,7 +333,7 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     </div>
                   </th>
                   <th 
-                    className="sortable-header"
+                    className="unified-table-header unified-table-header-regular sortable"
                     onClick={() => handleSort('createdAt')}
                     title="לחץ למיון לפי תאריך יצירה"
                     data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
@@ -343,7 +343,7 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     </div>
                   </th>
                   <th 
-                    className="sortable-header"
+                    className="unified-table-header unified-table-header-regular sortable"
                     onClick={() => handleSort('updatedAt')}
                     title="לחץ למיון לפי תאריך עדכון"
                     data-sorted={sortConfig?.key === 'updatedAt' ? 'true' : 'false'}
@@ -352,26 +352,26 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                       <span>תאריך עדכון</span>
                     </div>
                   </th>
-                  <th>פעולות</th>
+                  <th className="unified-table-header unified-table-header-regular" style={{ width: '100px' }}>פעולות</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedItems.map((location) => (
-                  <tr key={location.id}>
-                    <td>
+                  <tr key={location.id} className="unified-table-row">
+                    <td className="unified-table-cell-sticky">
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(location.id)}
                         onChange={(e) => handleSelectItem(location.id, e.target.checked)}
                       />
                     </td>
-                    <td>{location.name}</td>
-                    <td>{getUnitName(location.unitId)}</td>
-                    <td>{new Date(location.createdAt).toLocaleDateString('he-IL')}</td>
-                    <td>{new Date(location.updatedAt).toLocaleDateString('he-IL')}</td>
-                    <td>
+                    <td className="unified-table-cell">{location.name}</td>
+                    <td className="unified-table-cell">{getUnitName(location.unitId)}</td>
+                    <td className="unified-table-cell">{new Date(location.createdAt).toLocaleDateString('he-IL')}</td>
+                    <td className="unified-table-cell">{new Date(location.updatedAt).toLocaleDateString('he-IL')}</td>
+                    <td className="unified-table-cell">
                       <button
-                        className="btn btn-sm btn-ghost"
+                        className="btn btn-sm btn-ghost unified-action-btn"
                         onClick={() => openEditModal(location)}
                       >
                         עדכן

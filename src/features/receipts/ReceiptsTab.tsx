@@ -340,52 +340,52 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                             </div>
                         ) : (
                             <>
-                                <div className="table-container">
-                                    <table className="table">
+                                <div className="unified-table-container">
+                                    <table className="unified-table">
                                         <thead>
                                             <tr>
-                                                <th className="sortable-header" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
                                                     <div className="d-flex align-items-center">
                                                         <span>מנפיק</span>
                                                     </div>
                                                 </th>
-                                                <th className="sortable-header" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
                                                     <div className="d-flex align-items-center">
                                                         <span>מקבל</span>
                                                     </div>
                                                 </th>
-                                                <th className="sortable-header" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
                                                     <div className="d-flex align-items-center">
                                                         <span>יחידה</span>
                                                     </div>
                                                 </th>
-                                                <th className="sortable-header" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
                                                     <div className="d-flex align-items-center">
                                                         <span>כמות פריטים</span>
                                                     </div>
                                                 </th>
-                                                <th className="sortable-header" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
                                                     <div className="d-flex align-items-center">
                                                         <span>תאריך חתימה</span>
                                                     </div>
                                                 </th>
-                                                <th>פעולות</th>
+                                                <th className="unified-table-header unified-table-header-regular" style={{ width: '200px' }}>פעולות</th>
                                             </tr>
                                         </thead>
                                     <tbody>
                                         {paginatedReceipts.map(receipt => (
-                                            <tr key={receipt.id} onClick={() => setDetailsReceipt(receipt)} style={{ cursor: 'pointer' }}>
-                                                <td>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
-                                                <td>{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
-                                                <td>{getUnit(receipt)}</td>
-                                                <td>{receipt.receiptItems?.length || 0}</td>
-                                                <td>{timestampToDate(receipt.updatedAt.toString())}</td>
-                                                <td>
+                                            <tr key={receipt.id} className="unified-table-row" onClick={() => setDetailsReceipt(receipt)} style={{ cursor: 'pointer' }}>
+                                                <td className="unified-table-cell">{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
+                                                <td className="unified-table-cell">{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
+                                                <td className="unified-table-cell">{getUnit(receipt)}</td>
+                                                <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
+                                                <td className="unified-table-cell">{timestampToDate(receipt.updatedAt.toString())}</td>
+                                                <td className="unified-table-cell">
                                                     <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
                                                         {isAdmin && (
                                                             <>
                                                                 <button 
-                                                                    className="btn btn-primary" 
+                                                                    className="btn btn-primary unified-action-btn" 
                                                                     onClick={() => handleUpdateClick(receipt)}
                                                                     title="עדכן קבלה"
                                                                 >
@@ -393,7 +393,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                                                     עדכן
                                                                 </button>
                                                                 <button 
-                                                                    className="btn btn-danger" 
+                                                                    className="btn btn-danger unified-action-btn" 
                                                                     onClick={() => handleDeleteClick(receipt)}
                                                                     title="מחק קבלה"
                                                                 >
@@ -403,7 +403,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                                             </>
                                                         )}
                                                         <button 
-                                                            className="btn btn-info" 
+                                                            className="btn btn-info unified-action-btn" 
                                                             onClick={() => handleDownloadPDF(receipt)}
                                                             disabled={downloadingReceiptId === receipt.id}
                                                             title="הורד קבלה"

@@ -201,12 +201,12 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
         </small>
       </div>
       <div className="card-body">
-        <div className="table-responsive">
-          <table className="table table-striped">
+        <div className="unified-table-container">
+          <table className="unified-table">
             <thead>
               <tr>
                 <th 
-                  className="sortable-header text-center"
+                  className="unified-table-header unified-table-header-regular sortable text-center"
                   onClick={() => handleSort('createdAt')}
                   title="לחץ למיון לפי תאריך דוח"
                   data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
@@ -215,10 +215,10 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                     <span>תאריך דוח</span>
                   </div>
                 </th>
-                <th className="text-center">נוצר על ידי</th>
-                <th className="text-center">הושלם על ידי</th>
+                <th className="unified-table-header unified-table-header-regular text-center">נוצר על ידי</th>
+                <th className="unified-table-header unified-table-header-regular text-center">הושלם על ידי</th>
                 <th 
-                  className="sortable-header text-center"
+                  className="unified-table-header unified-table-header-regular sortable text-center"
                   onClick={() => handleSort('totalItems')}
                   title="לחץ למיון לפי סהכ פריטים"
                   data-sorted={sortConfig?.key === 'totalItems' ? 'true' : 'false'}
@@ -227,30 +227,30 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                     <span>סה"כ פריטים</span>
                   </div>
                 </th>
-                <th className="text-center">פעולות</th>
+                <th className="unified-table-header unified-table-header-regular text-center" style={{ width: '150px' }}>פעולות</th>
               </tr>
             </thead>
             <tbody>
               {sortedHistory.map(report => {
                 return (
-                  <tr key={report.id}>
-                    <td className="text-center">{formatDateWithTime(report.createdAt)}</td>
-                    <td className="text-center">{report.createdBy.name}</td>
-                    <td className="text-center">
+                  <tr key={report.id} className="unified-table-row">
+                    <td className="unified-table-cell text-center">{formatDateWithTime(report.createdAt)}</td>
+                    <td className="unified-table-cell text-center">{report.createdBy.name}</td>
+                    <td className="unified-table-cell text-center">
                       {report.completedBy ? (
                         <span>{report.completedBy.name}</span>
                       ) : (
                         <span className="text-muted">-</span>
                       )}
                     </td>
-                    <td className="text-center">
-                      <span className="badge bg-secondary">
+                    <td className="unified-table-cell text-center">
+                      <span className="unified-badge unified-badge-secondary">
                         {report.totalItems}
                       </span>
                     </td>
-                    <td className="text-center">
+                    <td className="unified-table-cell text-center">
                       <button
-                        className="btn btn-outline-primary btn-sm"
+                        className="btn btn-outline-primary btn-sm unified-action-btn"
                         onClick={() => handleDownloadPDF(report)}
                         disabled={downloadingId === report.id}
                         title="הורד PDF"

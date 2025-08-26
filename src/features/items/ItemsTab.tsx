@@ -297,11 +297,11 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
         </div>
       </div>
 
-        <div className="table-responsive">
-          <table className="table">
+        <div className="unified-table-container">
+          <table className="unified-table">
             <thead>
               <tr>
-                <th style={{ width: '50px' }}>
+                <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -311,7 +311,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   />
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="unified-table-header unified-table-header-regular"
                   onClick={() => handleSort('name')}
                   title="לחץ למיון לפי שם פריט"
                   data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
@@ -321,7 +321,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="unified-table-header unified-table-header-regular"
                   onClick={() => handleSort('idNumber')}
                   title="לחץ למיון לפי מספר צ'"
                   data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
@@ -331,7 +331,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="unified-table-header unified-table-header-regular"
                   onClick={() => handleSort('allocatedLocation')}
                   title="לחץ למיון לפי הקצאה"
                   data-sorted={sortConfig?.key === 'allocatedLocation' ? 'true' : 'false'}
@@ -341,7 +341,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="unified-table-header unified-table-header-regular"
                   onClick={() => handleSort('status')}
                   title="לחץ למיון לפי סטטוס"
                   data-sorted={sortConfig?.key === 'status' ? 'true' : 'false'}
@@ -351,7 +351,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header"
+                  className="unified-table-header unified-table-header-regular"
                   onClick={() => handleSort('note')}
                   title="לחץ למיון לפי הערה"
                   data-sorted={sortConfig?.key === 'note' ? 'true' : 'false'}
@@ -360,13 +360,13 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                     <span>הערה</span>
                   </div>
                 </th>
-                <th>פעולות</th>
+                <th className="unified-table-header unified-table-header-regular">פעולות</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedItems.map((item: Item) => (
-                <tr key={item.id}>
-                  <td>
+              {paginatedItems.map((item: Item, index: number) => (
+                <tr key={item.id} className="unified-table-row">
+                  <td className={`unified-table-cell-sticky ${index % 2 === 0 ? 'even' : 'odd'}`}>
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -374,17 +374,17 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                       onChange={() => handleToggleItemSelection(item.id)}
                     />
                   </td>
-                  <td>{item.itemName?.name || 'אין תערכה'}</td>
-                  <td>{item.idNumber || 'לא זמין'}</td>
-                  <td>{item.allocatedLocation?.name || 'לא מוקצה'}</td>
-                  <td>
+                  <td className="unified-table-cell">{item.itemName?.name || 'אין תערכה'}</td>
+                  <td className="unified-table-cell">{item.idNumber || 'לא זמין'}</td>
+                  <td className="unified-table-cell">{item.allocatedLocation?.name || 'לא מוקצה'}</td>
+                  <td className="unified-table-cell">
                     <span 
-                      className={`badge status-badge ${
+                      className={`unified-badge ${
                         !item.isOperational 
-                          ? 'bg-warning text-dark' 
+                          ? 'unified-badge-warning' 
                           : (item.isAvailable ?? false) 
-                            ? 'bg-success' 
-                            : 'bg-danger'
+                            ? 'unified-badge-success' 
+                            : 'unified-badge-danger'
                       }`}
                     >
                       {!item.isOperational 
@@ -395,10 +395,10 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                       }
                     </span>
                   </td>
-                  <td>{item.note || 'אין הערה'}</td>
-                  <td>
+                  <td className="unified-table-cell">{item.note || 'אין הערה'}</td>
+                  <td className="unified-table-cell">
                     <button 
-                      className="btn btn-sm btn-outline" 
+                      className="unified-action-btn unified-action-btn-primary" 
                       onClick={() => handleItemClick(item)}
                     >
                       עדכן

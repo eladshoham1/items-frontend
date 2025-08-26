@@ -395,11 +395,11 @@ export const AllocationsTab: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="table-responsive">
-        <table className="table">
+      <div className="unified-table-container">
+        <table className="unified-table">
           <thead>
             <tr>
-              <th style={{ width: '40px' }}>
+              <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
                 <input
                   type="checkbox"
                   className="form-check-input"
@@ -408,70 +408,70 @@ export const AllocationsTab: React.FC = () => {
                 />
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('unit')}
                 style={{ cursor: 'pointer' }}
               >
                 מסגרת
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('secondaryUnit')}
                 style={{ cursor: 'pointer' }}
               >
                 מסגרת משנה
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('owner')}
                 style={{ cursor: 'pointer' }}
               >
                 בע"ת
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('vehicleType')}
                 style={{ cursor: 'pointer' }}
               >
                 סוג הכלי
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('idNumber')}
                 style={{ cursor: 'pointer' }}
               >
                 צ'
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('standard')}
                 style={{ cursor: 'pointer' }}
               >
                 תקן
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('isIssued')}
                 style={{ cursor: 'pointer' }}
               >
                 הונפק קשר
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('form624')}
                 style={{ cursor: 'pointer' }}
               >
                 624
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('is624Issued')}
                 style={{ cursor: 'pointer' }}
               >
                 הונפק 624
               </th>
               <th 
-                className="sortable-header" 
+                className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('note')}
                 style={{ cursor: 'pointer' }}
               >
@@ -481,8 +481,8 @@ export const AllocationsTab: React.FC = () => {
           </thead>
           <tbody>
             {filteredAndSortedAllocations.map((allocation) => (
-              <tr key={allocation.id}>
-                <td>
+              <tr key={allocation.id} className="unified-table-row">
+                <td className="unified-table-cell-sticky">
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -496,16 +496,16 @@ export const AllocationsTab: React.FC = () => {
                     }}
                   />
                 </td>
-                <td>{renderCell(allocation, 'unit')}</td>
-                <td>{renderCell(allocation, 'secondaryUnit')}</td>
-                <td>{renderCell(allocation, 'owner')}</td>
-                <td>{renderCell(allocation, 'vehicleType')}</td>
-                <td>{renderCell(allocation, 'idNumber')}</td>
-                <td>{renderCell(allocation, 'standard')}</td>
-                <td>{renderCell(allocation, 'isIssued')}</td>
-                <td>{renderCell(allocation, 'form624')}</td>
-                <td>{renderCell(allocation, 'is624Issued')}</td>
-                <td>{renderCell(allocation, 'note')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'unit')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'secondaryUnit')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'owner')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'vehicleType')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'idNumber')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'standard')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'isIssued')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'form624')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'is624Issued')}</td>
+                <td className="unified-table-cell">{renderCell(allocation, 'note')}</td>
               </tr>
             ))}
           </tbody>

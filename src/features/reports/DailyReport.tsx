@@ -593,159 +593,76 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
               </div>
 
               {/* Modern Table */}
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                overflow: 'hidden',
-                backdropFilter: 'blur(10px)'
-              }}>
+              <div className="unified-table-container">
                 <div style={{ overflowX: 'auto' }}>
-                  <table style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    margin: 0
-                  }}>
+                  <table className="unified-table">
                     <thead>
-                      <tr style={{
-                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(29, 78, 216, 0.1))',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                      }}>
+                      <tr>
                         <th 
-                          className="sortable-header"
+                          className="unified-table-header unified-table-header-regular sortable"
                           onClick={() => handleSort('itemName')}
                           title="לחץ למיון לפי שם פריט"
                           data-sorted={sortConfig?.key === 'itemName' ? 'true' : 'false'}
-                          style={{
-                            padding: '16px',
-                            textAlign: 'right',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>פריט</span>
                           </div>
                         </th>
                         <th 
-                          className="sortable-header"
+                          className="unified-table-header unified-table-header-regular sortable"
                           onClick={() => handleSort('idNumber')}
                           title="לחץ למיון לפי מספר צ'"
                           data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
-                          style={{
-                            padding: '16px',
-                            textAlign: 'right',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>מספר צ'</span>
                           </div>
                         </th>
                         <th 
-                          className="sortable-header"
+                          className="unified-table-header unified-table-header-regular sortable"
                           onClick={() => handleSort('signedBy')}
                           title="לחץ למיון לפי מי חתם על הפריט"
                           data-sorted={sortConfig?.key === 'signedBy' ? 'true' : 'false'}
-                          style={{
-                            padding: '16px',
-                            textAlign: 'right',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>חתום על ידי</span>
                           </div>
                         </th>
                         <th 
-                          className="sortable-header"
+                          className="unified-table-header unified-table-header-regular sortable"
                           onClick={() => handleSort('location')}
                           title="לחץ למיון לפי מיקום"
                           data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
-                          style={{
-                            padding: '16px',
-                            textAlign: 'right',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>מיקום</span>
                           </div>
                         </th>
                         <th 
-                          className="sortable-header"
+                          className="unified-table-header unified-table-header-regular sortable"
                           onClick={() => handleSort('reportedAt')}
                           title="לחץ למיון לפי תאריך דיווח"
                           data-sorted={sortConfig?.key === 'reportedAt' ? 'true' : 'false'}
-                          style={{
-                            padding: '16px',
-                            textAlign: 'right',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>תאריך דיווח</span>
                           </div>
                         </th>
                         <th 
-                          className="sortable-header"
+                          className="unified-table-header unified-table-header-regular sortable"
                           onClick={() => handleSort('reportedBy')}
                           title="לחץ למיון לפי מי דיווח"
                           data-sorted={sortConfig?.key === 'reportedBy' ? 'true' : 'false'}
-                          style={{
-                            padding: '16px',
-                            textAlign: 'right',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>מי דיווח</span>
                           </div>
                         </th>
                         <th 
-                          className="sortable-header"
+                          className="unified-table-header unified-table-header-regular sortable"
                           onClick={() => handleSort('isReported')}
                           title="לחץ למיון לפי סטטוס דיווח"
                           data-sorted={sortConfig?.key === 'isReported' ? 'true' : 'false'}
-                          style={{
-                            padding: '16px',
-                            textAlign: 'right',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <span>דיווח</span>
@@ -764,74 +681,36 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             </div>
                           </div>
                         </th>
-                        <th style={{
-                          padding: '16px',
-                          textAlign: 'right',
-                          color: 'rgba(255, 255, 255, 0.9)',
-                          fontWeight: '600',
-                          fontSize: '14px',
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                        }}>
+                        <th className="unified-table-header unified-table-header-regular">
                           הערות
                         </th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginatedItems.map((item, index) => (
-                        <tr key={item.id} style={{
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-                          background: index % 2 === 0 ? 'rgba(255, 255, 255, 0.02)' : 'transparent',
-                          transition: 'all 0.2s ease'
-                        }}>
-                          <td style={{
-                            padding: '16px',
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                        <tr key={item.id} className="unified-table-row">
+                          <td className="unified-table-cell">
                             {item.itemName}
                           </td>
-                          <td style={{
-                            padding: '16px',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                          <td className="unified-table-cell">
                             {item.idNumber || '-'}
                           </td>
-                          <td style={{
-                            padding: '16px',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                          <td className="unified-table-cell">
                             {item.signedByUserName || '-'}
                           </td>
-                          <td style={{
-                            padding: '16px',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                          <td className="unified-table-cell">
                             {item.location || '-'}
                           </td>
-                          <td style={{
-                            padding: '16px',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                          <td className="unified-table-cell">
                             {item.reportedAt ? (() => {
                               const date = new Date(item.reportedAt);
                               return !isNaN(date.getTime()) ? date.toLocaleDateString('he-IL') : 'תאריך לא תקין';
                             })() : '-'}
                           </td>
-                          <td style={{
-                            padding: '16px',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                          <td className="unified-table-cell">
                             {item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '-'}
                           </td>
-                          <td style={{
-                            padding: '16px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                          <td className="unified-table-cell">
                             <input
                               type="checkbox"
                               checked={item.isReported || false}
@@ -843,10 +722,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                               }}
                             />
                           </td>
-                          <td style={{
-                            padding: '16px',
-                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
-                          }}>
+                          <td className="unified-table-cell">
                             <input
                               type="text"
                               value={item.notes || ''}

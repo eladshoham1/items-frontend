@@ -646,205 +646,241 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           )}          {activeTab === 'units' && (
-            <div className="dashboard-table-container scroll-container force-horizontal-scroll">
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th 
-                    className="dashboard-table-header-item"
-                    onClick={() => handleSort('name')}
-                  >
-                    פריט
-                  </th>
-                  {units.map(unit => (
-                    <th 
-                      key={unit} 
-                      className="dashboard-table-header-unit"
-                      onClick={() => handleSort(`unit_${unit}`)}
-                    >
-                      {unit}
-                    </th>
-                  ))}
-                  <th 
-                    className="dashboard-table-header-signed"
-                    onClick={() => handleSort('signed')}
-                  >
-                    חתומים
-                  </th>
-                  <th 
-                    className="dashboard-table-header-waiting"
-                    onClick={() => handleSort('waiting')}
-                  >
-                    ממתינים לחתימה
-                  </th>
-                  <th 
-                    className="dashboard-table-header-broken"
-                    onClick={() => handleSort('nonOperational')}
-                  >
-                    תקולים
-                  </th>
-                  <th 
-                    className="dashboard-table-header-available"
-                    onClick={() => handleSort('available')}
-                  >
-                    זמינים
-                  </th>
-                  <th 
-                    className="dashboard-table-header-total"
-                    onClick={() => handleSort('total')}
-                  >
-                    סה"כ
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedItems && Array.isArray(paginatedItems) ? paginatedItems.map((item, itemIndex) => {
-                  if (!item || typeof item !== 'string') return null;
-                  
-                  return (
-                  <tr 
-                    key={item} 
-                    className="dashboard-table-row"
-                  >
-                    <td className={`dashboard-table-cell-item ${itemIndex % 2 === 0 ? 'even' : 'odd'}`}>
-                      {item}
-                    </td>
-                    {units && Array.isArray(units) ? units.map(unit => {
-                      if (!unit || typeof unit !== 'string') return null;
-                      
-                      const { signedQuantity, waitingQuantity, users } = getCellData(item, unit);
-                      const hasUsers = users && Array.isArray(users) && users.length > 0;
-                      const hasSignedUsers = signedQuantity > 0;
-                      const hasWaitingUsers = waitingQuantity > 0;
+            <div className="unified-table-container">
+              <div style={{ overflowX: 'auto' }}>
+                <table className="unified-table">
+                  <thead>
+                    <tr>
+                      <th 
+                        className="unified-table-header unified-table-header-regular sortable"
+                        onClick={() => handleSort('name')}
+                        title="לחץ למיון לפי שם פריט"
+                        data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>פריט</span>
+                        </div>
+                      </th>
+                      {units.map(unit => (
+                        <th 
+                          key={unit} 
+                          className="unified-table-header unified-table-header-regular sortable"
+                          onClick={() => handleSort(`unit_${unit}`)}
+                          title={`לחץ למיון לפי ${unit}`}
+                          data-sorted={sortConfig?.key === `unit_${unit}` ? 'true' : 'false'}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <span>{unit}</span>
+                          </div>
+                        </th>
+                      ))}
+                      <th 
+                        className="unified-table-header unified-table-header-regular sortable"
+                        onClick={() => handleSort('signed')}
+                        title="לחץ למיון לפי חתומים"
+                        data-sorted={sortConfig?.key === 'signed' ? 'true' : 'false'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>חתומים</span>
+                        </div>
+                      </th>
+                      <th 
+                        className="unified-table-header unified-table-header-regular sortable"
+                        onClick={() => handleSort('waiting')}
+                        title="לחץ למיון לפי ממתינים לחתימה"
+                        data-sorted={sortConfig?.key === 'waiting' ? 'true' : 'false'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>ממתינים לחתימה</span>
+                        </div>
+                      </th>
+                      <th 
+                        className="unified-table-header unified-table-header-regular sortable"
+                        onClick={() => handleSort('nonOperational')}
+                        title="לחץ למיון לפי תקולים"
+                        data-sorted={sortConfig?.key === 'nonOperational' ? 'true' : 'false'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>תקולים</span>
+                        </div>
+                      </th>
+                      <th 
+                        className="unified-table-header unified-table-header-regular sortable"
+                        onClick={() => handleSort('available')}
+                        title="לחץ למיון לפי זמינים"
+                        data-sorted={sortConfig?.key === 'available' ? 'true' : 'false'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>זמינים</span>
+                        </div>
+                      </th>
+                      <th 
+                        className="unified-table-header unified-table-header-regular sortable"
+                        onClick={() => handleSort('total')}
+                        title="לחץ למיון לפי סה'כ"
+                        data-sorted={sortConfig?.key === 'total' ? 'true' : 'false'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span>סה"כ</span>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedItems && Array.isArray(paginatedItems) ? paginatedItems.map((item, itemIndex) => {
+                      if (!item || typeof item !== 'string') return null;
                       
                       return (
-                        <td 
-                          key={`${item}-${unit}`}
-                          className={`dashboard-table-cell ${hasUsers ? 'has-users' : 'no-users'}`}
-                          onClick={(e) => handleCellClick(e, users || [], item, unit)}
-                          title={hasUsers ? 'לחץ לפרטים נוספים' : 'אין משתמשים רשומים'}
-                        >
-                          {hasUsers ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
-                              {hasSignedUsers && (
-                                <span className="dashboard-badge-signed" title={`חתומים: ${signedQuantity}`}>
-                                  ✓ {signedQuantity}
-                                </span>
-                              )}
-                              {hasWaitingUsers && (
-                                <span className="dashboard-badge-waiting" title={`ממתינים: ${waitingQuantity}`}>
-                                  ⏳ {waitingQuantity}
-                                </span>
-                              )}
-                          </div>
-                          ) : (
-                            <span className="dashboard-badge-empty">
-                              0
-                            </span>
-                          )}
+                      <tr 
+                        key={item} 
+                        className="unified-table-row"
+                      >
+                        <td className="unified-table-cell">
+                          {item}
                         </td>
+                        {units && Array.isArray(units) ? units.map(unit => {
+                          if (!unit || typeof unit !== 'string') return null;
+                          
+                          const { signedQuantity, waitingQuantity, users } = getCellData(item, unit);
+                          const hasUsers = users && Array.isArray(users) && users.length > 0;
+                          const hasSignedUsers = signedQuantity > 0;
+                          const hasWaitingUsers = waitingQuantity > 0;
+                          
+                          return (
+                            <td 
+                              key={`${item}-${unit}`}
+                              className="unified-table-cell"
+                              onClick={(e) => handleCellClick(e, users || [], item, unit)}
+                              title={hasUsers ? 'לחץ לפרטים נוספים' : 'אין משתמשים רשומים'}
+                              style={{ cursor: hasUsers ? 'pointer' : 'default' }}
+                            >
+                              {hasUsers ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                                  {hasSignedUsers && (
+                                    <span className="dashboard-badge-signed" title={`חתומים: ${signedQuantity}`}>
+                                      ✓ {signedQuantity}
+                                    </span>
+                                  )}
+                                  {hasWaitingUsers && (
+                                    <span className="dashboard-badge-waiting" title={`ממתינים: ${waitingQuantity}`}>
+                                      ⏳ {waitingQuantity}
+                                    </span>
+                                  )}
+                              </div>
+                              ) : (
+                                <span className="dashboard-badge-empty">
+                                  0
+                                </span>
+                              )}
+                            </td>
+                          );
+                        }) : null}
+                        <td 
+                          className="unified-table-cell"
+                          onClick={(e) => {
+                            // Collect all signed users from all units for this item
+                            const allSignedUsers: SignUser[] = [];
+                            units.forEach(unit => {
+                              const { users } = getCellData(item, unit);
+                              if (users && Array.isArray(users)) {
+                                const signedUsers = users.filter(user => user.isSigned === true);
+                                allSignedUsers.push(...signedUsers);
+                              }
+                            });
+                            handleCellClick(e, allSignedUsers, item, 'כל היחידות - חתומים');
+                          }}
+                          title="לחץ לפרטי כל המשתמשים החתומים"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <span className="dashboard-badge-large dashboard-badge-signed-large">
+                            {getItemSignedTotal(item)}
+                          </span>
+                        </td>
+                        <td 
+                          className="unified-table-cell"
+                          onClick={(e) => {
+                            // Collect all waiting users from all units for this item
+                            const allWaitingUsers: SignUser[] = [];
+                            units.forEach(unit => {
+                              const { users } = getCellData(item, unit);
+                              if (users && Array.isArray(users)) {
+                                const waitingUsers = users.filter(user => user.isSigned !== true);
+                                allWaitingUsers.push(...waitingUsers);
+                              }
+                            });
+                            handleCellClick(e, allWaitingUsers, item, 'כל היחידות - ממתינים');
+                          }}
+                          title="לחץ לפרטי כל המשתמשים הממתינים"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <span className="dashboard-badge-large dashboard-badge-waiting-large">
+                            {getItemWaitingTotal(item)}
+                          </span>
+                        </td>
+                        <td 
+                          className="unified-table-cell"
+                          onClick={(e) => {
+                            const nonOpCount = stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0;
+                            if (nonOpCount > 0) {
+                              // For non-operational, we'll show a summary info instead of user details
+                              // since non-operational items might not have specific users assigned
+                              handleCellClick(e, [], item, `תקולים - ${nonOpCount} יחידות`);
+                            }
+                          }}
+                          title={stats && stats[item] && stats[item].nonOperationalQuantity > 0 ? "לחץ לפרטי הפריטים התקולים" : "אין פריטים תקולים"}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <span className="dashboard-badge-large dashboard-badge-broken-large">
+                            {stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0}
+                          </span>
+                        </td>
+                        <td 
+                          className="unified-table-cell"
+                          onClick={(e) => {
+                            // For available items, show all users who are not assigned or not signed
+                            const allUsers: SignUser[] = [];
+                            units.forEach(unit => {
+                              const { users } = getCellData(item, unit);
+                              if (users && Array.isArray(users)) {
+                                allUsers.push(...users);
+                              }
+                            });
+                            handleCellClick(e, allUsers, item, 'כל היחידות - סטטוס זמינות');
+                          }}
+                          title="לחץ לפרטי זמינות הפריט"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <span className="dashboard-badge-large dashboard-badge-available-large">
+                            {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - (stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0) - getItemSignedTotal(item) - getItemWaitingTotal(item)}
+                          </span>
+                        </td>
+                        <td 
+                          className="unified-table-cell"
+                          onClick={(e) => {
+                            // For total, show all users from all units for this item
+                            const allUsers: SignUser[] = [];
+                            units.forEach(unit => {
+                              const { users } = getCellData(item, unit);
+                              if (users && Array.isArray(users)) {
+                                allUsers.push(...users);
+                              }
+                            });
+                            handleCellClick(e, allUsers, item, 'כל היחידות - סיכום כללי');
+                          }}
+                          title="לחץ לפרטי כל המשתמשים הרשומים לפריט"
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <span className="dashboard-badge-large dashboard-badge-total-large">
+                            {stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0}
+                          </span>
+                        </td>
+                      </tr>
                       );
-                    }) : null}
-                    <td 
-                      className="dashboard-table-cell-signed"
-                      onClick={(e) => {
-                        // Collect all signed users from all units for this item
-                        const allSignedUsers: SignUser[] = [];
-                        units.forEach(unit => {
-                          const { users } = getCellData(item, unit);
-                          if (users && Array.isArray(users)) {
-                            const signedUsers = users.filter(user => user.isSigned === true);
-                            allSignedUsers.push(...signedUsers);
-                          }
-                        });
-                        handleCellClick(e, allSignedUsers, item, 'כל היחידות - חתומים');
-                      }}
-                      title="לחץ לפרטי כל המשתמשים החתומים"
-                    >
-                      <span className="dashboard-badge-large dashboard-badge-signed-large">
-                        {getItemSignedTotal(item)}
-                      </span>
-                    </td>
-                    <td 
-                      className="dashboard-table-cell-waiting"
-                      onClick={(e) => {
-                        // Collect all waiting users from all units for this item
-                        const allWaitingUsers: SignUser[] = [];
-                        units.forEach(unit => {
-                          const { users } = getCellData(item, unit);
-                          if (users && Array.isArray(users)) {
-                            const waitingUsers = users.filter(user => user.isSigned !== true);
-                            allWaitingUsers.push(...waitingUsers);
-                          }
-                        });
-                        handleCellClick(e, allWaitingUsers, item, 'כל היחידות - ממתינים');
-                      }}
-                      title="לחץ לפרטי כל המשתמשים הממתינים"
-                    >
-                      <span className="dashboard-badge-large dashboard-badge-waiting-large">
-                        {getItemWaitingTotal(item)}
-                      </span>
-                    </td>
-                    <td 
-                      className="dashboard-table-cell-broken"
-                      onClick={(e) => {
-                        const nonOpCount = stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0;
-                        if (nonOpCount > 0) {
-                          // For non-operational, we'll show a summary info instead of user details
-                          // since non-operational items might not have specific users assigned
-                          handleCellClick(e, [], item, `תקולים - ${nonOpCount} יחידות`);
-                        }
-                      }}
-                      title={stats && stats[item] && stats[item].nonOperationalQuantity > 0 ? "לחץ לפרטי הפריטים התקולים" : "אין פריטים תקולים"}
-                    >
-                      <span className="dashboard-badge-large dashboard-badge-broken-large">
-                        {stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0}
-                      </span>
-                    </td>
-                    <td 
-                      className="dashboard-table-cell-available"
-                      onClick={(e) => {
-                        // For available items, show all users who are not assigned or not signed
-                        const allUsers: SignUser[] = [];
-                        units.forEach(unit => {
-                          const { users } = getCellData(item, unit);
-                          if (users && Array.isArray(users)) {
-                            allUsers.push(...users);
-                          }
-                        });
-                        handleCellClick(e, allUsers, item, 'כל היחידות - סטטוס זמינות');
-                      }}
-                      title="לחץ לפרטי זמינות הפריט"
-                    >
-                      <span className="dashboard-badge-large dashboard-badge-available-large">
-                        {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - (stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0) - getItemSignedTotal(item) - getItemWaitingTotal(item)}
-                      </span>
-                    </td>
-                    <td 
-                      className="dashboard-table-cell-total"
-                      onClick={(e) => {
-                        // For total, show all users from all units for this item
-                        const allUsers: SignUser[] = [];
-                        units.forEach(unit => {
-                          const { users } = getCellData(item, unit);
-                          if (users && Array.isArray(users)) {
-                            allUsers.push(...users);
-                          }
-                        });
-                        handleCellClick(e, allUsers, item, 'כל היחידות - סיכום כללי');
-                      }}
-                      title="לחץ לפרטי כל המשתמשים הרשומים לפריט"
-                    >
-                      <span className="dashboard-badge-large dashboard-badge-total-large">
-                        {stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0}
-                      </span>
-                    </td>
-                  </tr>
-                  );
-                }).filter(Boolean) : null}
-              </tbody>
-            </table>
-          </div>
+                    }).filter(Boolean) : null}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           )}
 
         {/* Locations Tab Content - Unified Table */}
@@ -903,36 +939,43 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="dashboard-card">
-                  <div className="dashboard-card-body">
-                    <div className="table-container scroll-container force-horizontal-scroll">
-                      <table className="table">
-                        <thead>
-                          <tr>
+                <div className="unified-table-container">
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="unified-table">
+                      <thead>
+                        <tr>
+                          <th 
+                            className="unified-table-header unified-table-header-regular sortable"
+                            onClick={() => handleLocationsSort('itemName')}
+                            title="לחץ למיון לפי שם פריט"
+                            data-sorted={locationsSortConfig?.key === 'itemName' ? 'true' : 'false'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span>פריט</span>
+                            </div>
+                          </th>
+                          {getFilteredAndSortedLocationsData().locations.map(location => (
                             <th 
-                              className="dashboard-locations-header-item"
-                              onClick={() => handleLocationsSort('itemName')}
+                              key={location} 
+                              className="unified-table-header unified-table-header-regular sortable"
+                              onClick={() => handleLocationsSort(`location_${location}`)}
+                              title={`לחץ למיון לפי ${location}`}
+                              data-sorted={locationsSortConfig?.key === `location_${location}` ? 'true' : 'false'}
                             >
-                              פריט
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <span>{location}</span>
+                              </div>
                             </th>
-                            {getFilteredAndSortedLocationsData().locations.map(location => (
-                              <th 
-                                key={location} 
-                                className="dashboard-locations-header-location"
-                                onClick={() => handleLocationsSort(`location_${location}`)}
-                              >
-                                {location}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
+                          ))}
+                        </tr>
+                      </thead>
                   <tbody>
                     {getFilteredAndSortedLocationsData().items.map((item, itemIndex) => (
                       <tr 
                         key={`${item.itemName}-locations`} 
-                        className="dashboard-locations-row"
+                        className="unified-table-row"
                       >
-                        <td className="dashboard-locations-cell-item">
+                        <td className="unified-table-cell">
                           {item.itemName}
                         </td>
                         {getFilteredAndSortedLocationsData().locations.map(location => {
@@ -943,7 +986,7 @@ const Dashboard: React.FC = () => {
                           return (
                             <td 
                               key={`${item.itemName}-${location}`}
-                              className={`dashboard-locations-table-cell ${hasAnyData ? 'dashboard-locations-table-cell--has-data' : 'dashboard-locations-table-cell--no-data'}`}
+                              className="unified-table-cell"
                               style={{ 
                                 cursor: hasUserData ? 'pointer' : 'default'
                               }}
@@ -976,7 +1019,7 @@ const Dashboard: React.FC = () => {
                                       📋 {locationData.allocation}
                                     </span>
                                   )}
-                              </div>
+                                </div>
                               ) : (
                                 <span className="dashboard-locations-badge-empty">
                                   0
@@ -991,7 +1034,6 @@ const Dashboard: React.FC = () => {
                 </table>
               </div>
             </div>
-          </div>
               </>
             ) : (
               <div style={{ 

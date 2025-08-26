@@ -272,11 +272,11 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
         </div>
       </div>
 
-        <div className="table-responsive">
-          <table className="table">
+        <div className="unified-table-container">
+          <table className="unified-table">
             <thead>
               <tr>
-                <th style={{ width: '50px' }}>
+                <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -286,7 +286,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   />
                 </th>
                 <th 
-                  className="sortable-header" 
+                  className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('name')}
                   title="לחץ למיון לפי שם"
                   data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
@@ -296,7 +296,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header" 
+                  className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('personalNumber')}
                   title="לחץ למיון לפי מספר אישי"
                   data-sorted={sortConfig?.key === 'personalNumber' ? 'true' : 'false'}
@@ -306,7 +306,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header" 
+                  className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('phoneNumber')}
                   title="לחץ למיון לפי טלפון"
                   data-sorted={sortConfig?.key === 'phoneNumber' ? 'true' : 'false'}
@@ -316,7 +316,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header" 
+                  className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('rank')}
                   title="לחץ למיון לפי דרגה"
                   data-sorted={sortConfig?.key === 'rank' ? 'true' : 'false'}
@@ -326,7 +326,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header" 
+                  className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('unit')}
                   title="לחץ למיון לפי מסגרת"
                   data-sorted={sortConfig?.key === 'unit' ? 'true' : 'false'}
@@ -336,7 +336,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header" 
+                  className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('location')}
                   title="לחץ למיון לפי מיקום"
                   data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
@@ -346,7 +346,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   </div>
                 </th>
                 <th 
-                  className="sortable-header" 
+                  className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('isAdmin')}
                   title="לחץ למיון לפי סוג משתמש"
                   data-sorted={sortConfig?.key === 'isAdmin' ? 'true' : 'false'}
@@ -355,13 +355,13 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                     <span>סוג משתמש</span>
                   </div>
                 </th>
-                <th>פעולות</th>
+                <th className="unified-table-header unified-table-header-regular">פעולות</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedUsers.map((user: User) => (
-                <tr key={user.id}>
-                  <td>
+              {paginatedUsers.map((user: User, index: number) => (
+                <tr key={user.id} className="unified-table-row">
+                  <td className={`unified-table-cell-sticky ${index % 2 === 0 ? 'even' : 'odd'}`}>
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -369,16 +369,20 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                       onChange={() => handleToggleUserSelection(user.id)}
                     />
                   </td>
-                  <td>{user.name}</td>
-                  <td>{user.personalNumber}</td>
-                  <td>{user.phoneNumber}</td>
-                  <td>{user.rank}</td>
-                  <td>{user.unit}</td>
-                  <td>{user.location}</td>
-                  <td>{user.isAdmin ? 'מנהל' : 'משתמש'}</td>
-                  <td>
+                  <td className="unified-table-cell">{user.name}</td>
+                  <td className="unified-table-cell">{user.personalNumber}</td>
+                  <td className="unified-table-cell">{user.phoneNumber}</td>
+                  <td className="unified-table-cell">{user.rank}</td>
+                  <td className="unified-table-cell">{user.unit}</td>
+                  <td className="unified-table-cell">{user.location}</td>
+                  <td className="unified-table-cell">
+                    <span className={`unified-badge ${user.isAdmin ? 'unified-badge-success' : 'unified-badge-secondary'}`}>
+                      {user.isAdmin ? 'מנהל' : 'משתמש'}
+                    </span>
+                  </td>
+                  <td className="unified-table-cell">
                     <button 
-                      className="btn btn-sm btn-outline" 
+                      className="unified-action-btn unified-action-btn-primary" 
                       onClick={() => handleSelectUser(user)}
                     >
                       עדכן

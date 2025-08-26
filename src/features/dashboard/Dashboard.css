@@ -586,14 +586,15 @@
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
   text-align: center;
   z-index: 5;
+  background: transparent; /* Allow row background to show through */
 }
 
 .dashboard-table-cell-item.even {
-  background: var(--color-surface-alt, #333333);
+  background: transparent; /* Allow row background to show through */
 }
 
 .dashboard-table-cell-item.odd {
-  background: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
 }
 
 .dashboard-table-cell {
@@ -603,16 +604,17 @@
   transition: all 0.3s ease;
   border-left: 1px solid var(--color-border, #404040);
   color: var(--color-text, #ffffff);
+  background: transparent; /* Allow row background to show through */
 }
 
 .dashboard-table-cell.has-users {
-  background-color: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
   border-left: 1px solid var(--color-border, #404040);
   cursor: pointer;
 }
 
 .dashboard-table-cell.no-users {
-  background-color: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
   border-left: 1px solid var(--color-border, #404040);
 }
 
@@ -623,7 +625,7 @@
 
 .dashboard-table-cell-signed {
   padding: 16px 8px;
-  background-color: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
   border-left: 1px solid var(--color-border, #404040);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -637,7 +639,7 @@
 
 .dashboard-table-cell-waiting {
   padding: 16px 8px;
-  background-color: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
   border-left: 1px solid var(--color-border, #404040);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -649,9 +651,14 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+.dashboard-table-cell-waiting:hover {
+  background-color: var(--color-hover, #3d4852);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
 .dashboard-table-cell-broken {
   padding: 16px 8px;
-  background-color: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
   border-left: 1px solid var(--color-border, #404040);
   transition: all 0.3s ease;
   color: var(--color-text, #ffffff);
@@ -668,7 +675,7 @@
 
 .dashboard-table-cell-available {
   padding: 16px 8px;
-  background-color: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
   border-left: 1px solid var(--color-border, #404040);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -682,7 +689,7 @@
 
 .dashboard-table-cell-total {
   padding: 16px 8px;
-  background-color: var(--color-surface, #2a2a2a);
+  background: transparent; /* Allow row background to show through */
   border-left: 1px solid var(--color-border, #404040);
   cursor: pointer;
   transition: all 0.3s ease;

@@ -286,11 +286,11 @@ export function ManagementTable<T extends BaseEntity>({
         />
       ) : (
         <>
-          <div className="table-responsive">
-            <table className="table">
+          <div className="unified-table-container">
+            <table className="unified-table">
               <thead>
                 <tr>
-                  <th>
+                  <th className="unified-table-header unified-table-header-sticky">
                     <input
                       type="checkbox"
                       checked={selectedIds.length === paginatedItems.length && paginatedItems.length > 0}
@@ -299,7 +299,7 @@ export function ManagementTable<T extends BaseEntity>({
                     />
                   </th>
                   <th 
-                    className="sortable-header"
+                    className="unified-table-header unified-table-header-regular"
                     onClick={() => handleSort('name')}
                     title="לחץ למיון לפי שם"
                     data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
@@ -309,7 +309,7 @@ export function ManagementTable<T extends BaseEntity>({
                     </div>
                   </th>
                   <th 
-                    className="sortable-header"
+                    className="unified-table-header unified-table-header-regular"
                     onClick={() => handleSort('createdAt')}
                     title="לחץ למיון לפי תאריך יצירה"
                     data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
@@ -319,7 +319,7 @@ export function ManagementTable<T extends BaseEntity>({
                     </div>
                   </th>
                   <th 
-                    className="sortable-header"
+                    className="unified-table-header unified-table-header-regular"
                     onClick={() => handleSort('updatedAt')}
                     title="לחץ למיון לפי תאריך עדכון"
                     data-sorted={sortConfig?.key === 'updatedAt' ? 'true' : 'false'}
@@ -328,13 +328,13 @@ export function ManagementTable<T extends BaseEntity>({
                       <span>תאריך עדכון</span>
                     </div>
                   </th>
-                  <th>פעולות</th>
+                  <th className="unified-table-header unified-table-header-regular">פעולות</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map((item) => (
-                  <tr key={item.id}>
-                    <td>
+                {paginatedItems.map((item, index) => (
+                  <tr key={item.id} className="unified-table-row">
+                    <td className={`unified-table-cell-sticky ${index % 2 === 0 ? 'even' : 'odd'}`}>
                       <input
                         type="checkbox"
                         className="form-check-input"
@@ -348,12 +348,12 @@ export function ManagementTable<T extends BaseEntity>({
                         }}
                       />
                     </td>
-                    <td className="fw-medium">{item.name}</td>
-                    <td>{new Date(item.createdAt).toLocaleDateString('he-IL')}</td>
-                    <td>{new Date(item.updatedAt).toLocaleDateString('he-IL')}</td>
-                    <td>
+                    <td className="unified-table-cell">{item.name}</td>
+                    <td className="unified-table-cell">{new Date(item.createdAt).toLocaleDateString('he-IL')}</td>
+                    <td className="unified-table-cell">{new Date(item.updatedAt).toLocaleDateString('he-IL')}</td>
+                    <td className="unified-table-cell">
                       <button
-                        className="btn btn-sm btn-ghost"
+                        className="unified-action-btn unified-action-btn-primary"
                         onClick={() => openEditModal(item)}
                         title="עריכה"
                       >

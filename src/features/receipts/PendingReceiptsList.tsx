@@ -305,12 +305,12 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
           </div>
         </div>
         
-        <div className="table-responsive">
-          <table className="receipts-table">
+        <div className="unified-table-container">
+          <table className="unified-table">
             <thead>
               <tr>
                 {isAdmin && (
-                  <th style={{ width: '50px' }}>
+                  <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
                     <input
                       type="checkbox"
                       className="form-check-input"
@@ -321,32 +321,32 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     />
                   </th>
                 )}
-                <th className="sortable-header" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
+                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
                   <div className="d-flex align-items-center">
                     <span>מנפיק</span>
                   </div>
                 </th>
-                <th className="sortable-header" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
+                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
                   <div className="d-flex align-items-center">
                     <span>מקבל</span>
                   </div>
                 </th>
-                <th className="sortable-header" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
+                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
                   <div className="d-flex align-items-center">
                     <span>יחידה</span>
                   </div>
                 </th>
-                <th className="sortable-header" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
+                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
                   <div className="d-flex align-items-center">
                     <span>כמות פריטים</span>
                   </div>
                 </th>
-                <th className="sortable-header" onClick={() => handleSort('createdAt')} data-sorted={sortConfig?.key === 'createdAt'}>
+                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('createdAt')} data-sorted={sortConfig?.key === 'createdAt'}>
                   <div className="d-flex align-items-center">
                     <span>תאריך יצירה</span>
                   </div>
                 </th>
-                <th>פעולות</th>
+                <th className="unified-table-header unified-table-header-regular" style={{ width: '200px' }}>פעולות</th>
               </tr>
             </thead>
             <tbody>
@@ -355,6 +355,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                 return (
                   <tr 
                     key={receipt.id} 
+                    className="unified-table-row"
                     onClick={() => setDetailsReceipt(receipt)} 
                     style={{ 
                       cursor: 'pointer',
@@ -363,7 +364,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     }}
                   >
                     {isAdmin && (
-                      <td onClick={(e) => e.stopPropagation()}>
+                      <td className="unified-table-cell" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           className="form-check-input"
@@ -373,15 +374,15 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         />
                       </td>
                     )}
-                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
-                    <td>
+                    <td className="unified-table-cell">{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
+                    <td className="unified-table-cell">
                       <div className="d-flex align-items-center">
-                        <span style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                        <span>
                           {receipt.signedBy?.name || 'משתמש לא ידוע'}
                         </span>
                         {!isAdmin && !canSign && (
                           <span 
-                            className="badge bg-warning ms-2" 
+                            className="unified-badge unified-badge-warning ms-2" 
                             style={{ fontSize: '10px' }}
                             title="קבלה זו מיועדת למשתמש אחר"
                           >
@@ -390,14 +391,14 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         )}
                       </div>
                     </td>
-                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{getUnit(receipt)}</td>
-                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.receiptItems?.length || 0}</td>
-                    <td style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
-                    <td>
+                    <td className="unified-table-cell">{getUnit(receipt)}</td>
+                    <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
+                    <td className="unified-table-cell">{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
+                    <td className="unified-table-cell">
                       <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
                         {isAdmin && (
                           <button 
-                            className="btn btn-primary btn-sm me-2" 
+                            className="btn btn-primary btn-sm me-2 unified-action-btn" 
                             onClick={() => handleUpdateClick(receipt)}
                             title="עדכן קבלה"
                           >
@@ -407,7 +408,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         )}
                         {canSign && (
                           <button
-                            className="btn-sign btn-sm"
+                            className="btn-sign btn-sm unified-action-btn"
                             onClick={() => handleSignClick(receipt)}
                             title="חתום וקבל"
                           >
