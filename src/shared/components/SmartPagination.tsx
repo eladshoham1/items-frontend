@@ -31,7 +31,7 @@ export const SmartPagination: React.FC<SmartPaginationProps> = ({
 
       {/* Previous button */}
       <button
-        className="btn btn-sm btn-outline"
+        className="btn btn-xs btn-outline"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         title="עמוד קודם"
@@ -44,7 +44,7 @@ export const SmartPagination: React.FC<SmartPaginationProps> = ({
       {showFirstPage && (
         <>
           <button
-            className="btn btn-sm btn-outline"
+            className="btn btn-xs btn-outline"
             onClick={() => onPageChange(1)}
             title="עמוד ראשון"
             aria-label="עמוד ראשון"
@@ -60,7 +60,7 @@ export const SmartPagination: React.FC<SmartPaginationProps> = ({
         <button
           key={page}
           onClick={() => onPageChange(page)}
-          className={`btn btn-sm ${currentPage === page ? 'btn-primary' : 'btn-outline'}`}
+          className={`btn btn-xs ${currentPage === page ? 'btn-primary' : 'btn-outline'}`}
           title={`עמוד ${page}`}
           aria-label={`עמוד ${page}${currentPage === page ? ' - עמוד נוכחי' : ''}`}
           aria-current={currentPage === page ? 'page' : undefined}
@@ -74,7 +74,7 @@ export const SmartPagination: React.FC<SmartPaginationProps> = ({
         <>
           {showLastEllipsis && <span className="pagination-ellipsis">⋯</span>}
           <button
-            className="btn btn-sm btn-outline"
+            className="btn btn-xs btn-outline"
             onClick={() => onPageChange(totalPages)}
             title={`עמוד אחרון (${totalPages})`}
             aria-label={`עמוד אחרון (${totalPages})`}
@@ -86,7 +86,7 @@ export const SmartPagination: React.FC<SmartPaginationProps> = ({
 
       {/* Next button */}
       <button
-        className="btn btn-sm btn-outline"
+        className="btn btn-xs btn-outline"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         title="עמוד הבא"
