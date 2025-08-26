@@ -73,15 +73,6 @@ export const AllocationsTab: React.FC = () => {
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (key: keyof AllocationEntity) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   const filteredAndSortedAllocations = useMemo(() => {
     let filtered = allocations.filter(allocation => {
       const searchLower = searchTerm.toLowerCase().normalize('NFC');
@@ -421,70 +412,70 @@ export const AllocationsTab: React.FC = () => {
                 onClick={() => handleSort('unit')}
                 style={{ cursor: 'pointer' }}
               >
-                מסגרת {getSortIcon('unit')}
+                מסגרת
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('secondaryUnit')}
                 style={{ cursor: 'pointer' }}
               >
-                מסגרת משנה {getSortIcon('secondaryUnit')}
+                מסגרת משנה
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('owner')}
                 style={{ cursor: 'pointer' }}
               >
-                בע"ת {getSortIcon('owner')}
+                בע"ת
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('vehicleType')}
                 style={{ cursor: 'pointer' }}
               >
-                סוג הכלי {getSortIcon('vehicleType')}
+                סוג הכלי
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('idNumber')}
                 style={{ cursor: 'pointer' }}
               >
-                צ' {getSortIcon('idNumber')}
+                צ'
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('standard')}
                 style={{ cursor: 'pointer' }}
               >
-                תקן {getSortIcon('standard')}
+                תקן
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('isIssued')}
                 style={{ cursor: 'pointer' }}
               >
-                הונפק קשר {getSortIcon('isIssued')}
+                הונפק קשר
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('form624')}
                 style={{ cursor: 'pointer' }}
               >
-                624 {getSortIcon('form624')}
+                624
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('is624Issued')}
                 style={{ cursor: 'pointer' }}
               >
-                הונפק 624 {getSortIcon('is624Issued')}
+                הונפק 624
               </th>
               <th 
                 className="sortable-header" 
                 onClick={() => handleSort('note')}
                 style={{ cursor: 'pointer' }}
               >
-                הערות {getSortIcon('note')}
+                הערות
               </th>
             </tr>
           </thead>

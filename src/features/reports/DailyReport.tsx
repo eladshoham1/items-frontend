@@ -80,15 +80,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   // Sort items based on sort config
   const sortedReportItems = (() => {
     if (!dailyReportData || !dailyReportData.items) return [];
@@ -636,9 +627,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>פריט</span>
-                            <div>{getSortIcon('itemName')}</div>
                           </div>
                         </th>
                         <th 
@@ -657,9 +647,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>מספר צ'</span>
-                            <div>{getSortIcon('idNumber')}</div>
                           </div>
                         </th>
                         <th 
@@ -678,9 +667,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>חתום על ידי</span>
-                            <div>{getSortIcon('signedBy')}</div>
                           </div>
                         </th>
                         <th 
@@ -699,9 +687,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>מיקום</span>
-                            <div>{getSortIcon('location')}</div>
                           </div>
                         </th>
                         <th 
@@ -720,9 +707,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>תאריך דיווח</span>
-                            <div>{getSortIcon('reportedAt')}</div>
                           </div>
                         </th>
                         <th 
@@ -741,9 +727,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             transition: 'all 0.2s ease'
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
                             <span>מי דיווח</span>
-                            <div>{getSortIcon('reportedBy')}</div>
                           </div>
                         </th>
                         <th 
@@ -776,7 +761,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                                   cursor: 'pointer'
                                 }}
                               />
-                              <div>{getSortIcon('isReported')}</div>
                             </div>
                           </div>
                         </th>

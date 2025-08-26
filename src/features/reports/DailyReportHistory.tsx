@@ -32,15 +32,6 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   const formatDateWithTime = (dateString: string): string => {
     if (!dateString) {
       return 'תאריך לא זמין';
@@ -220,11 +211,8 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                   title="לחץ למיון לפי תאריך דוח"
                   data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>תאריך דוח</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('createdAt')}
-                    </div>
                   </div>
                 </th>
                 <th className="text-center">נוצר על ידי</th>
@@ -235,11 +223,8 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                   title="לחץ למיון לפי סהכ פריטים"
                   data-sorted={sortConfig?.key === 'totalItems' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>סה"כ פריטים</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('totalItems')}
-                    </div>
                   </div>
                 </th>
                 <th className="text-center">פעולות</th>

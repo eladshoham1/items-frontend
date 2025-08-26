@@ -104,15 +104,6 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
     setCurrentPage(1); // Reset to first page when sorting
   };
 
-  const getSortIcon = (key: keyof LocationEntity | 'unitName') => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   const handleSelectAll = (checked: boolean) => {
     setSelectedIds(checked ? paginatedItems.map(location => location.id) : []);
   };
@@ -327,11 +318,8 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     title="לחץ למיון לפי שם המיקום"
                     data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
                       <span>שם המיקום</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('name')}
-                      </div>
                     </div>
                   </th>
                   <th 
@@ -340,11 +328,8 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     title="לחץ למיון לפי יחידה"
                     data-sorted={sortConfig?.key === 'unitName' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
                       <span>יחידה</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('unitName')}
-                      </div>
                     </div>
                   </th>
                   <th 
@@ -353,11 +338,8 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     title="לחץ למיון לפי תאריך יצירה"
                     data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
                       <span>תאריך יצירה</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('createdAt')}
-                      </div>
                     </div>
                   </th>
                   <th 
@@ -366,11 +348,8 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     title="לחץ למיון לפי תאריך עדכון"
                     data-sorted={sortConfig?.key === 'updatedAt' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
                       <span>תאריך עדכון</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('updatedAt')}
-                      </div>
                     </div>
                   </th>
                   <th>פעולות</th>

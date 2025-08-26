@@ -103,15 +103,6 @@ export function ManagementTable<T extends BaseEntity>({
     setCurrentPage(1); // Reset to first page when sorting
   };
 
-  const getSortIcon = (key: keyof BaseEntity) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   const handleAdd = async () => {
     if (!newItemName.trim()) return;
     
@@ -313,11 +304,8 @@ export function ManagementTable<T extends BaseEntity>({
                     title="לחץ למיון לפי שם"
                     data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
                       <span>שם</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('name')}
-                      </div>
                     </div>
                   </th>
                   <th 
@@ -326,11 +314,8 @@ export function ManagementTable<T extends BaseEntity>({
                     title="לחץ למיון לפי תאריך יצירה"
                     data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
                       <span>תאריך יצירה</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('createdAt')}
-                      </div>
                     </div>
                   </th>
                   <th 
@@ -339,11 +324,8 @@ export function ManagementTable<T extends BaseEntity>({
                     title="לחץ למיון לפי תאריך עדכון"
                     data-sorted={sortConfig?.key === 'updatedAt' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
                       <span>תאריך עדכון</span>
-                      <div className="sort-indicator">
-                        {getSortIcon('updatedAt')}
-                      </div>
                     </div>
                   </th>
                   <th>פעולות</th>

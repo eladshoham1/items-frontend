@@ -54,15 +54,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   // Filter and sort users based on search term and sort config
   const filteredAndSortedUsers = (() => {
     const normalizedSearchTerm = searchTerm.toLowerCase().normalize('NFC');
@@ -300,11 +291,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   title="לחץ למיון לפי שם"
                   data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>שם</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('name')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -313,11 +301,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   title="לחץ למיון לפי מספר אישי"
                   data-sorted={sortConfig?.key === 'personalNumber' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>מספר אישי</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('personalNumber')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -326,11 +311,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   title="לחץ למיון לפי טלפון"
                   data-sorted={sortConfig?.key === 'phoneNumber' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>טלפון</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('phoneNumber')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -339,11 +321,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   title="לחץ למיון לפי דרגה"
                   data-sorted={sortConfig?.key === 'rank' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>דרגה</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('rank')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -352,11 +331,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   title="לחץ למיון לפי מסגרת"
                   data-sorted={sortConfig?.key === 'unit' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>מסגרת</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('unit')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -365,11 +341,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   title="לחץ למיון לפי מיקום"
                   data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>מיקום</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('location')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -378,11 +351,8 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   title="לחץ למיון לפי סוג משתמש"
                   data-sorted={sortConfig?.key === 'isAdmin' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>סוג משתמש</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('isAdmin')}
-                    </div>
                   </div>
                 </th>
                 <th>פעולות</th>

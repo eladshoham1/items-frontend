@@ -905,25 +905,7 @@ textarea.form-control {
   opacity: 1;
 }
 
-.sortable-header::after {
-  content: "⇅";
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  opacity: 0.3;
-  transition: opacity var(--transition);
-  pointer-events: none;
-}
-
-.sortable-header:hover::after {
-  opacity: 0.7;
-}
-
-.sortable-header[data-sorted="true"]::after {
-  display: none;
-}
+/* Sortable header hover effect removed for cleaner UI */
 
 /* Checkbox styling in tables */
 .management-table input[type="checkbox"] {
@@ -1436,20 +1418,21 @@ textarea.form-control {
   }
 }
 
-/* Pagination styles - Dark Theme */
+/* Pagination styles - Clean & Professional */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
-  margin: var(--spacing-lg) 0;
-  padding: var(--spacing-md) 0;
+  gap: 4px;
+  margin: 32px 0 24px 0;
+  padding: 0;
   flex-wrap: wrap;
+  /* Remove all background effects for clean look */
 }
 
 .pagination .btn {
-  min-width: 36px;
-  height: 36px;
+  min-width: 40px;
+  height: 40px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -1460,53 +1443,110 @@ textarea.form-control {
   transition: all 0.2s ease;
   background: transparent;
   color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
+  cursor: pointer;
 }
 
 .pagination .btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .pagination .btn.btn-primary {
-  background: #ffffff;
-  color: #2d2d2d;
-  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
   font-weight: 600;
 }
 
 .pagination .btn.btn-primary:hover:not(:disabled) {
-  background: #f0f0f0;
-  color: #2d2d2d;
-  border-color: #f0f0f0;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .pagination .btn:disabled {
-  opacity: 0.4;
+  opacity: 0.3;
   cursor: not-allowed;
   background: transparent;
   color: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+.pagination .btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
 .pagination-ellipsis {
   padding: 0 8px;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 400;
   display: flex;
   align-items: center;
-  height: 36px;
+  height: 40px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+/* Navigation arrows */
+.pagination .btn .nav-arrow {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Page info for mobile */
+.pagination-info {
+  display: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  margin: 0 16px;
+  white-space: nowrap;
 }
 
 /* Responsive pagination */
-@media (max-width: 576px) {
+@media (max-width: 768px) {
   .pagination {
     gap: 2px;
+    margin: 24px 0 16px 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0 16px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   
+  .pagination::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .pagination .btn {
+    min-width: 36px;
+    height: 36px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  
+  .pagination-ellipsis {
+    padding: 0 6px;
+    height: 36px;
+    font-size: 10px;
+  }
+  
+  .pagination-info {
+    display: block;
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 480px) {
   .pagination .btn {
     min-width: 32px;
     height: 32px;
@@ -1514,8 +1554,8 @@ textarea.form-control {
   }
   
   .pagination-ellipsis {
-    padding: 0 4px;
     height: 32px;
+    padding: 0 4px;
   }
 }
 

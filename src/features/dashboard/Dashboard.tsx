@@ -336,15 +336,6 @@ const Dashboard: React.FC = () => {
   }, [items, unitsSearchTerm, sortConfig, stats]);
   const { paginatedItems, totalPages } = paginate(filteredAndSortedItems || [], currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
 
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   // Locations table helper functions
   const handleLocationsSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -352,15 +343,6 @@ const Dashboard: React.FC = () => {
       direction = 'desc';
     }
     setLocationsSortConfig({ key, direction });
-  };
-
-  const getLocationsSortIcon = (key: string) => {
-    if (!locationsSortConfig || locationsSortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return locationsSortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
   };
 
   const getFilteredAndSortedLocationsData = () => {
@@ -598,126 +580,72 @@ const Dashboard: React.FC = () => {
         }}>
           {/* Unit Selection for Locations Tab */}
           {activeTab === 'locations' && (
-              <div className="card" style={{ 
-                margin: '0 0 24px 0',
-                direction: 'rtl'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <label htmlFor="unitSelect" style={{ 
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: 'var(--color-text)',
-                    marginBottom: 0
-                  }}>
-                    בחר יחידה:
-                  </label>
+            <div className="dashboard-select-container">
+              <div className="dashboard-select-row">
+                <label htmlFor="unitSelect" className="dashboard-select-label">
+                  בחר יחידה:
+                </label>
+                <div className="dashboard-select-wrapper">
                   <select
                     id="unitSelect"
+                    className="dashboard-select"
                     value={selectedUnit}
                     onChange={(e) => setSelectedUnit(e.target.value)}
                     disabled={unitsLoading}
-                    style={{
-                      padding: '10px 16px',
-                      borderRadius: '8px',
-                      border: '2px solid var(--color-border)',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      backgroundColor: 'var(--color-bg)',
-                      color: 'var(--color-text)',
-                      minWidth: '200px',
-                      direction: 'rtl',
-                      opacity: unitsLoading ? 0.6 : 1
-                    }}
                   >
                     <option value="">{unitsLoading ? 'טוען יחידות...' : 'בחר יחידה...'}</option>
                     {allUnits.map(unit => (
                       <option key={unit.id} value={unit.name}>{unit.name}</option>
                     ))}
                   </select>
-                  {selectedUnit && (
-                    <span style={{
-                      backgroundColor: 'var(--color-accent)',
-                      color: 'var(--color-text)',
-                      padding: '8px 16px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: '600'
-                    }}>
+                </div>
+                {selectedUnit && (
+                  <div className="dashboard-badge-container">
+                    <span className="dashboard-results-badge">
                       {locations.length} מיקומים
                     </span>
-                  )}
+                  </div>
+                )}
               </div>
             </div>
             )}
         </div>
 
-          {/* Search Input for Units Tab */}
+          {/* Enhanced Search Input for Units Tab */}
           {activeTab === 'units' && (
-            <div style={{ 
-              padding: '20px 24px',
-              backgroundColor: 'var(--color-surface)',
-              borderBottom: '1px solid var(--color-border)',
-              direction: 'rtl'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <label htmlFor="unitsSearch" style={{ 
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: 'var(--color-text)',
-                  marginBottom: 0
-                }}>
+            <div className="dashboard-search-container">
+              <div className="dashboard-search-row">
+                <label htmlFor="unitsSearch" className="dashboard-search-label">
                   חיפוש פריטים:
                 </label>
-                <input
-                  id="unitsSearch"
-                  type="text"
-                  value={unitsSearchTerm}
-                  onChange={(e) => setUnitsSearchTerm(e.target.value)}
-                  placeholder="הקלד שם פריט לחיפוש..."
-                  style={{
-                    padding: '10px 16px',
-                    borderRadius: '8px',
-                    border: '2px solid var(--color-border)',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    backgroundColor: 'var(--color-bg)',
-                    color: 'var(--color-text)',
-                    minWidth: '300px',
-                    direction: 'rtl'
-                  }}
-                />
-                {unitsSearchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => setUnitsSearchTerm('')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: 'var(--color-text-secondary)',
-                      fontSize: '16px',
-                      cursor: 'pointer',
-                      padding: '5px'
-                    }}
-                    title="נקה חיפוש"
-                  >
-                    ×
-                  </button>
-                )}
-                <span style={{
-                  backgroundColor: 'var(--color-accent)',
-                  color: 'var(--color-text)',
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
-                  {filteredAndSortedItems.length} פריטים
-                </span>
+                <div className="dashboard-search-input-wrapper">
+                  <input
+                    id="unitsSearch"
+                    type="text"
+                    value={unitsSearchTerm}
+                    onChange={(e) => setUnitsSearchTerm(e.target.value)}
+                    placeholder="הקלד שם פריט לחיפוש..."
+                    className="dashboard-input"
+                  />
+                </div>
+                <div className="dashboard-badge-container">
+                  {unitsSearchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setUnitsSearchTerm('')}
+                      className="dashboard-clear-btn"
+                      title="נקה חיפוש"
+                    >
+                      נקה
+                    </button>
+                  )}
+                  <span className="dashboard-results-badge">
+                    {filteredAndSortedItems.length} פריטים
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-          )}
-
-          {activeTab === 'units' && (
+          )}          {activeTab === 'units' && (
             <div className="dashboard-table-container scroll-container force-horizontal-scroll">
             <table className="dashboard-table">
               <thead>
@@ -727,7 +655,6 @@ const Dashboard: React.FC = () => {
                     onClick={() => handleSort('name')}
                   >
                     פריט
-                    {getSortIcon('name')}
                   </th>
                   {units.map(unit => (
                     <th 
@@ -736,7 +663,6 @@ const Dashboard: React.FC = () => {
                       onClick={() => handleSort(`unit_${unit}`)}
                     >
                       {unit}
-                      {getSortIcon(`unit_${unit}`)}
                     </th>
                   ))}
                   <th 
@@ -744,35 +670,30 @@ const Dashboard: React.FC = () => {
                     onClick={() => handleSort('signed')}
                   >
                     חתומים
-                    {getSortIcon('signed')}
                   </th>
                   <th 
                     className="dashboard-table-header-waiting"
                     onClick={() => handleSort('waiting')}
                   >
                     ממתינים לחתימה
-                    {getSortIcon('waiting')}
                   </th>
                   <th 
                     className="dashboard-table-header-broken"
                     onClick={() => handleSort('nonOperational')}
                   >
                     תקולים
-                    {getSortIcon('nonOperational')}
                   </th>
                   <th 
                     className="dashboard-table-header-available"
                     onClick={() => handleSort('available')}
                   >
                     זמינים
-                    {getSortIcon('available')}
                   </th>
                   <th 
                     className="dashboard-table-header-total"
                     onClick={() => handleSort('total')}
                   >
                     סה"כ
-                    {getSortIcon('total')}
                   </th>
                 </tr>
               </thead>
@@ -925,14 +846,6 @@ const Dashboard: React.FC = () => {
             </table>
           </div>
           )}
-          
-          {totalPages > 1 && (
-            <SmartPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          )}
 
         {/* Locations Tab Content - Unified Table */}
         {activeTab === 'locations' && selectedUnit && (
@@ -956,69 +869,39 @@ const Dashboard: React.FC = () => {
             </div>
             ) : dashboardData && dashboardData.length > 0 ? (
               <>
-                {/* Search Input */}
-                <div style={{ 
-                  padding: '20px 24px',
-                  backgroundColor: 'var(--color-bg, #1a1a1a)',
-                  borderBottom: '1px solid var(--color-border, #404040)',
-                  direction: 'rtl'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <label htmlFor="locationsSearch" style={{ 
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      color: 'var(--color-text, #ffffff)',
-                      marginBottom: 0
-                    }}>
+                {/* Enhanced Search Input */}
+                <div className="dashboard-search-container">
+                  <div className="dashboard-search-row">
+                    <label htmlFor="locationsSearch" className="dashboard-search-label">
                       חיפוש פריטים:
                     </label>
-                    <input
-                      id="locationsSearch"
-                      type="text"
-                      value={locationsSearchTerm}
-                      onChange={(e) => setLocationsSearchTerm(e.target.value)}
-                      placeholder="הקלד שם פריט לחיפוש..."
-                      style={{
-                        padding: '10px 16px',
-                        borderRadius: '8px',
-                        border: '2px solid var(--color-border, #404040)',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        backgroundColor: 'var(--color-bg-secondary, #2a2a2a)',
-                        color: 'var(--color-text, #ffffff)',
-                        minWidth: '300px',
-                        direction: 'rtl'
-                      }}
-                    />
-                    {locationsSearchTerm && (
-                      <button
-                        type="button"
-                        onClick={() => setLocationsSearchTerm('')}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--color-text-muted, #8e8e93)',
-                          fontSize: '16px',
-                          cursor: 'pointer',
-                          padding: '5px'
-                        }}
-                        title="נקה חיפוש"
-                      >
-                        ×
-                      </button>
-                    )}
-                    <span style={{
-                      backgroundColor: 'var(--color-accent, #007bff)',
-                      color: 'var(--color-text, #ffffff)',
-                      padding: '8px 16px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: '600'
-                    }}>
-                      {getFilteredAndSortedLocationsData().items.length} פריטים
-                    </span>
+                    <div className="dashboard-search-input-wrapper">
+                      <input
+                        id="locationsSearch"
+                        type="text"
+                        value={locationsSearchTerm}
+                        onChange={(e) => setLocationsSearchTerm(e.target.value)}
+                        placeholder="הקלד שם פריט לחיפוש..."
+                        className="dashboard-input"
+                      />
+                    </div>
+                    <div className="dashboard-badge-container">
+                      {locationsSearchTerm && (
+                        <button
+                          type="button"
+                          onClick={() => setLocationsSearchTerm('')}
+                          className="dashboard-clear-btn"
+                          title="נקה חיפוש"
+                        >
+                          נקה
+                        </button>
+                      )}
+                      <span className="dashboard-results-badge">
+                        {getFilteredAndSortedLocationsData().items.length} פריטים
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
                 <div className="dashboard-card">
                   <div className="dashboard-card-body">
@@ -1031,7 +914,6 @@ const Dashboard: React.FC = () => {
                               onClick={() => handleLocationsSort('itemName')}
                             >
                               פריט
-                              {getLocationsSortIcon('itemName')}
                             </th>
                             {getFilteredAndSortedLocationsData().locations.map(location => (
                               <th 
@@ -1040,7 +922,6 @@ const Dashboard: React.FC = () => {
                                 onClick={() => handleLocationsSort(`location_${location}`)}
                               >
                                 {location}
-                                {getLocationsSortIcon(`location_${location}`)}
                               </th>
                             ))}
                           </tr>
@@ -1155,19 +1036,23 @@ const Dashboard: React.FC = () => {
       {/* User Details Table - Appears below main table when clicked */}
       {tooltipData.show && (
         <div className="card shadow-lg border-0 mt-3" style={{ 
-          borderRadius: '12px', 
-          overflow: 'hidden'
+          borderRadius: '16px', 
+          overflow: 'hidden',
+          backgroundColor: 'var(--color-surface, #2a2a2a)',
+          border: '1px solid var(--color-border, #404040)',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
         }}>
           <div 
             className="card-header border-0" 
             style={{ 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              padding: '20px 24px',
+              background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)',
+              color: 'var(--color-text, #ffffff)',
+              padding: '24px 28px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              direction: 'rtl'
+              direction: 'rtl',
+              borderBottom: '1px solid var(--color-border, #404040)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -1176,7 +1061,7 @@ const Dashboard: React.FC = () => {
                 fontSize: '18px', 
                 fontWeight: '700',
                 margin: 0,
-                color: 'white'
+                color: 'var(--color-text, #ffffff)'
               }}>
                 פרטי משתמשים רשומים ({tooltipData.users.length})
               </h5>
@@ -1185,102 +1070,104 @@ const Dashboard: React.FC = () => {
               type="button" 
               onClick={handleCloseTooltip}
               style={{ 
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                borderRadius: '6px',
-                width: '32px',
-                height: '32px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                width: '36px',
+                height: '36px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                color: 'white',
-                fontSize: '16px',
+                color: 'var(--color-text, #ffffff)',
+                fontSize: '18px',
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.transform = 'scale(1.05)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.transform = 'scale(1)';
               }}
             >
               ×
             </button>
         </div>
-          <div className="card-body p-0">
-            <div className="table-container">
-              <table className="table">
-                <thead>
+          <div className="card-body p-0" style={{ backgroundColor: 'var(--color-surface, #2a2a2a)' }}>
+            <div className="table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+              <table className="table" style={{ margin: 0, backgroundColor: 'transparent' }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                   <tr>
                     <th style={{ 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
-                      color: 'white',
+                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                      color: 'var(--color-text, #ffffff)',
                       padding: '16px 20px',
                       fontSize: '14px',
                       fontWeight: '600',
                       border: 'none',
-                      borderBottom: '3px solid #3498db',
+                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
                       textAlign: 'right'
                     }}>
                       שם החותם
                     </th>
                     <th style={{ 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
-                      color: 'white',
+                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                      color: 'var(--color-text, #ffffff)',
                       padding: '16px 20px',
                       fontSize: '14px',
                       fontWeight: '600',
                       border: 'none',
-                      borderBottom: '3px solid #3498db',
+                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
                       textAlign: 'center'
                     }}>
                       מיקום
                     </th>
                     <th style={{ 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
-                      color: 'white',
+                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                      color: 'var(--color-text, #ffffff)',
                       padding: '16px 20px',
                       fontSize: '14px',
                       fontWeight: '600',
                       border: 'none',
-                      borderBottom: '3px solid #3498db',
+                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
                       textAlign: 'center'
                     }}>
                       מספר צ'
                     </th>
                     <th style={{ 
-                      background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)', 
-                      color: 'white',
+                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                      color: 'var(--color-text, #ffffff)',
                       padding: '16px 20px',
                       fontSize: '14px',
                       fontWeight: '600',
                       border: 'none',
-                      borderBottom: '3px solid #3498db',
+                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
                       textAlign: 'center'
                     }}>
                       האם חתום
                     </th>
                     <th style={{ 
-                      background: 'linear-gradient(135deg, #16a085 0%, #1abc9c 100%)', 
-                      color: 'white',
+                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                      color: 'var(--color-text, #ffffff)',
                       padding: '16px 20px',
                       fontSize: '14px',
                       fontWeight: '600',
                       border: 'none',
-                      borderBottom: '3px solid #2ecc71',
+                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
                       textAlign: 'center'
                     }}>
                       הקצאה
                     </th>
                     <th style={{ 
-                      background: 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)', 
-                      color: 'white',
+                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
+                      color: 'var(--color-text, #ffffff)',
                       padding: '16px 20px',
                       fontSize: '14px',
                       fontWeight: '600',
                       border: 'none',
-                      borderBottom: '3px solid #af7ac5',
+                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
                       textAlign: 'center'
                     }}>
                       הערות
@@ -1293,22 +1180,27 @@ const Dashboard: React.FC = () => {
                       <tr 
                         key={`${user.id || userIndex}-${item.itemId || itemIndex}`}
                         style={{ 
-                          backgroundColor: (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 ? '#f8fafc' : 'white',
-                          transition: 'all 0.2s ease'
+                          backgroundColor: (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 
+                            ? 'var(--color-surface-alt, #333333)' 
+                            : 'var(--color-surface, #2a2a2a)',
+                          transition: 'all 0.2s ease',
+                          borderBottom: '1px solid var(--color-border, #404040)'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#e3f2fd';
-                          e.currentTarget.style.transform = 'scale(1.01)';
+                          e.currentTarget.style.backgroundColor = 'var(--color-hover, #3d4852)';
+                          e.currentTarget.style.transform = 'scale(1.005)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 ? '#f8fafc' : 'white';
+                          e.currentTarget.style.backgroundColor = (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 
+                            ? 'var(--color-surface-alt, #333333)' 
+                            : 'var(--color-surface, #2a2a2a)';
                           e.currentTarget.style.transform = 'scale(1)';
                         }}
                       >
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#2c3e50',
+                          color: 'var(--color-text, #ffffff)',
                           fontWeight: '600',
                           textAlign: 'right'
                         }}>
@@ -1317,7 +1209,7 @@ const Dashboard: React.FC = () => {
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#495057',
+                          color: 'var(--color-text-secondary, #a0a0a0)',
                           textAlign: 'center',
                           fontWeight: '500'
                         }}>
@@ -1326,7 +1218,7 @@ const Dashboard: React.FC = () => {
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#495057',
+                          color: 'var(--color-text-secondary, #a0a0a0)',
                           textAlign: 'center',
                           fontFamily: 'monospace',
                           fontWeight: '600'
@@ -1334,19 +1226,15 @@ const Dashboard: React.FC = () => {
                           <span 
                             className="badge" 
                             style={{ 
-                              backgroundColor: item.idNumber ? '#17a2b8' : '#6c757d',
+                              backgroundColor: item.idNumber ? 'var(--color-accent, #3b82f6)' : 'var(--color-text-muted, #6b7280)',
                               color: 'white',
                               fontSize: '12px',
                               padding: '6px 10px',
-                              borderRadius: '12px',
+                              borderRadius: '8px',
                               fontWeight: '600',
                               fontFamily: 'monospace',
-                              boxShadow: item.idNumber 
-                                ? '0 2px 4px rgba(23, 162, 184, 0.3)' 
-                                : '0 2px 4px rgba(108, 117, 125, 0.3)',
-                              border: item.idNumber 
-                                ? '1px solid #20c997' 
-                                : '1px solid #adb5bd'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
                             {item.idNumber || 'ללא מספר'}
@@ -1359,18 +1247,14 @@ const Dashboard: React.FC = () => {
                           <span 
                             className="badge" 
                             style={{ 
-                              backgroundColor: user.isSigned ? '#27ae60' : '#e74c3c',
+                              backgroundColor: user.isSigned ? 'var(--color-success, #10b981)' : 'var(--color-danger, #ef4444)',
                               color: 'white',
                               fontSize: '12px',
                               padding: '6px 12px',
-                              borderRadius: '15px',
+                              borderRadius: '8px',
                               fontWeight: '600',
-                              boxShadow: user.isSigned 
-                                ? '0 2px 4px rgba(39, 174, 96, 0.3)' 
-                                : '0 2px 4px rgba(231, 76, 60, 0.3)',
-                              border: user.isSigned 
-                                ? '2px solid #2ecc71' 
-                                : '2px solid #ec7063'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
                             {user.isSigned ? 'כן' : 'לא'}
@@ -1378,24 +1262,19 @@ const Dashboard: React.FC = () => {
                         </td>
                         <td style={{ 
                           padding: '16px 20px', 
-                          textAlign: 'center',
-                          backgroundColor: '#e8f5e8'
+                          textAlign: 'center'
                         }}>
                           <span 
                             className="badge" 
                             style={{ 
-                              backgroundColor: item.allocatedLocationName ? '#3498db' : '#6c757d',
+                              backgroundColor: item.allocatedLocationName ? 'var(--color-accent, #3b82f6)' : 'var(--color-text-muted, #6b7280)',
                               color: 'white',
                               fontSize: '12px',
                               padding: '6px 12px',
-                              borderRadius: '15px',
+                              borderRadius: '8px',
                               fontWeight: '600',
-                              boxShadow: item.allocatedLocationName 
-                                ? '0 2px 4px rgba(52, 152, 219, 0.3)' 
-                                : '0 2px 4px rgba(108, 117, 125, 0.3)',
-                              border: item.allocatedLocationName 
-                                ? '2px solid #5dade2' 
-                                : '2px solid #adb5bd'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
                             {item.allocatedLocationName || 'לא הוקצה'}
@@ -1404,7 +1283,7 @@ const Dashboard: React.FC = () => {
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#495057',
+                          color: 'var(--color-text-secondary, #a0a0a0)',
                           textAlign: 'center',
                           fontStyle: 'italic'
                         }}>
@@ -1415,22 +1294,27 @@ const Dashboard: React.FC = () => {
                       <tr 
                         key={user.id || userIndex}
                         style={{ 
-                          backgroundColor: userIndex % 2 === 0 ? '#f8fafc' : 'white',
-                          transition: 'all 0.2s ease'
+                          backgroundColor: userIndex % 2 === 0 
+                            ? 'var(--color-surface-alt, #333333)' 
+                            : 'var(--color-surface, #2a2a2a)',
+                          transition: 'all 0.2s ease',
+                          borderBottom: '1px solid var(--color-border, #404040)'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#e3f2fd';
-                          e.currentTarget.style.transform = 'scale(1.01)';
+                          e.currentTarget.style.backgroundColor = 'var(--color-hover, #3d4852)';
+                          e.currentTarget.style.transform = 'scale(1.005)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = userIndex % 2 === 0 ? '#f8fafc' : 'white';
+                          e.currentTarget.style.backgroundColor = userIndex % 2 === 0 
+                            ? 'var(--color-surface-alt, #333333)' 
+                            : 'var(--color-surface, #2a2a2a)';
                           e.currentTarget.style.transform = 'scale(1)';
                         }}
                       >
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#2c3e50',
+                          color: 'var(--color-text, #ffffff)',
                           fontWeight: '600',
                           textAlign: 'right'
                         }}>
@@ -1439,7 +1323,7 @@ const Dashboard: React.FC = () => {
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#495057',
+                          color: 'var(--color-text-secondary, #a0a0a0)',
                           textAlign: 'center',
                           fontWeight: '500'
                         }}>
@@ -1448,22 +1332,22 @@ const Dashboard: React.FC = () => {
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#495057',
+                          color: 'var(--color-text-secondary, #a0a0a0)',
                           textAlign: 'center',
                           fontFamily: 'monospace'
                         }}>
                           <span 
                             className="badge" 
                             style={{ 
-                              backgroundColor: '#6c757d',
+                              backgroundColor: 'var(--color-text-muted, #6b7280)',
                               color: 'white',
                               fontSize: '12px',
                               padding: '6px 10px',
-                              borderRadius: '12px',
+                              borderRadius: '8px',
                               fontWeight: '600',
                               fontFamily: 'monospace',
-                              boxShadow: '0 2px 4px rgba(108, 117, 125, 0.3)',
-                              border: '1px solid #adb5bd'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
                             ללא מספר
@@ -1476,18 +1360,14 @@ const Dashboard: React.FC = () => {
                           <span 
                             className="badge" 
                             style={{ 
-                              backgroundColor: user.isSigned ? '#27ae60' : '#e74c3c',
+                              backgroundColor: user.isSigned ? 'var(--color-success, #10b981)' : 'var(--color-danger, #ef4444)',
                               color: 'white',
                               fontSize: '12px',
                               padding: '6px 12px',
-                              borderRadius: '15px',
+                              borderRadius: '8px',
                               fontWeight: '600',
-                              boxShadow: user.isSigned 
-                                ? '0 2px 4px rgba(39, 174, 96, 0.3)' 
-                                : '0 2px 4px rgba(231, 76, 60, 0.3)',
-                              border: user.isSigned 
-                                ? '2px solid #2ecc71' 
-                                : '2px solid #ec7063'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
                             {user.isSigned ? 'כן' : 'לא'}
@@ -1495,20 +1375,19 @@ const Dashboard: React.FC = () => {
                         </td>
                         <td style={{ 
                           padding: '16px 20px', 
-                          textAlign: 'center',
-                          backgroundColor: '#e8f5e8'
+                          textAlign: 'center'
                         }}>
                           <span 
                             className="badge" 
                             style={{ 
-                              backgroundColor: '#6c757d',
+                              backgroundColor: 'var(--color-text-muted, #6b7280)',
                               color: 'white',
                               fontSize: '12px',
                               padding: '6px 12px',
-                              borderRadius: '15px',
+                              borderRadius: '8px',
                               fontWeight: '600',
-                              boxShadow: '0 2px 4px rgba(108, 117, 125, 0.3)',
-                              border: '2px solid #adb5bd'
+                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)'
                             }}
                           >
                             לא הוקצה
@@ -1517,7 +1396,7 @@ const Dashboard: React.FC = () => {
                         <td style={{ 
                           padding: '16px 20px', 
                           fontSize: '14px', 
-                          color: '#495057',
+                          color: 'var(--color-text-secondary, #a0a0a0)',
                           textAlign: 'center',
                           fontStyle: 'italic'
                         }}>
@@ -1532,12 +1411,14 @@ const Dashboard: React.FC = () => {
             <div 
               className="card-footer border-0"
               style={{ 
-                background: 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)',
+                background: 'linear-gradient(135deg, var(--color-accent, #3b82f6) 0%, var(--color-accent-dark, #2563eb) 100%)',
                 color: 'white',
                 padding: '16px 20px',
                 textAlign: 'center',
                 fontSize: '15px',
-                fontWeight: '600'
+                fontWeight: '600',
+                borderTop: '1px solid var(--color-border, #404040)',
+                boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)'
               }}
             >
               סה"כ פריטים מוקצים: <span style={{ fontSize: '18px', fontWeight: '700' }}>

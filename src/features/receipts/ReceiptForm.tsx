@@ -94,16 +94,6 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
     });
   }, [items, sortConfig]);
 
-  // Get sort icon for a field
-  const getSortIcon = (field: SortField) => {
-    if (sortConfig?.field !== field) {
-      return <i className="fas fa-sort" style={{ color: 'rgba(255, 255, 255, 0.4)' }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up" style={{ color: '#3b82f6' }}></i>
-      : <i className="fas fa-sort-down" style={{ color: '#3b82f6' }}></i>;
-  };
-
   if (items.length === 0) {
     return (
       <div style={{
@@ -194,12 +184,10 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
               >
                 <div style={{ 
                   display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
+                  alignItems: 'center',
                   direction: 'rtl'
                 }}>
                   <span>פריט</span>
-                  <div style={{ marginLeft: '8px' }}>{getSortIcon('name')}</div>
                 </div>
               </th>
               <th 
@@ -218,11 +206,9 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
               >
                 <div style={{ 
                   display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center'
+                  alignItems: 'center'
                 }}>
                   <span>מספר צ'</span>
-                  <div style={{ marginRight: '4px' }}>{getSortIcon('idNumber')}</div>
                 </div>
               </th>
               <th 
@@ -241,11 +227,9 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
               >
                 <div style={{ 
                   display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center'
+                  alignItems: 'center'
                 }}>
                   <span>הקצאה</span>
-                  <div style={{ marginRight: '4px' }}>{getSortIcon('location')}</div>
                 </div>
               </th>
               <th style={{ 

@@ -108,17 +108,6 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         setSortConfig({ key, direction });
     };
 
-    const getSortIcon = (key: string) => {
-        if (!sortConfig || sortConfig.key !== key) {
-            return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }} />;
-        }
-        return sortConfig.direction === 'asc' ? (
-            <i className="fas fa-sort-up ms-1" />
-        ) : (
-            <i className="fas fa-sort-down ms-1" />
-        );
-    };
-
     // Apply search + sort
     const filteredAndSortedReceipts = useMemo(() => {
         const term = searchTerm.toLowerCase().normalize('NFC');
@@ -356,33 +345,28 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                         <thead>
                                             <tr>
                                                 <th className="sortable-header" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center">
                                                         <span>מנפיק</span>
-                                                        <div className="sort-indicator">{getSortIcon('createdBy')}</div>
                                                     </div>
                                                 </th>
                                                 <th className="sortable-header" onClick={() => handleSort('signedBy')} data-sorted={sortConfig?.key === 'signedBy'}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center">
                                                         <span>מקבל</span>
-                                                        <div className="sort-indicator">{getSortIcon('signedBy')}</div>
                                                     </div>
                                                 </th>
                                                 <th className="sortable-header" onClick={() => handleSort('unit')} data-sorted={sortConfig?.key === 'unit'}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center">
                                                         <span>יחידה</span>
-                                                        <div className="sort-indicator">{getSortIcon('unit')}</div>
                                                     </div>
                                                 </th>
                                                 <th className="sortable-header" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center">
                                                         <span>כמות פריטים</span>
-                                                        <div className="sort-indicator">{getSortIcon('itemCount')}</div>
                                                     </div>
                                                 </th>
                                                 <th className="sortable-header" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
-                                                    <div className="d-flex align-items-center justify-content-between">
+                                                    <div className="d-flex align-items-center">
                                                         <span>תאריך חתימה</span>
-                                                        <div className="sort-indicator">{getSortIcon('updatedAt')}</div>
                                                     </div>
                                                 </th>
                                                 <th>פעולות</th>

@@ -55,15 +55,6 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     setSortConfig({ key, direction });
   };
 
-  const getSortIcon = (key: string) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return <i className="fas fa-sort ms-1" style={{ opacity: 0.5 }}></i>;
-    }
-    return sortConfig.direction === 'asc' 
-      ? <i className="fas fa-sort-up ms-1"></i>
-      : <i className="fas fa-sort-down ms-1"></i>;
-  };
-
   // Filter and sort items based on search term and sort config
   const filteredAndSortedItems = (() => {
     let filtered = items.filter(item => {
@@ -325,11 +316,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   title="לחץ למיון לפי שם פריט"
                   data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>שם פריט</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('name')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -338,11 +326,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   title="לחץ למיון לפי מספר צ'"
                   data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>מספר צ'</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('idNumber')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -351,11 +336,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   title="לחץ למיון לפי הקצאה"
                   data-sorted={sortConfig?.key === 'allocatedLocation' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>הקצאה</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('allocatedLocation')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -364,11 +346,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   title="לחץ למיון לפי סטטוס"
                   data-sorted={sortConfig?.key === 'status' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>סטטוס</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('status')}
-                    </div>
                   </div>
                 </th>
                 <th 
@@ -377,11 +356,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   title="לחץ למיון לפי הערה"
                   data-sorted={sortConfig?.key === 'note' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
                     <span>הערה</span>
-                    <div className="sort-indicator">
-                      {getSortIcon('note')}
-                    </div>
                   </div>
                 </th>
                 <th>פעולות</th>
