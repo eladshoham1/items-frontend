@@ -394,8 +394,13 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     <td className="unified-table-cell">{getUnit(receipt)}</td>
                     <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
                     <td className="unified-table-cell">{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
-                    <td className="unified-table-cell">
-                      <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
+                    <td className="unified-table-cell" style={{ textAlign: 'center' }}>
+                      <div className="action-buttons" onClick={(e) => e.stopPropagation()} style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        gap: '8px' 
+                      }}>
                         {isAdmin && (
                           <button 
                             className="btn btn-primary btn-sm me-2 unified-action-btn" 
