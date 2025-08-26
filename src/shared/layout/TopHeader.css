@@ -245,8 +245,15 @@
     font-size: var(--font-size-md);
   }
   
+  /* Mobile dropdown positioning */
   .user-menu-dropdown {
-    min-width: 180px;
+    position: fixed;
+    top: 65px;
+    right: var(--spacing-md);
+    left: auto;
+    min-width: 160px;
+    max-width: calc(100vw - 32px);
+    margin-top: 0;
   }
 }
 
@@ -271,6 +278,37 @@
   
   .logo-title {
     font-size: var(--font-size-sm);
+  }
+  
+  .user-menu-dropdown {
+    right: var(--spacing-sm);
+    max-width: calc(100vw - 16px);
+  }
+  
+  .user-menu-item {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 360px) {
+  .user-menu-dropdown {
+    right: 8px;
+    max-width: calc(100vw - 16px);
+    min-width: 140px;
+  }
+  
+  .user-menu-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    gap: var(--spacing-sm);
+    min-height: 44px;
+  }
+  
+  .menu-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 
