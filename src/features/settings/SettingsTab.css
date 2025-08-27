@@ -138,6 +138,33 @@
   gap: var(--spacing-sm);
 }
 
+/* Enhanced theme toggle integration in settings */
+.theme-toggle-settings {
+  width: 100%;
+  padding: var(--spacing-sm, 8px) 0;
+}
+
+.theme-toggle-settings .theme-toggle-label-section {
+  min-width: 120px;
+}
+
+.theme-toggle-settings .theme-toggle-label {
+  font-size: var(--font-size-base, 1rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-text-primary);
+}
+
+.theme-toggle-settings .theme-toggle-status {
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* Remove the redundant field label styling since the toggle has its own label */
+.settings-field:has(.theme-toggle-settings) .field-label {
+  display: none;
+}
+
 .role-badge {
   display: inline-flex;
   align-items: center;

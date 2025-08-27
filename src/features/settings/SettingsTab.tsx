@@ -339,8 +339,12 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile: propUserProfile,
         <h2 className="section-title">העדפות תצוגה</h2>
         <div className="settings-form">
           <div className="settings-field">
-            <label className="field-label">ערכת נושא</label>
-            <ThemeToggle showLabel={true} />
+            <ThemeToggle 
+              showLabel={true} 
+              variant="default" 
+              size="md"
+              className="theme-toggle-settings" 
+            />
           </div>
         </div>
       </div>
