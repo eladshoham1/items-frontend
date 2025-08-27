@@ -1,27 +1,27 @@
-/* Receipts Tab Styling - Dark Theme */
+/* Receipts Tab Styling - Theme Aware */
 .receipts-tab-container {
   font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
   direction: rtl;
-  background: #1a1a1a;
-  color: #e9ecef;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 /* Selected Items Table Styling */
 .selected-items-table-container {
-  background-color: #2d2d2d;
-  border: 1px solid #404040;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  box-shadow: var(--shadow);
   margin-top: 16px;
 }
 
 .selected-items-table-container .table-header {
-  background-color: #2d2d2d;
+  background-color: var(--color-table-header);
   padding: 12px 16px;
-  border-bottom: 1px solid #404040;
+  border-bottom: 1px solid var(--color-border);
   font-weight: 600;
-  color: #e9ecef;
+  color: var(--color-text);
 }
 
 .selected-items-table-container .table {
@@ -29,10 +29,10 @@
 }
 
 .selected-items-table-container .table th {
-  background-color: #2d2d2d;
-  border-bottom: 2px solid #404040;
+  background-color: var(--color-table-header);
+  border-bottom: 2px solid var(--color-border);
   font-weight: 600;
-  color: #e9ecef;
+  color: var(--color-text);
   padding: 12px 8px;
   vertical-align: middle;
 }
@@ -40,8 +40,8 @@
 .selected-items-table-container .table td {
   padding: 12px 8px;
   vertical-align: middle;
-  border-bottom: 1px solid #404040;
-  color: #e9ecef;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
 }
 
 /* Remove hover effects completely */
@@ -55,11 +55,11 @@
 }
 
 .selected-items-table-container .table-footer {
-  background-color: #2d2d2d;
+  background-color: var(--color-table-header);
   padding: 12px 16px;
-  border-top: 1px solid #404040;
+  border-top: 1px solid var(--color-border);
   font-size: 14px;
-  color: #e9ecef;
+  color: var(--color-text);
 }
 
 .selected-items-table-container .btn-sm {
@@ -81,7 +81,7 @@
 .receipt-form-header {
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .form-group {
@@ -90,7 +90,7 @@
 
 .form-label.required:after {
   content: " *";
-  color: #dc3545;
+  color: var(--color-danger);
   font-weight: bold;
 }
 

@@ -40,6 +40,7 @@ export const useUserProfile = () => {
             phoneNumber: serverUser.phoneNumber,
             rank: serverUser.rank,
             isAdmin: serverUser.isAdmin,
+            emailSubscribed: serverUser.emailSubscribed,
             firebaseUid: serverUser.firebaseUid,
             createdAt: serverUser.createdAt,
             updatedAt: serverUser.updatedAt,
@@ -109,6 +110,7 @@ export const useUserProfile = () => {
           phoneNumber: serverUser.phoneNumber,
           rank: serverUser.rank,
           isAdmin: serverUser.isAdmin,
+          emailSubscribed: serverUser.emailSubscribed,
           firebaseUid: serverUser.firebaseUid,
           createdAt: serverUser.createdAt,
           updatedAt: serverUser.updatedAt,
@@ -157,6 +159,7 @@ export const useUserProfile = () => {
           phoneNumber: serverUser.phoneNumber,
           rank: serverUser.rank,
           isAdmin: serverUser.isAdmin,
+          emailSubscribed: serverUser.emailSubscribed,
           firebaseUid: serverUser.firebaseUid,
           createdAt: serverUser.createdAt,
           updatedAt: serverUser.updatedAt,
@@ -166,8 +169,6 @@ export const useUserProfile = () => {
         };
         setUserProfile(transformedUser);
         
-        // Reload the page to ensure fresh data is displayed
-        window.location.reload();
         return true;
       }
       

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, UpdateUserRequest, ranks } from '../../types';
 import { useUserProfile, useAuth } from '../../hooks';
 import { useManagement } from '../../contexts';
+import { ThemeToggle } from '../../shared/components';
 import { sanitizeInput } from '../../utils';
 import './SettingsTab.css';
 
@@ -15,10 +16,13 @@ interface EditingField {
   value: string;
 }
 
-const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile, isAdmin }) => {
-  const { updateUserProfile } = useUserProfile();
+const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile: propUserProfile, isAdmin }) => {
+  const { updateUserProfile, refetch, userProfile: hookUserProfile } = useUserProfile();
   const { user: firebaseUser } = useAuth();
   const { loadLocations } = useManagement();
+  
+  // Use the userProfile from the hook as it's the source of truth and gets updated by refetch
+  const userProfile = hookUserProfile || propUserProfile;
   const [editingField, setEditingField] = useState<EditingField | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -91,6 +95,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile, isAdmin }) => {
       
       if (field === 'personalNumber') {
         updates = { personalNumber: parseInt(value) };
+      } else if (field === 'emailSubscribed') {
+        updates = { emailSubscribed: value === 'true' };
       } else {
         updates = { [field]: sanitizeInput(value) };
       }
@@ -99,6 +105,8 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile, isAdmin }) => {
       if (success) {
         setUpdateMessage({ type: 'success', text: 'הפרטים עודכנו בהצלחה!' });
         setEditingField(null);
+        // Refresh user data from server to display the latest values
+        await refetch();
       } else {
         setUpdateMessage({ type: 'error', text: 'שגיאה בעדכון הפרטים' });
       }
@@ -107,6 +115,21 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile, isAdmin }) => {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleToggleEmailSubscription = (checked: boolean) => {
+    if (!userProfile || isUpdating) return;
+    
+    const originalValue = userProfile.emailSubscribed ?? false;
+    
+    // If the new value is the same as original, cancel editing
+    if (checked === originalValue) {
+      setEditingField(null);
+      return;
+    }
+    
+    // Start editing mode for emailSubscribed field
+    setEditingField({ field: 'emailSubscribed', value: checked.toString() });
   };
 
   const renderEditableField = (
@@ -218,16 +241,16 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile, isAdmin }) => {
           {renderEditableField('דרגה', 'rank', userProfile.rank, 'select', ranks.map((rank: string) => ({ value: rank, label: rank })))}
           
           <div className="settings-field">
-            <label className="field-label">מיקום</label>
+            <label className="field-label">יחידה</label>
             <div className="field-display">
-              <span className="field-value">{userProfile.location}</span>
+              <span className="field-value">{userProfile.unit}</span>
             </div>
           </div>
 
           <div className="settings-field">
-            <label className="field-label">יחידה</label>
+            <label className="field-label">מיקום</label>
             <div className="field-display">
-              <span className="field-value">{userProfile.unit}</span>
+              <span className="field-value">{userProfile.location}</span>
             </div>
           </div>
 
@@ -238,6 +261,86 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ userProfile, isAdmin }) => {
                 {userProfile.isAdmin ? 'מנהל מערכת' : 'משתמש רגיל'}
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <h2 className="section-title">התראות</h2>
+        <div className="settings-form">
+          <div className="settings-field">
+            <label className="field-label">התראות אימייל</label>
+            {editingField?.field === 'emailSubscribed' ? (
+              <div className="field-edit-container">
+                <div className="field-display notification-toggle-field">
+                  <span className="notification-toggle-label">
+                    {editingField.value === 'true' ? 'מופעל' : 'מבוטל'}
+                  </span>
+                  <label className="notification-toggle-wrapper">
+                    <input
+                      type="checkbox"
+                      checked={editingField.value === 'true'}
+                      onChange={(e) => {
+                        const newValue = e.target.checked;
+                        const originalValue = userProfile.emailSubscribed ?? false;
+                        
+                        // If changed back to original value, exit edit mode
+                        if (newValue === originalValue) {
+                          setEditingField(null);
+                        } else {
+                          setEditingField({ ...editingField, value: newValue.toString() });
+                        }
+                      }}
+                      disabled={isUpdating}
+                      className="notification-toggle-input"
+                    />
+                    <span className="notification-toggle-slider"></span>
+                  </label>
+                </div>
+                <div className="field-actions">
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={handleSaveField}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? 'שומר...' : 'שמור'}
+                  </button>
+                  <button
+                    className="btn btn-sm btn-ghost"
+                    onClick={handleCancelEdit}
+                    disabled={isUpdating}
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="field-display notification-toggle-field">
+                <span className="notification-toggle-label">
+                  {userProfile.emailSubscribed ? 'מופעל' : 'מבוטל'}
+                </span>
+                <label className="notification-toggle-wrapper">
+                  <input
+                    type="checkbox"
+                    checked={userProfile.emailSubscribed ?? false}
+                    onChange={(e) => handleToggleEmailSubscription(e.target.checked)}
+                    disabled={isUpdating}
+                    className="notification-toggle-input"
+                  />
+                  <span className="notification-toggle-slider"></span>
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <h2 className="section-title">העדפות תצוגה</h2>
+        <div className="settings-form">
+          <div className="settings-field">
+            <label className="field-label">ערכת נושא</label>
+            <ThemeToggle showLabel={true} />
           </div>
         </div>
       </div>

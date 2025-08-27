@@ -8,3 +8,5 @@ export { SmartPagination } from './SmartPagination';
 export { default as TabNavigation } from './TabNavigation';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as PageContainer } from './PageContainer';
+export { ThemeToggle } from './ThemeToggle';
+export { ThemeDemo } from './ThemeDemo';

@@ -8,7 +8,7 @@ import { ItemsTab } from './features/items';
 import { ManagementTab } from './features/management';
 import { SettingsTab } from './features/settings';
 import GoogleAuth from './features/auth/GoogleAuth';
-import { ManagementProvider } from './contexts';
+import { ManagementProvider, ThemeProvider } from './contexts';
 import { useAuth, useUserProfile } from './hooks';
 import { UserProfileSetup } from './components/auth';
 import { User } from 'firebase/auth';
@@ -205,7 +205,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <>
+    <ThemeProvider>
       <ManagementProvider>
         <Layout 
           topHeader={
@@ -232,7 +232,7 @@ const App: React.FC = () => {
           {renderTabContent()}
         </Layout>
       </ManagementProvider>
-    </>
+    </ThemeProvider>
   );
 };
 

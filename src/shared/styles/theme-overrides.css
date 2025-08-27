@@ -1,0 +1,310 @@
+/* Theme Support Override for all Components */
+
+/* Card and Surface Elements */
+.card,
+.receipt-card,
+.form-card,
+.dashboard-card,
+.management-card,
+.user-card,
+.item-card {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+/* Table Elements */
+.table,
+.receipts-table,
+.management-table,
+.users-table,
+.items-table {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+.table th,
+.table thead th {
+  background: var(--color-table-header) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.table td,
+.table tbody td {
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+  background: transparent !important;
+}
+
+.table tbody tr:hover td {
+  background: var(--color-table-row-hover) !important;
+}
+
+/* Form Elements */
+.form-control,
+.form-select,
+input,
+textarea,
+select {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.form-control:focus,
+.form-select:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-primary) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.25) !important;
+}
+
+/* Button Variants */
+.btn-primary {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-hover) !important;
+  border-color: var(--color-primary-hover) !important;
+}
+
+.btn-secondary {
+  background: var(--color-secondary) !important;
+  border-color: var(--color-secondary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+.btn-success {
+  background: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+}
+
+.btn-danger {
+  background: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
+}
+
+.btn-warning {
+  background: var(--color-warning) !important;
+  border-color: var(--color-warning) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+.btn-info {
+  background: var(--color-info) !important;
+  border-color: var(--color-info) !important;
+}
+
+/* Outline Button Variants */
+.btn-outline-primary {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+.btn-outline-primary:hover {
+  background: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+.btn-outline-secondary {
+  border-color: var(--color-border) !important;
+  color: var(--color-text) !important;
+  background: var(--color-surface) !important;
+}
+
+.btn-outline-secondary:hover {
+  background: var(--color-border-light) !important;
+  color: var(--color-text) !important;
+}
+
+/* Modal Elements */
+.modal-content {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.modal-footer {
+  border-top: 1px solid var(--color-border) !important;
+}
+
+/* Badge Elements */
+.badge {
+  color: var(--color-text-inverse) !important;
+}
+
+.badge-primary {
+  background: var(--color-primary) !important;
+}
+
+.badge-secondary {
+  background: var(--color-secondary) !important;
+}
+
+.badge-success {
+  background: var(--color-success) !important;
+}
+
+.badge-danger {
+  background: var(--color-danger) !important;
+}
+
+.badge-warning {
+  background: var(--color-warning) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+.badge-info {
+  background: var(--color-info) !important;
+}
+
+/* Alert Elements */
+.alert {
+  border-radius: var(--radius) !important;
+}
+
+.alert-success {
+  background: var(--color-success-bg) !important;
+  border-color: var(--color-success) !important;
+  color: var(--color-success) !important;
+}
+
+.alert-danger {
+  background: var(--color-danger-bg) !important;
+  border-color: var(--color-danger) !important;
+  color: var(--color-danger) !important;
+}
+
+.alert-warning {
+  background: var(--color-warning-bg) !important;
+  border-color: var(--color-warning) !important;
+  color: var(--color-warning) !important;
+}
+
+.alert-info {
+  background: var(--color-info-bg) !important;
+  border-color: var(--color-info) !important;
+  color: var(--color-info) !important;
+}
+
+/* Text Color Classes */
+.text-primary { color: var(--color-primary) !important; }
+.text-secondary { color: var(--color-text-secondary) !important; }
+.text-success { color: var(--color-success) !important; }
+.text-danger { color: var(--color-danger) !important; }
+.text-warning { color: var(--color-warning) !important; }
+.text-info { color: var(--color-info) !important; }
+.text-muted { color: var(--color-text-muted) !important; }
+
+/* Background Color Classes */
+.bg-primary { background: var(--color-primary) !important; }
+.bg-secondary { background: var(--color-secondary) !important; }
+.bg-success { background: var(--color-success) !important; }
+.bg-danger { background: var(--color-danger) !important; }
+.bg-warning { background: var(--color-warning) !important; }
+.bg-info { background: var(--color-info) !important; }
+.bg-light { background: var(--color-surface) !important; }
+.bg-dark { background: var(--color-bg) !important; }
+
+/* Border Color Classes */
+.border-primary { border-color: var(--color-primary) !important; }
+.border-secondary { border-color: var(--color-secondary) !important; }
+.border { border-color: var(--color-border) !important; }
+
+/* Loading and Spinner Elements */
+.spinner-border {
+  border-color: var(--color-border) !important;
+  border-top-color: var(--color-primary) !important;
+}
+
+.loading-spinner {
+  border-color: var(--color-border) !important;
+  border-top-color: var(--color-primary) !important;
+}
+
+/* Dropdown Elements */
+.dropdown-menu {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.dropdown-item {
+  color: var(--color-text) !important;
+}
+
+.dropdown-item:hover {
+  background: var(--color-table-row-hover) !important;
+  color: var(--color-text) !important;
+}
+
+/* Pagination Elements */
+.page-link {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+.page-link:hover {
+  background: var(--color-table-row-hover) !important;
+  color: var(--color-text) !important;
+}
+
+.page-item.active .page-link {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+/* Navigation Elements */
+.nav-link {
+  color: var(--color-text) !important;
+}
+
+.nav-link:hover {
+  color: var(--color-primary) !important;
+}
+
+.nav-link.active {
+  color: var(--color-primary) !important;
+  background: var(--color-table-row-hover) !important;
+}
+
+/* Specific Component Overrides */
+.receipts-container,
+.items-container,
+.users-container,
+.management-container,
+.reports-container {
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+
+/* Section Headers */
+.section-header,
+.page-header,
+.form-header {
+  color: var(--color-text) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+/* Footer Elements */
+.footer,
+.table-footer,
+.form-footer {
+  background: var(--color-table-header) !important;
+  border-top: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}

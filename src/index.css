@@ -35,7 +35,7 @@ html, body {
 
 body {
   font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
-  background-color: #1a1a1a;
+  background-color: var(--color-bg);
   color: var(--color-text);
   direction: rtl;
   padding: 0;
@@ -319,29 +319,31 @@ body {
   display: flex;
   align-items: center;
   padding: 0 12px;
-  background-color: #fff;
-  border: 1px solid #ccc;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+  color: var(--color-text);
 }
 
 .input-group .form-control {
   flex: 1 1 auto;
   width: 1%; /* allow flex to control width */
   min-width: 0; /* allow shrinking */
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   border-left: 0;
   border-right: 0;
   border-radius: 0; /* middle element */
   z-index: 0;
-  background-color: #fff;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .input-group .btn {
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
   border-top-right-radius: 0;
@@ -386,7 +388,8 @@ body {
   width: 100%;
   padding: 10px;
   font-size: 1rem;
-  background-color: #fff;
+  background-color: var(--color-surface);
+  color: var(--color-text);
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -400,12 +403,13 @@ body {
 /* Override legacy input-group field styles to ensure proper merged borders */
 .input-group input.form-control,
 .input-group select.form-control {
-  border-top: 1px solid #ccc !important;
-  border-bottom: 1px solid #ccc !important;
+  border-top: 1px solid var(--color-border) !important;
+  border-bottom: 1px solid var(--color-border) !important;
   border-left: 0 !important;
   border-right: 0 !important;
   border-radius: 0 !important;
-  background-color: #fff;
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 /* Ensure group-edge elements have rounded corners in RTL */
@@ -421,18 +425,18 @@ body {
 
 /* Outline secondary button (used for clear search) - strong overrides so it is visible */
 .input-group .btn.btn-outline-secondary {
-  background: #fff !important;
-  color: #495057 !important;
-  border: 1px solid #ced4da !important; /* override .btn { border: none } in feature CSS */
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important; /* override .btn { border: none } in feature CSS */
   box-shadow: none !important;
 }
 .input-group .btn.btn-outline-secondary:hover:not(:disabled) {
-  background: #e9ecef !important;
-  color: #343a40 !important;
-  border-color: #adb5bd !important;
+  background: var(--color-border-light) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border-dark) !important;
 }
 .input-group .btn.btn-outline-secondary:focus {
-  outline: 2px solid #80bdff !important;
+  outline: 2px solid var(--color-primary) !important;
   outline-offset: 2px !important;
 }
 
