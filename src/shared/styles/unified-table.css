@@ -33,21 +33,36 @@
 
 /* Universal Table Headers */
 .unified-table-header {
-  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-  color: var(--color-text, #ffffff);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  color: var(--color-text-primary, #1f2937);
   padding: 16px 12px;
   font-size: 14px;
   font-weight: 600;
-  border-bottom: 1px solid var(--color-border, #404040);
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
   text-align: center;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .unified-table-header:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme specific styling */
+[data-theme="dark"] .unified-table-header {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  color: var(--color-text, #ffffff);
+  border-bottom-color: var(--color-border, #404040);
+}
+
+[data-theme="dark"] .unified-table-header:hover {
   background: linear-gradient(135deg, #5a6578 0%, #3d4758 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Sticky Header for First Column */
@@ -185,13 +200,19 @@
 
 /* Universal Search Container */
 .unified-search-container {
-  background: linear-gradient(135deg, var(--color-surface, #2a2a2a) 0%, var(--color-surface-alt, #333333) 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   padding: 24px;
+  border: 1px solid var(--color-border);
   border-radius: 16px;
-  border: 1px solid var(--color-border, #404040);
   margin-bottom: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
   direction: rtl;
+}
+
+/* Dark theme gradient enhancement */
+[data-theme="dark"] .unified-search-container {
+  background: linear-gradient(135deg, var(--color-surface, #2a2a2a) 0%, var(--color-surface-alt, #333333) 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .unified-search-row {

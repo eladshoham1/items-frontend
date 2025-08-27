@@ -38,8 +38,11 @@
   --color-border: #404040;
   --color-border-light: #333333;
   --color-border-dark: #555555;
+  --color-border-hover: #555555;
   --color-table-header: #2d2d2d;
   --color-table-row-hover: #333333;
+  --color-bg-hover: #3d4852;
+  --color-text-disabled: #6c757d;
   
   /* Enhanced color variants */
   --color-primary-dark: #495057;
@@ -53,6 +56,9 @@
   --color-accent-dark: #6c63ff;
   --color-success-dark: #1e7e34;
   --color-danger-dark: #721c24;
+  --color-input-bg: #1a1a1a;
+  --color-table-stripe: rgba(255, 255, 255, 0.02);
+  --color-accent-alpha: rgba(108, 99, 255, 0.15);
   
   /* Shadows - Modern depth */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -135,21 +141,25 @@
   --color-info: #3b82f6;
   --color-info-bg: #eff6ff;
   
-  /* Text colors */
-  --color-text: #1f2937;
-  --color-text-secondary: #6b7280;
-  --color-text-muted: #9ca3af;
+  /* Text colors - Better contrast for light mode */
+  --color-text: #111827;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
   --color-text-inverse: #ffffff;
   --color-text-sidebar: #374151;
-  --color-text-sidebar-active: #1f2937;
+  --color-text-sidebar-active: #111827;
   
   /* Border and background colors */
   --color-background: #ffffff;
   --color-border: #e5e7eb;
   --color-border-light: #f3f4f6;
   --color-border-dark: #d1d5db;
+  --color-border-hover: #cbd5e1;
   --color-table-header: #f9fafb;
   --color-table-row-hover: #f9fafb;
+  --color-bg-hover: #f1f5f9;
+  --color-text-disabled: #cbd5e1;
   
   /* Enhanced color variants */
   --color-primary-dark: #1d4ed8;
@@ -158,11 +168,14 @@
   --color-sidebar-rgb: 241, 243, 245;
   
   /* Additional color variants for light theme */
-  --color-surface-alt: #e5e7eb;
-  --color-hover: #f3f4f6;
-  --color-accent-dark: #4338ca;
+  --color-surface-alt: #f8fafc;
+  --color-hover: #f1f5f9;
+  --color-accent-dark: #1e40af;
   --color-success-dark: #047857;
   --color-danger-dark: #b91c1c;
+  --color-input-bg: #ffffff;
+  --color-table-stripe: #f8fafc;
+  --color-accent-alpha: rgba(59, 130, 246, 0.1);
   
   /* Shadows - Light theme specific */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -178,6 +191,12 @@
   box-sizing: border-box;
 }
 
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -189,6 +208,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   direction: rtl;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Ensure root app element inherits theme */
+#root {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Typography */

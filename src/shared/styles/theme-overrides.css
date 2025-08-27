@@ -1,5 +1,48 @@
 /* Theme Support Override for all Components */
 
+/* Universal background override for all major containers */
+.main-content,
+.content-wrapper,
+.dashboard-content,
+.tab-content,
+.page-wrapper,
+.layout-content,
+.layout-main,
+.container,
+.container-fluid,
+body,
+#root,
+.App {
+  background-color: var(--color-background) !important;
+  color: var(--color-text) !important;
+}
+
+/* Force all containers to use theme backgrounds */
+div[class*="container"],
+div[class*="wrapper"],
+div[class*="content"],
+div[class*="dashboard"],
+div[class*="tab"],
+div[class*="page"],
+section,
+article,
+.main,
+main {
+  background-color: var(--color-background) !important;
+}
+
+/* Override any hardcoded dark backgrounds */
+*[style*="background: #1a1a1a"],
+*[style*="background-color: #1a1a1a"],
+*[style*="background: #2d2d2d"],
+*[style*="background-color: #2d2d2d"],
+*[style*="background: #262626"],
+*[style*="background-color: #262626"],
+*[style*="background: #333333"],
+*[style*="background-color: #333333"] {
+  background-color: var(--color-surface) !important;
+}
+
 /* Card and Surface Elements */
 .card,
 .receipt-card,
@@ -24,10 +67,222 @@
 }
 
 .table th,
-.table thead th {
-  background: var(--color-table-header) !important;
+.table thead th,
+.unified-table-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
   border-color: var(--color-border) !important;
   color: var(--color-text) !important;
+}
+
+.table th:hover,
+.table thead th:hover,
+.unified-table-header:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme table headers */
+[data-theme="dark"] .table th,
+[data-theme="dark"] .table thead th,
+[data-theme="dark"] .unified-table-header {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .table th:hover,
+[data-theme="dark"] .table thead th:hover,
+[data-theme="dark"] .unified-table-header:hover {
+  background: linear-gradient(135deg, #5a6578 0%, #3d4758 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Daily Report Component Overrides */
+/* Fix progress card backgrounds with hardcoded rgba whites */
+*[style*="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05))"],
+*[style*="background: rgba(255, 255, 255, 0.05)"],
+*[style*="background: rgba(255, 255, 255, 0.1)"],
+*[style*="background: rgba(255, 255, 255, 0.15)"] {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Search input and related elements */
+input[placeholder*="חיפוש"],
+input[placeholder*="הערות"] {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+}
+
+input[placeholder*="חיפוש"]:focus,
+input[placeholder*="הערות"]:focus {
+  background: var(--color-surface-hover) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Progress bar container */
+*[style*="background: rgba(255, 255, 255, 0.1)"][style*="border-radius: 12px"][style*="height: 12px"] {
+  background: var(--color-border) !important;
+}
+
+/* Empty state containers */
+*[style*="background: rgba(255, 255, 255, 0.05)"][style*="min-height"] {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* Text color overrides for light mode visibility */
+*[style*="color: rgba(255, 255, 255, 0.9)"],
+*[style*="color: rgba(255, 255, 255, 0.8)"],
+*[style*="color: rgba(255, 255, 255, 0.7)"],
+*[style*="color: rgba(255, 255, 255, 0.6)"],
+*[style*="color: rgba(255, 255, 255, 0.5)"] {
+  color: var(--color-text) !important;
+}
+
+/* Ensure proper contrast for muted text */
+*[style*="color: rgba(255, 255, 255, 0.6)"],
+*[style*="color: rgba(255, 255, 255, 0.5)"] {
+  color: var(--color-text-muted) !important;
+}
+
+/* Clear button hover effects */
+button[title*="נקה חיפוש"]:hover {
+  background: var(--color-surface-hover) !important;
+}
+
+/* Action buttons container */
+*[style*="background: rgba(255, 255, 255, 0.05)"][style*="padding: 20px"] {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+/* ========================================= */
+/* SELECT ELEMENT OVERRIDES FOR ALL FORMS */
+/* ========================================= */
+
+/* Universal select element styling */
+select,
+.form-control,
+.field-input,
+select[class*="form"],
+select[class*="field"] {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: none !important;
+}
+
+/* Select element focus states */
+select:focus,
+.form-control:focus,
+.field-input:focus,
+select[class*="form"]:focus,
+select[class*="field"]:focus {
+  background: var(--color-bg-hover) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  outline: none !important;
+  background-image: none !important;
+}
+
+/* Option elements */
+select option,
+.form-control option,
+.field-input option {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: none !important;
+}
+
+/* Fix hardcoded select backgrounds with rgba white colors */
+*[style*="background: rgba(255, 255, 255, 0.1)"][style*="appearance: none"],
+*[style*="background: rgba(255, 255, 255, 0.05)"][style*="appearance: none"],
+*[style*="background: rgba(255, 255, 255, 0.15)"][style*="appearance: none"] {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text) !important;
+  background-image: none !important;
+}
+
+/* Fix select elements with hardcoded border colors */
+*[style*="border: 1px solid rgba(255, 255, 255, 0.2)"] select,
+*[style*="border: 1px solid rgba(255, 255, 255, 0.1)"] select,
+select[style*="border: 1px solid rgba(255, 255, 255, 0.2)"],
+select[style*="border: 1px solid rgba(255, 255, 255, 0.1)"] {
+  border: 1px solid var(--color-border) !important;
+  background-image: none !important;
+}
+
+/* Remove all custom dropdown arrows */
+select[style*="backgroundImage"] {
+  background-image: none !important;
+}
+
+/* Fix inline styled select elements specifically */
+select[style*="color: rgba(255, 255, 255, 0.9)"] {
+  color: var(--color-text) !important;
+  background-image: none !important;
+}
+
+/* Force dropdown background for select in all contexts - NO ARROWS */
+select, select * {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  background-image: none !important;
+}
+
+/* Ensure proper styling for disabled select elements */
+select:disabled,
+.form-control:disabled,
+.field-input:disabled {
+  background: var(--color-surface-alt) !important;
+  color: var(--color-text-disabled) !important;
+  opacity: 0.6 !important;
+}
+
+/* Additional select overrides for specific form patterns */
+*[style*="background: rgba(255, 255, 255, 0.1)"] select,
+*[style*="background: rgba(255, 255, 255, 0.05)"] select,
+*[style*="background: rgba(255, 255, 255, 0.15)"] select {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+  background-image: none !important;
+}
+
+/* Fix UserForm and other component-specific selects */
+select[style*="rgba(255, 255, 255, 0.1)"] {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+  background-image: none !important;
+}
+
+/* Fix labels with hardcoded colors that appear near selects */
+*[style*="color: rgba(255, 255, 255, 0.9)"] {
+  color: var(--color-text) !important;
+}
+
+/* Specific override for select elements with background image and hardcoded colors - REMOVE ARROWS */
+select[style*="background: rgba(255, 255, 255, 0.1)"][style*="backgroundImage"] {
+  background: var(--color-surface) !important;
+  background-image: none !important;
+  background-position: unset !important;
+  background-repeat: unset !important;
+  background-size: unset !important;
+}
+
+/* Remove all theme-specific arrows completely */
+[data-theme="dark"] select[style*="background: rgba(255, 255, 255, 0.1)"][style*="backgroundImage"],
+[data-theme="light"] select[style*="background: rgba(255, 255, 255, 0.1)"][style*="backgroundImage"] {
+  background-image: none !important;
 }
 
 .table td,
@@ -307,4 +562,441 @@ select:focus {
   background: var(--color-table-header) !important;
   border-top: 1px solid var(--color-border) !important;
   color: var(--color-text) !important;
+}
+
+/* Light Theme Specific Overrides */
+[data-theme="light"] {
+  /* Ensure all backgrounds use light theme colors */
+  .modal-content,
+  .dropdown-menu,
+  .popover,
+  .tooltip-inner {
+    background: var(--color-surface) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+  }
+  
+  /* Force light text colors */
+  .card-header,
+  .table-header,
+  .tab-content,
+  .nav-tabs .nav-link,
+  .pagination .page-link {
+    color: var(--color-text) !important;
+  }
+  
+  /* Light theme panel backgrounds */
+  .panel,
+  .container-fluid,
+  .main-content,
+  .content-wrapper {
+    background: var(--color-bg) !important;
+    color: var(--color-text) !important;
+  }
+}
+
+/* Dark Theme Specific Overrides */
+[data-theme="dark"] {
+  /* Maintain dark styling where needed */
+  .modal-content,
+  .dropdown-menu,
+  .popover,
+  .tooltip-inner {
+    background: var(--color-surface) !important;
+    color: var(--color-text) !important;
+    border-color: var(--color-border) !important;
+  }
+}
+
+/* Universal Theme Application */
+* {
+  /* Force inheritance of theme colors */
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease !important;
+}
+
+/* High priority theme enforcement */
+body * {
+  color: inherit;
+}
+
+.app-container,
+.layout-container,
+.main-wrapper {
+  background: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+
+/* Bootstrap and third-party overrides */
+.container,
+.container-fluid,
+.row,
+.col,
+[class*="col-"] {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Tables - comprehensive override */
+.table,
+table,
+.table-responsive,
+.table-container {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+}
+
+.table thead,
+.table thead th,
+table thead,
+table thead th,
+.unified-table thead th,
+.unified-table-header,
+.unified-table-header-regular {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+  transition: all 0.2s ease !important;
+}
+
+.table thead:hover,
+.table thead th:hover,
+table thead:hover,
+table thead th:hover,
+.unified-table thead th:hover,
+.unified-table-header:hover,
+.unified-table-header-regular:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme table headers - comprehensive */
+[data-theme="dark"] .table thead,
+[data-theme="dark"] .table thead th,
+[data-theme="dark"] table thead,
+[data-theme="dark"] table thead th,
+[data-theme="dark"] .unified-table thead th,
+[data-theme="dark"] .unified-table-header,
+[data-theme="dark"] .unified-table-header-regular {
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .table thead:hover,
+[data-theme="dark"] .table thead th:hover,
+[data-theme="dark"] table thead:hover,
+[data-theme="dark"] table thead th:hover,
+[data-theme="dark"] .unified-table thead th:hover,
+[data-theme="dark"] .unified-table-header:hover,
+[data-theme="dark"] .unified-table-header-regular:hover {
+  background: linear-gradient(135deg, #5a6578 0%, #3d4758 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.table tbody,
+.table tbody td,
+table tbody,
+table tbody td {
+  background: transparent !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+.table tbody tr:nth-child(even) td,
+table tbody tr:nth-child(even) td {
+  background: var(--color-surface-alt) !important;
+}
+
+.table tbody tr:hover td,
+table tbody tr:hover td {
+  background: var(--color-table-row-hover) !important;
+}
+
+/* Panel and content overrides */
+.panel,
+.panel-body,
+.content-panel,
+.main-content,
+.content-area {
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Nav and tab overrides */
+.nav,
+.nav-tabs,
+.nav-pills,
+.tab-content,
+.tab-pane {
+  background: transparent !important;
+  color: var(--color-text) !important;
+}
+
+.nav-tabs .nav-link,
+.nav-pills .nav-link {
+  color: var(--color-text-secondary) !important;
+  border-color: var(--color-border) !important;
+  background: var(--color-surface) !important;
+  border-radius: 8px 8px 0 0 !important;
+  margin-right: 2px !important;
+  padding: 12px 20px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.nav-tabs .nav-link:hover {
+  background: var(--color-bg-hover) !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border-hover) !important;
+  transform: translateY(-1px) !important;
+}
+
+.nav-tabs .nav-link.active,
+.nav-pills .nav-link.active {
+  background: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+  border-color: var(--color-primary) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Pagination specific theme overrides - STRONGEST OVERRIDE */
+[data-theme="light"] .pagination .btn,
+[data-theme="light"] .pagination-btn,
+[data-theme="light"] .pagination button,
+[data-theme="light"] .pagination .page-link {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+}
+
+[data-theme="light"] .pagination .btn:hover:not(:disabled),
+[data-theme="light"] .pagination-btn:hover,
+[data-theme="light"] .pagination button:hover,
+[data-theme="light"] .pagination .page-link:hover {
+  background: #e2e8f0 !important;
+  color: #1e293b !important;
+  border-color: #94a3b8 !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-theme="light"] .pagination .btn.btn-primary,
+[data-theme="light"] .pagination .btn.active,
+[data-theme="light"] .pagination-btn.active,
+[data-theme="light"] .pagination button.active,
+[data-theme="light"] .pagination .page-link.active {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="light"] .pagination .btn:disabled,
+[data-theme="light"] .pagination-btn:disabled,
+[data-theme="light"] .pagination button:disabled {
+  background: #f8fafc !important;
+  color: #cbd5e1 !important;
+  border-color: #f1f5f9 !important;
+  opacity: 0.6 !important;
+}
+
+[data-theme="light"] .pagination-ellipsis {
+  color: #94a3b8 !important;
+}
+
+/* Aggressive final override for any remaining hardcoded backgrounds */
+* {
+  box-sizing: border-box;
+}
+
+/* Light theme body override */
+[data-theme="light"] body,
+[data-theme="light"] #root,
+[data-theme="light"] .App,
+[data-theme="light"] .layout,
+[data-theme="light"] .layout-main,
+[data-theme="light"] .layout-content {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Dark theme body override */
+[data-theme="dark"] body,
+[data-theme="dark"] #root,
+[data-theme="dark"] .App,
+[data-theme="dark"] .layout,
+[data-theme="dark"] .layout-main,
+[data-theme="dark"] .layout-content {
+  background-color: #1a1a1a !important;
+  color: #e9ecef !important;
+}
+
+/* Catch-all for any div that might be overriding backgrounds */
+[data-theme="light"] div:not([class*="table"]):not([class*="button"]):not([class*="btn"]):not([class*="nav"]):not([class*="modal"]) {
+  background-color: inherit !important;
+}
+
+[data-theme="dark"] div:not([class*="table"]):not([class*="button"]):not([class*="btn"]):not([class*="nav"]):not([class*="modal"]) {
+  background-color: inherit !important;
+}
+
+/* ============== FINAL OVERRIDES - HIGHEST PRIORITY ============== */
+/* These overrides ensure visibility in light mode no matter what */
+
+/* PAGINATION - ULTIMATE OVERRIDE */
+[data-theme="light"] *[class*="pagination"] .btn,
+[data-theme="light"] *[class*="pagination"] button,
+[data-theme="light"] .pagination *,
+[data-theme="light"] .pagination-btn {
+  background: #f1f5f9 !important;
+  color: #374151 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme="light"] *[class*="pagination"] .btn:hover,
+[data-theme="light"] *[class*="pagination"] button:hover,
+[data-theme="light"] .pagination-btn:hover {
+  background: #e2e8f0 !important;
+  color: #1f2937 !important;
+  border-color: #94a3b8 !important;
+}
+
+[data-theme="light"] *[class*="pagination"] .btn.active,
+[data-theme="light"] *[class*="pagination"] .btn.btn-primary,
+[data-theme="light"] .pagination-btn.active {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+
+/* NAV TABS - ULTIMATE OVERRIDE */
+[data-theme="light"] .nav-tabs .nav-link,
+[data-theme="light"] *[class*="tab"] .nav-link,
+[data-theme="light"] .nav-tabs * {
+  background: #f1f5f9 !important;
+  color: #374151 !important;
+  border: 1px solid #cbd5e1 !important;
+  text-decoration: none !important;
+}
+
+[data-theme="light"] .nav-tabs .nav-link:hover,
+[data-theme="light"] *[class*="tab"] .nav-link:hover {
+  background: #e2e8f0 !important;
+  color: #1f2937 !important;
+  border-color: #94a3b8 !important;
+}
+
+[data-theme="light"] .nav-tabs .nav-link.active,
+[data-theme="light"] *[class*="tab"] .nav-link.active {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
+}
+
+/* NAV ARROWS - Make sure navigation arrows are visible */
+[data-theme="light"] .pagination .nav-arrow,
+[data-theme="light"] .pagination .btn .nav-arrow {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* Ensure text elements are visible */
+[data-theme="light"] .pagination-ellipsis,
+[data-theme="light"] .pagination-info {
+  color: #6b7280 !important;
+}
+
+/* ============== CONTENT TAB NAVIGATION FIXES ============== */
+/* Fix for TabNavigation component tabs (content tabs, not main navigation) */
+
+[data-theme="light"] .tab-navigation {
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+[data-theme="light"] .tab-navigation__item {
+  color: var(--color-text-secondary) !important;
+  background: transparent !important;
+  border-bottom: 2px solid transparent !important;
+}
+
+[data-theme="light"] .tab-navigation__item:hover:not(.tab-navigation__item--disabled) {
+  color: var(--color-text) !important;
+  font-weight: 550 !important;
+}
+
+[data-theme="light"] .tab-navigation__item--active {
+  color: var(--color-primary) !important;
+  font-weight: 550 !important;
+  border-bottom-color: var(--color-primary) !important;
+}
+
+[data-theme="light"] .tab-navigation__count {
+  background: var(--color-primary) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+[data-theme="light"] .tab-navigation__item--active .tab-navigation__count {
+  background: var(--color-primary-hover) !important;
+  color: var(--color-text-inverse) !important;
+}
+
+/* Make sure icons and text are visible */
+[data-theme="light"] .tab-navigation__icon,
+[data-theme="light"] .tab-navigation__label {
+  color: inherit !important;
+}
+
+/* ============== EMERGENCY LIGHT MODE FIXES ============== */
+/* Use highest specificity and multiple selectors to override everything */
+
+[data-theme="light"] .pagination,
+[data-theme="light"] .pagination *,
+[data-theme="light"] [class*="pagination"],
+[data-theme="light"] [class*="pagination"] *,
+[data-theme="light"] div[class*="pagination"],
+[data-theme="light"] ul[class*="pagination"],
+[data-theme="light"] nav[class*="pagination"] {
+  background: transparent !important;
+}
+
+[data-theme="light"] .pagination .btn,
+[data-theme="light"] .pagination button,
+[data-theme="light"] .pagination-btn,
+[data-theme="light"] .pagination .page-link,
+[data-theme="light"] [class*="pagination"] .btn,
+[data-theme="light"] [class*="pagination"] button,
+[data-theme="light"] [class*="pagination"] a,
+[data-theme="light"] [class*="pagination"] span {
+  background: #e2e8f0 !important;
+  color: #334155 !important;
+  border: 1px solid #94a3b8 !important;
+  border-radius: 6px !important;
+  text-decoration: none !important;
+}
+
+[data-theme="light"] .pagination .btn:hover,
+[data-theme="light"] .pagination button:hover,
+[data-theme="light"] .pagination-btn:hover,
+[data-theme="light"] .pagination .page-link:hover,
+[data-theme="light"] [class*="pagination"] .btn:hover,
+[data-theme="light"] [class*="pagination"] button:hover,
+[data-theme="light"] [class*="pagination"] a:hover {
+  background: #cbd5e1 !important;
+  color: #1e293b !important;
+  border-color: #64748b !important;
+}
+
+[data-theme="light"] .pagination .btn.active,
+[data-theme="light"] .pagination .btn.btn-primary,
+[data-theme="light"] .pagination button.active,
+[data-theme="light"] .pagination-btn.active,
+[data-theme="light"] .pagination .page-link.active,
+[data-theme="light"] [class*="pagination"] .btn.active,
+[data-theme="light"] [class*="pagination"] .active {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border-color: #3b82f6 !important;
 }

@@ -6,7 +6,7 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e0 #f7fafc;
+  scrollbar-color: var(--color-border) var(--color-surface-alt);
 }
 
 .table-responsive::-webkit-scrollbar {
@@ -14,17 +14,17 @@
 }
 
 .table-responsive::-webkit-scrollbar-track {
-  background: #f7fafc;
+  background: var(--color-surface-alt);
   border-radius: 4px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
+  background: var(--color-border);
   border-radius: 4px;
 }
 
 .table-responsive::-webkit-scrollbar-thumb:hover {
-  background: #a0aec0;
+  background: var(--color-text-muted);
 }
 
 /* Mobile-specific button groups */

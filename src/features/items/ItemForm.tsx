@@ -263,7 +263,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, isAdmin, onSuccess, onCancel 
               display: 'block',
               fontSize: '14px',
               fontWeight: '600',
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: 'var(--color-text)',
               marginBottom: '8px'
             }}>
               שם פריט <span style={{ color: '#ef4444' }}>*</span>
@@ -276,33 +276,29 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, isAdmin, onSuccess, onCancel 
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: `1px solid ${errors.name ? '#ef4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                background: 'var(--color-surface)',
+                border: `1px solid ${errors.name ? '#ef4444' : 'var(--color-border)'}`,
                 borderRadius: '8px',
-                color: 'rgba(255, 255, 255, 0.9)',
+                color: 'var(--color-text)',
                 fontSize: '14px',
                 transition: 'all 0.2s ease',
                 outline: 'none',
                 appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'left 12px center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '16px 16px',
-                paddingLeft: '40px',
+                paddingLeft: '16px',
                 cursor: 'pointer'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
-                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                e.target.style.borderColor = 'var(--color-primary)';
+                e.target.style.background = 'var(--color-bg-hover)';
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = errors.name ? '#ef4444' : 'rgba(255, 255, 255, 0.2)';
-                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.target.style.borderColor = errors.name ? '#ef4444' : 'var(--color-border)';
+                e.target.style.background = 'var(--color-surface)';
               }}
             >
               <option value="" style={{
-                background: '#1f2937',
-                color: 'rgba(255, 255, 255, 0.7)'
+                background: 'var(--color-surface)',
+                color: 'var(--color-text-muted)'
               }}>
                 בחר שם פריט
               </option>
@@ -311,8 +307,8 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, isAdmin, onSuccess, onCancel 
                   key={itemName.id} 
                   value={itemName.name}
                   style={{
-                    background: '#1f2937',
-                    color: 'rgba(255, 255, 255, 0.9)'
+                    background: 'var(--color-surface)',
+                    color: 'var(--color-text)'
                   }}
                 >
                   {itemName.name}
@@ -339,7 +335,7 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, isAdmin, onSuccess, onCancel 
               display: 'block',
               fontSize: '14px',
               fontWeight: '600',
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: 'var(--color-text)',
               marginBottom: '8px'
             }}>
               מיקום מוקצה (אופציונלי)
@@ -351,33 +347,29 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, isAdmin, onSuccess, onCancel 
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '8px',
-                color: 'rgba(255, 255, 255, 0.9)',
+                color: 'var(--color-text)',
                 fontSize: '14px',
                 transition: 'all 0.2s ease',
                 outline: 'none',
                 appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgba(255,255,255,0.5)' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                backgroundPosition: 'left 12px center',
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: '16px 16px',
-                paddingLeft: '40px',
+                paddingLeft: '16px',
                 cursor: 'pointer'
               }}
               onFocus={(e) => {
-                (e.target as HTMLSelectElement).style.borderColor = 'rgba(59, 130, 246, 0.5)';
-                (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.15)';
+                (e.target as HTMLSelectElement).style.borderColor = 'var(--color-primary)';
+                (e.target as HTMLSelectElement).style.background = 'var(--color-bg-hover)';
               }}
               onBlur={(e) => {
-                (e.target as HTMLSelectElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                (e.target as HTMLSelectElement).style.background = 'rgba(255, 255, 255, 0.1)';
+                (e.target as HTMLSelectElement).style.borderColor = 'var(--color-border)';
+                (e.target as HTMLSelectElement).style.background = 'var(--color-surface)';
               }}
             >
               <option value="" style={{
-                background: '#1f2937',
-                color: 'rgba(255, 255, 255, 0.7)'
+                background: 'var(--color-surface)',
+                color: 'var(--color-text-muted)'
               }}>
                 ללא מיקום מוקצה
               </option>
@@ -386,8 +378,8 @@ const ItemForm: React.FC<ItemFormProps> = ({ item, isAdmin, onSuccess, onCancel 
                   key={location.id} 
                   value={location.id}
                   style={{
-                    background: '#1f2937',
-                    color: 'rgba(255, 255, 255, 0.9)'
+                    background: 'var(--color-surface)',
+                    color: 'var(--color-text)'
                   }}
                 >
                   {location.name}

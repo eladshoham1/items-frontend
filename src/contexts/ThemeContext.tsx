@@ -23,22 +23,26 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // Default to dark theme as requested
-  const [theme, setThemeState] = useState<Theme>('dark');
-
-  // Load theme from localStorage on component mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme') as Theme | null;
-    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-      setThemeState(savedTheme);
+  // Get saved theme from localStorage or default to light
+  const getSavedTheme = (): Theme => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('app-theme') as Theme | null;
+      if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
+        return savedTheme;
+      }
     }
-  }, []);
+    return 'light'; // Default to light theme
+  };
+
+  const [theme, setThemeState] = useState<Theme>(getSavedTheme);
 
   // Apply theme to document root and save to localStorage
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute('data-theme', theme);
-    localStorage.setItem('app-theme', theme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('app-theme', theme);
+    }
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {

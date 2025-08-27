@@ -125,7 +125,7 @@ const BackupRestoreTab: React.FC = () => {
             display: 'flex', 
             alignItems: 'center', 
             gap: '16px',
-            color: 'rgba(255, 255, 255, 0.8)',
+            color: 'var(--color-text-secondary)',
             fontSize: '14px'
           }}>
             <i className="fas fa-database" style={{ fontSize: '16px' }}></i>
@@ -151,7 +151,7 @@ const BackupRestoreTab: React.FC = () => {
           </button>
           
           <label 
-            className="btn btn-ghost btn-sm"
+            className="btn btn-secondary btn-sm"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -159,7 +159,23 @@ const BackupRestoreTab: React.FC = () => {
               gap: '6px',
               padding: '0 16px',
               cursor: busy ? 'not-allowed' : 'pointer',
-              opacity: busy ? 0.6 : 1
+              opacity: busy ? 0.6 : 1,
+              background: 'var(--color-surface)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              if (!busy) {
+                e.currentTarget.style.background = 'var(--color-bg-hover)';
+                e.currentTarget.style.borderColor = 'var(--color-border-hover)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!busy) {
+                e.currentTarget.style.background = 'var(--color-surface)';
+                e.currentTarget.style.borderColor = 'var(--color-border)';
+              }
             }}
           >
             <i className="fas fa-upload" style={{ fontSize: '13px' }}></i>
@@ -214,13 +230,13 @@ const BackupRestoreTab: React.FC = () => {
         <div style={{ 
           padding: '16px',
           margin: '16px 0',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '8px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          color: 'rgba(255, 255, 255, 0.8)'
+          color: 'var(--color-text-secondary)'
         }}>
           <div className="saving-spinner"></div>
           <span>
@@ -233,23 +249,23 @@ const BackupRestoreTab: React.FC = () => {
       {exportResult && (
         <div style={{ 
           margin: '20px 0',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '8px',
           overflow: 'hidden'
         }}>
           <div style={{ 
             padding: '16px 20px',
             background: 'rgba(34, 197, 94, 0.15)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            borderBottom: '1px solid var(--color-border)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="fas fa-download" style={{ color: '#22c55e', fontSize: '16px' }}></i>
-              <span style={{ color: '#ffffff', fontWeight: '600', fontSize: '14px' }}>ייצוא הושלם</span>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '13px' }}>
+              <span style={{ color: 'var(--color-text)', fontWeight: '600', fontSize: '14px' }}>ייצוא הושלם</span>
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: '13px' }}>
                 {exportResult.statistics?.summary?.totalRecords || 0} רשומות • {exportResult.statistics?.summary?.totalTables || 0} טבלאות
               </span>
             </div>
@@ -266,9 +282,9 @@ const BackupRestoreTab: React.FC = () => {
             </div>
           </div>
           
-          <div style={{ padding: '16px 20px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px' }}>
+          <div style={{ padding: '16px 20px', color: 'var(--color-text-secondary)', fontSize: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <i className="fas fa-info-circle" style={{ color: 'rgba(255, 255, 255, 0.5)' }}></i>
+              <i className="fas fa-info-circle" style={{ color: 'var(--color-text-muted)' }}></i>
               <span>הנתונים יוצאו בהצלחה והורדו כקובץ JSON</span>
             </div>
           </div>
@@ -279,23 +295,23 @@ const BackupRestoreTab: React.FC = () => {
       {importResult && (
         <div style={{ 
           margin: '20px 0',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: '8px',
           overflow: 'hidden'
         }}>
           <div style={{ 
             padding: '16px 20px',
             background: 'rgba(59, 130, 246, 0.15)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            borderBottom: '1px solid var(--color-border)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <i className="fas fa-upload" style={{ color: '#3b82f6', fontSize: '16px' }}></i>
-              <span style={{ color: '#ffffff', fontWeight: '600', fontSize: '14px' }}>ייבוא הושלם</span>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '13px' }}>
+              <span style={{ color: 'var(--color-text)', fontWeight: '600', fontSize: '14px' }}>ייבוא הושלם</span>
+              <span style={{ color: 'var(--color-text-secondary)', fontSize: '13px' }}>
                 {Object.values(importResult || {}).reduce((sum: number, tableStats: any) => sum + (tableStats?.success || 0), 0)} יובאו • 
                 {Object.keys(importResult || {}).length} טבלאות
               </span>
@@ -313,9 +329,9 @@ const BackupRestoreTab: React.FC = () => {
             </div>
           </div>
           
-          <div style={{ padding: '16px 20px', color: 'rgba(255, 255, 255, 0.8)', fontSize: '14px' }}>
+          <div style={{ padding: '16px 20px', color: 'var(--color-text-secondary)', fontSize: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <i className="fas fa-info-circle" style={{ color: 'rgba(255, 255, 255, 0.5)' }}></i>
+              <i className="fas fa-info-circle" style={{ color: 'var(--color-text-muted)' }}></i>
               <span>הנתונים יובאו בהצלחה למסד הנתונים</span>
             </div>
           </div>

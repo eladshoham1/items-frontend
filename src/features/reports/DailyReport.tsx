@@ -345,9 +345,9 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
               justifyContent: 'center',
               minHeight: '400px',
               textAlign: 'center',
-              background: 'rgba(255, 255, 255, 0.05)',
+              background: 'var(--color-surface)',
               borderRadius: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              border: '1px solid var(--color-border)',
               padding: '40px'
             }}>
               <div style={{
@@ -367,7 +367,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 }}></i>
               </div>
               <h3 style={{ 
-                color: 'rgba(255, 255, 255, 0.9)', 
+                color: 'var(--color-text)', 
                 marginBottom: '12px',
                 fontWeight: '600',
                 fontSize: '24px'
@@ -375,7 +375,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 אין פריטים לדיווח
               </h3>
               <p style={{ 
-                color: 'rgba(255, 255, 255, 0.7)', 
+                color: 'var(--color-text-muted)', 
                 fontSize: '16px',
                 lineHeight: '1.5',
                 maxWidth: '400px'
@@ -388,9 +388,9 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
             <>
               {/* Modern Progress Card */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05))',
+                background: 'linear-gradient(135deg, var(--color-primary-light), var(--color-primary))',
                 borderRadius: '16px',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
+                border: '1px solid var(--color-border)',
                 padding: '24px',
                 marginBottom: '24px',
                 backdropFilter: 'blur(10px)'
@@ -419,7 +419,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                     </div>
                     <div>
                       <h3 style={{ 
-                        color: 'rgba(255, 255, 255, 0.9)', 
+                        color: 'var(--color-text)', 
                         margin: '0',
                         fontSize: '20px',
                         fontWeight: '600'
@@ -427,7 +427,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                         {isAdmin ? 'סטטוס דיווח יומי' : 'הדיווח שלי היום'}
                       </h3>
                       <p style={{ 
-                        color: 'rgba(255, 255, 255, 0.6)', 
+                        color: 'var(--color-text-muted)', 
                         margin: '4px 0 0 0',
                         fontSize: '14px'
                       }}>
@@ -455,7 +455,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 
                 {/* Modern Progress Bar */}
                 <div style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
+                  background: 'var(--color-border)',
                   borderRadius: '12px',
                   height: '12px',
                   overflow: 'hidden',
@@ -492,14 +492,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   alignItems: 'center',
                   marginTop: '16px'
                 }}>
-                  <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px' }}>
+                  <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>
                     {reportingStats.percentage.toFixed(1)}% הושלם
                   </div>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
-                    color: 'rgba(255, 255, 255, 0.8)',
+                    color: 'var(--color-text)',
                     fontSize: '14px',
                     fontWeight: '500'
                   }}>
@@ -524,14 +524,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'var(--color-surface)',
                   borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  border: '1px solid var(--color-border)',
                   padding: '4px',
                   transition: 'all 0.2s ease'
                 }}>
                   <i className="fas fa-search" style={{
-                    color: 'rgba(255, 255, 255, 0.5)',
+                    color: 'var(--color-text-muted)',
                     paddingLeft: '12px'
                   }}></i>
                   <input
@@ -546,7 +546,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                       background: 'none',
                       border: 'none',
                       outline: 'none',
-                      color: 'rgba(255, 255, 255, 0.9)',
+                      color: 'var(--color-text)',
                       fontSize: '14px',
                       flex: 1,
                       padding: '12px 8px',
@@ -564,14 +564,14 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: 'rgba(255, 255, 255, 0.7)',
+                        color: 'var(--color-text-muted)',
                         cursor: 'pointer',
                         padding: '8px 12px',
                         borderRadius: '8px',
                         transition: 'all 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
-                        (e.target as HTMLButtonElement).style.background = 'rgba(255, 255, 255, 0.1)';
+                        (e.target as HTMLButtonElement).style.background = 'var(--color-surface-hover)';
                       }}
                       onMouseLeave={(e) => {
                         (e.target as HTMLButtonElement).style.background = 'none';
@@ -583,7 +583,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 </div>
                 {searchTerm && (
                   <div style={{
-                    color: 'rgba(255, 255, 255, 0.6)',
+                    color: 'var(--color-text-muted)',
                     fontSize: '14px',
                     marginTop: '8px'
                   }}>
@@ -729,22 +729,22 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                               onChange={(e) => updateItemNotes(item.id, e.target.value)}
                               placeholder="הערות..."
                               style={{
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                border: '1px solid rgba(255, 255, 255, 0.2)',
+                                background: 'var(--color-surface)',
+                                border: '1px solid var(--color-border)',
                                 borderRadius: '8px',
                                 padding: '8px 12px',
-                                color: 'rgba(255, 255, 255, 0.9)',
+                                color: 'var(--color-text)',
                                 fontSize: '14px',
                                 minWidth: '150px',
                                 transition: 'all 0.2s ease'
                               }}
                               onFocus={(e) => {
-                                e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                                e.target.style.borderColor = 'rgba(59, 130, 246, 0.5)';
+                                e.target.style.background = 'var(--color-surface-hover)';
+                                e.target.style.borderColor = 'var(--color-primary)';
                               }}
                               onBlur={(e) => {
-                                e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                                e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                                e.target.style.background = 'var(--color-surface)';
+                                e.target.style.borderColor = 'var(--color-border)';
                               }}
                             />
                           </td>
@@ -774,9 +774,9 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   alignItems: 'center',
                   marginTop: '24px',
                   padding: '20px',
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'var(--color-surface)',
                   borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                  border: '1px solid var(--color-border)'
                 }}>
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <button 
@@ -858,9 +858,9 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                   justifyContent: 'center',
                   minHeight: '300px',
                   textAlign: 'center',
-                  background: 'rgba(255, 255, 255, 0.05)',
+                  background: 'var(--color-surface)',
                   borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  border: '1px solid var(--color-border)',
                   padding: '40px'
                 }}>
                   <div style={{
@@ -876,7 +876,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                     <i className="fas fa-search" style={{ fontSize: '32px', color: 'white' }}></i>
                   </div>
                   <h3 style={{ 
-                    color: 'rgba(255, 255, 255, 0.9)', 
+                    color: 'var(--color-text)', 
                     marginBottom: '12px',
                     fontWeight: '600',
                     fontSize: '24px'
@@ -884,7 +884,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                     לא נמצאו תוצאות
                   </h3>
                   <p style={{ 
-                    color: 'rgba(255, 255, 255, 0.7)', 
+                    color: 'var(--color-text-muted)', 
                     fontSize: '16px',
                     lineHeight: '1.5'
                   }}>

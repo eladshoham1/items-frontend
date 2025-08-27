@@ -85,7 +85,7 @@ const ManagementSettingsTab: React.FC = () => {
             display: 'flex', 
             alignItems: 'center', 
             gap: '16px',
-            color: 'rgba(255, 255, 255, 0.8)',
+            color: 'var(--color-text-secondary)',
             fontSize: '14px'
           }}>
             <i className="fas fa-cog" style={{ fontSize: '16px' }}></i>
@@ -155,8 +155,8 @@ const ManagementSettingsTab: React.FC = () => {
 
       {/* Settings Content */}
       <div style={{
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
         borderRadius: '12px',
         padding: '0',
         overflow: 'hidden'
@@ -164,7 +164,7 @@ const ManagementSettingsTab: React.FC = () => {
         {/* Settings Section */}
         <div style={{
           padding: '24px 28px',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+          borderBottom: '1px solid var(--color-border)'
         }}>
           <div style={{
             display: 'flex',
@@ -180,20 +180,20 @@ const ManagementSettingsTab: React.FC = () => {
                 marginBottom: '6px'
               }}>
                 <i className="fas fa-envelope" style={{ 
-                  color: 'rgba(255, 255, 255, 0.7)', 
+                  color: 'var(--color-text-secondary)', 
                   fontSize: '18px' 
                 }}></i>
                 <span style={{
                   fontSize: '16px',
                   fontWeight: '600',
-                  color: '#ffffff'
+                  color: 'var(--color-text)'
                 }}>
                   התראות במייל
                 </span>
               </div>
               <p style={{
                 fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.6)',
+                color: 'var(--color-text-secondary)',
                 margin: '0',
                 paddingRight: '30px'
               }}>
@@ -206,7 +206,7 @@ const ManagementSettingsTab: React.FC = () => {
               <span style={{
                 fontSize: '13px',
                 fontWeight: '500',
-                color: settings.emailNotificationsEnabled ? '#22c55e' : 'rgba(255, 255, 255, 0.5)'
+                color: settings.emailNotificationsEnabled ? '#22c55e' : 'var(--color-text-muted)'
               }}>
                 {settings.emailNotificationsEnabled ? 'פעיל' : 'כבוי'}
               </span>
@@ -223,7 +223,7 @@ const ManagementSettingsTab: React.FC = () => {
                   cursor: saving ? 'not-allowed' : 'pointer',
                   background: settings.emailNotificationsEnabled 
                     ? 'linear-gradient(45deg, #22c55e, #16a34a)' 
-                    : 'rgba(255, 255, 255, 0.2)',
+                    : 'var(--color-surface-alt)',
                   transition: 'all 0.3s ease',
                   outline: 'none',
                   opacity: saving ? 0.6 : 1
@@ -249,7 +249,7 @@ const ManagementSettingsTab: React.FC = () => {
         <div style={{
           padding: '20px 28px',
           textAlign: 'center',
-          color: 'rgba(255, 255, 255, 0.5)',
+          color: 'var(--color-text-muted)',
           fontSize: '14px'
         }}>
           <i className="fas fa-plus-circle" style={{ 
