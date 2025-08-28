@@ -610,25 +610,57 @@ export const AllocationsTab: React.FC = () => {
               />
             </div>
             <div className="col-md-6">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={newAllocation.isIssued}
-                  onChange={(e) => setNewAllocation({ ...newAllocation, isIssued: e.target.checked })}
-                />
-                <label className="form-check-label">הונפק קשר</label>
+              <div className="custom-checkbox-wrapper">
+                <label className={`custom-checkbox ${newAllocation.isIssued ? 'checked' : ''}`}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="checkbox"
+                      checked={newAllocation.isIssued}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, isIssued: e.target.checked })}
+                      style={{
+                        position: 'absolute',
+                        opacity: 0,
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <div className="custom-checkbox-checkmark">
+                      {newAllocation.isIssued && (
+                        <i className="fas fa-check checkmark-icon"></i>
+                      )}
+                    </div>
+                  </div>
+                  <div className="custom-checkbox-label">
+                    <strong>הונפק קשר</strong>
+                    <div className="checkbox-description">מציין האם הקשר כבר הונפק</div>
+                  </div>
+                </label>
               </div>
             </div>
             <div className="col-md-6">
-              <div className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={newAllocation.is624Issued}
-                  onChange={(e) => setNewAllocation({ ...newAllocation, is624Issued: e.target.checked })}
-                />
-                <label className="form-check-label">הונפק 624</label>
+              <div className="custom-checkbox-wrapper">
+                <label className={`custom-checkbox ${newAllocation.is624Issued ? 'checked' : ''}`}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="checkbox"
+                      checked={newAllocation.is624Issued}
+                      onChange={(e) => setNewAllocation({ ...newAllocation, is624Issued: e.target.checked })}
+                      style={{
+                        position: 'absolute',
+                        opacity: 0,
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <div className="custom-checkbox-checkmark">
+                      {newAllocation.is624Issued && (
+                        <i className="fas fa-check checkmark-icon"></i>
+                      )}
+                    </div>
+                  </div>
+                  <div className="custom-checkbox-label">
+                    <strong>הונפק 624</strong>
+                    <div className="checkbox-description">מציין האם 624 כבר הונפק</div>
+                  </div>
+                </label>
               </div>
             </div>
           </div>

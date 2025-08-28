@@ -22,11 +22,6 @@
   margin-bottom: 24px;
 }
 
-.unified-table-container:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-  transform: translateY(-2px);
-}
-
 /* Universal Table Base */
 .unified-table {
   width: 100%;

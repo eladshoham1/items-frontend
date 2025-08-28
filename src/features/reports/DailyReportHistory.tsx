@@ -200,9 +200,9 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
     return (
       <div className="unified-table-container">
         <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-          <i className="fas fa-calendar-alt" style={{ fontSize: '48px', color: '#6b7280', marginBottom: '24px', display: 'block' }}></i>
-          <h4 style={{ color: '#e9ecef', marginBottom: '12px', fontSize: '20px' }}>אין דוחות להצגה</h4>
-          <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>עדיין לא נוצרו דוחות יומיים במערכת</p>
+          <i className="fas fa-calendar-alt" style={{ fontSize: '48px', color: 'var(--color-text-muted)', marginBottom: '24px', display: 'block' }}></i>
+          <h4 style={{ color: 'var(--color-text)', marginBottom: '12px', fontSize: '20px' }}>אין דוחות להצגה</h4>
+          <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', margin: 0 }}>עדיין לא נוצרו דוחות יומיים במערכת</p>
         </div>
       </div>
     );
@@ -221,7 +221,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                 onClick={() => handleSort('createdAt')}
                 title="לחץ למיון לפי תאריך דוח"
                 data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
-                style={{ color: '#ffffff', padding: '12px 8px' }}
+                style={{ color: 'var(--color-text)', padding: '12px 8px' }}
               >
                 <div className="d-flex align-items-center justify-content-center">
                   <i className="fas fa-calendar-day me-2" style={{ fontSize: '13px' }}></i>
@@ -231,13 +231,13 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                   )}
                 </div>
               </th>
-              <th className="unified-table-header unified-table-header-regular text-center" style={{ color: '#ffffff', padding: '12px 8px' }}>
+              <th className="unified-table-header unified-table-header-regular text-center" style={{ color: 'var(--color-text)', padding: '12px 8px' }}>
                 <div className="d-flex align-items-center justify-content-center">
                   <i className="fas fa-user-plus me-2" style={{ fontSize: '13px' }}></i>
                   <span style={{ fontSize: '13px', fontWeight: '600' }}>נוצר על ידי</span>
                 </div>
               </th>
-              <th className="unified-table-header unified-table-header-regular text-center" style={{ color: '#ffffff', padding: '12px 8px' }}>
+              <th className="unified-table-header unified-table-header-regular text-center" style={{ color: 'var(--color-text)', padding: '12px 8px' }}>
                 <div className="d-flex align-items-center justify-content-center">
                   <i className="fas fa-user-check me-2" style={{ fontSize: '13px' }}></i>
                   <span style={{ fontSize: '13px', fontWeight: '600' }}>הושלם על ידי</span>
@@ -248,7 +248,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                 onClick={() => handleSort('totalItems')}
                 title="לחץ למיון לפי סהכ פריטים"
                 data-sorted={sortConfig?.key === 'totalItems' ? 'true' : 'false'}
-                style={{ color: '#ffffff', padding: '12px 8px' }}
+                style={{ color: 'var(--color-text)', padding: '12px 8px' }}
               >
                 <div className="d-flex align-items-center justify-content-center">
                   <i className="fas fa-boxes me-2" style={{ fontSize: '13px' }}></i>
@@ -258,7 +258,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                   )}
                 </div>
               </th>
-              <th className="unified-table-header unified-table-header-regular text-center" style={{ width: '120px', color: '#ffffff', padding: '12px 8px' }}>
+              <th className="unified-table-header unified-table-header-regular text-center" style={{ width: '120px', color: 'var(--color-text)', padding: '12px 8px' }}>
                 <div className="d-flex align-items-center justify-content-center">
                   <i className="fas fa-download me-2" style={{ fontSize: '13px' }}></i>
                   <span style={{ fontSize: '13px', fontWeight: '600' }}>הורדה</span>
@@ -270,12 +270,12 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
             {sortedHistory.map(report => {
               return (
                 <tr key={report.id} className="unified-table-row" style={{ transition: 'all 0.2s ease' }}>
-                  <td className="unified-table-cell text-center" style={{ color: '#e9ecef', padding: '12px 8px' }}>
+                  <td className="unified-table-cell text-center" style={{ color: 'var(--color-text)', padding: '12px 8px' }}>
                     <div style={{ fontSize: '13px', fontWeight: '500' }}>
                       {formatDateWithTime(report.createdAt)}
                     </div>
                   </td>
-                  <td className="unified-table-cell text-center" style={{ color: '#e9ecef', padding: '12px 8px' }}>
+                  <td className="unified-table-cell text-center" style={{ color: 'var(--color-text)', padding: '12px 8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                       <div style={{ 
                         width: '24px', 
@@ -291,7 +291,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                       <span style={{ fontSize: '13px' }}>{report.createdBy.name}</span>
                     </div>
                   </td>
-                  <td className="unified-table-cell text-center" style={{ color: '#e9ecef', padding: '12px 8px' }}>
+                  <td className="unified-table-cell text-center" style={{ color: 'var(--color-text)', padding: '12px 8px' }}>
                     {report.completedBy ? (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                         <div style={{ 
@@ -320,7 +320,7 @@ const DailyReportHistory: React.FC<DailyReportHistoryProps> = ({ isAdmin }) => {
                         }}>
                           <i className="fas fa-minus" style={{ color: '#ffffff', fontSize: '10px' }}></i>
                         </div>
-                        <span style={{ color: '#9ca3af', fontSize: '13px' }}>לא הושלם</span>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>לא הושלם</span>
                       </div>
                     )}
                   </td>

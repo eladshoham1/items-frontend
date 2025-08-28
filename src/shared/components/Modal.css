@@ -194,8 +194,8 @@
     transform: none !important; /* Reset any transforms that might hide modal */
     position: relative !important;
     z-index: 1004 !important;
-    background: #2a2a2a !important; /* Fallback dark background */
-    border: 2px solid #007bff !important; /* Visible blue border for debugging */
+    background: var(--color-surface) !important; /* Theme-aware background */
+    border: 1px solid var(--color-border) !important; /* Theme-aware border */
     border-radius: 8px !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
   }
@@ -210,8 +210,8 @@
     max-width: calc(100vw - 20px) !important;
     margin: 10px auto !important;
     transform: none !important; /* Prevent modal from being hidden by transforms */
-    background: #2a2a2a !important; /* Fallback background */
-    border: 2px solid #007bff !important; /* Visible border for debugging */
+    background: var(--color-surface) !important; /* Theme-aware background */
+    border: 1px solid var(--color-border) !important; /* Theme-aware border */
     display: flex !important;
     flex-direction: column !important;
   }
@@ -221,14 +221,14 @@
     position: sticky;
     top: 0;
     z-index: 1005;
-    background: #2a2a2a !important; /* Fallback header background */
-    color: white !important;
-    border-bottom: 1px solid #007bff !important;
+    background: var(--color-surface) !important; /* Theme-aware header background */
+    color: var(--color-text) !important;
+    border-bottom: 1px solid var(--color-border) !important;
   }
   
   .modal-title {
     font-size: 18px !important;
-    color: white !important;
+    color: var(--color-text) !important;
     margin: 0 !important;
   }
   
@@ -236,8 +236,8 @@
     padding: 12px 8px !important;
     max-height: calc(85vh - 120px);
     overflow-y: auto;
-    background: #2a2a2a !important;
-    color: white !important;
+    background: var(--color-surface) !important;
+    color: var(--color-text) !important;
     flex: 1;
   }
   
