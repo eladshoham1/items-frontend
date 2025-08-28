@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { AllocationEntity, CreateAllocationRequest, UpdateAllocationRequest } from '../../types';
 import { managementService } from '../../services';
-import { BulkDeleteErrorModal, Modal, LoadingSpinner, NotificationModal } from '../../shared/components';
+import { BulkDeleteErrorModal, Modal, LoadingSpinner, NotificationModal, SearchInput } from '../../shared/components';
+import { SelectionToolbar } from '../../shared/components';
+import { useModernTableSelection } from '../../hooks';
 import type { NotificationType } from '../../shared/components/NotificationModal';
 
 interface EditingCell {
@@ -15,7 +17,6 @@ export const AllocationsTab: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -140,6 +141,19 @@ export const AllocationsTab: React.FC = () => {
     return filtered;
   }, [allocations, searchTerm, sortConfig]);
 
+  // Modern selection hook
+  const {
+    selectedIds,
+    isSelected,
+    toggleSelection,
+    clearSelection,
+    selectAll,
+    selectedCount
+  } = useModernTableSelection({
+    items: filteredAndSortedAllocations,
+    multiSelect: true
+  });
+
   const handleCellClick = (allocation: AllocationEntity, field: keyof AllocationEntity) => {
     if (field === 'id' || field === 'createdAt' || field === 'updatedAt') return;
     
@@ -238,7 +252,7 @@ export const AllocationsTab: React.FC = () => {
       if (result.success && result.data) {
         if (result.data.deleted) {
           setAllocations(prev => prev.filter(allocation => !selectedIds.includes(allocation.id)));
-          setSelectedIds([]);
+          clearSelection();
           showNotification('success', `נמחקו בהצלחה ${result.data.deletedCount} שבצק`);
         } else {
           setBulkDeleteError({
@@ -257,13 +271,7 @@ export const AllocationsTab: React.FC = () => {
     }
   };
 
-  const handleSelectAll = () => {
-    if (selectedIds.length === filteredAndSortedAllocations.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredAndSortedAllocations.map(allocation => allocation.id));
-    }
-  };
+
 
   const renderCell = (allocation: AllocationEntity, field: keyof AllocationEntity) => {
     const isEditing = editingCell?.id === allocation.id && editingCell?.field === field;
@@ -327,9 +335,7 @@ export const AllocationsTab: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="management-container">
-        <LoadingSpinner />
-      </div>
+      <LoadingSpinner />
     );
   }
 
@@ -346,38 +352,17 @@ export const AllocationsTab: React.FC = () => {
   }
 
   return (
-    <div className="management-container">
+    <>
       {/* Compact Header with Actions */}
       <div className="management-header-compact">
         <div className="management-search-section">
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="text"
-              className="management-search-input"
-              placeholder="חפש לפי מסגרת, מסגרת משנה, בעל, סוג הכלי, תקן..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ flex: 1 }}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => setSearchTerm('')}
-                title="נקה חיפוש"
-                style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  padding: '0 12px',
-                  minWidth: 'auto'
-                }}
-              >
-                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
-                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
-              </button>
-            )}
-          </div>
+          <SearchInput
+            value={searchTerm}
+            onChange={(value) => setSearchTerm(value)}
+            placeholder="חפש לפי מסגרת, מסגרת משנה, בעל, סוג הכלי, תקן..."
+            resultsCount={filteredAndSortedAllocations.length}
+            resultsLabel="הקצאות"
+          />
         </div>
         
         <div className="management-actions-compact">
@@ -397,41 +382,25 @@ export const AllocationsTab: React.FC = () => {
             <i className="fas fa-plus" style={{ fontSize: '13px' }}></i>
             <span style={{ fontSize: '13px', fontWeight: '600' }}>הוסף חדש</span>
           </button>
-          
-          {selectedIds.length > 0 && (
-            <button
-              className="btn btn-danger btn-sm"
-              onClick={handleDelete}
-              disabled={isSubmitting}
-              title={`מחק ${selectedIds.length} שבצקים נבחרים`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: '0 12px'
-              }}
-            >
-              <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
-              <span style={{ fontSize: '12px', fontWeight: '500' }}>מחק ({selectedIds.length})</span>
-            </button>
-          )}
         </div>
       </div>
+
+      {/* Modern Selection Toolbar */}
+      <SelectionToolbar
+        selectedCount={selectedCount}
+        totalCount={filteredAndSortedAllocations.length}
+        onDelete={handleDelete}
+        onClear={clearSelection}
+        onSelectAll={selectAll}
+        isDeleting={isSubmitting}
+        isVisible={selectedCount > 0}
+      />
 
       {/* Table */}
       <div className="unified-table-container">
         <table className="unified-table">
           <thead>
             <tr>
-              <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  checked={selectedIds.length === filteredAndSortedAllocations.length && filteredAndSortedAllocations.length > 0}
-                  onChange={handleSelectAll}
-                />
-              </th>
               <th 
                 className="unified-table-header unified-table-header-regular sortable" 
                 onClick={() => handleSort('unit')}
@@ -506,21 +475,11 @@ export const AllocationsTab: React.FC = () => {
           </thead>
           <tbody>
             {filteredAndSortedAllocations.map((allocation) => (
-              <tr key={allocation.id} className="unified-table-row">
-                <td className="unified-table-cell-sticky">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={selectedIds.includes(allocation.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedIds([...selectedIds, allocation.id]);
-                      } else {
-                        setSelectedIds(selectedIds.filter(id => id !== allocation.id));
-                      }
-                    }}
-                  />
-                </td>
+              <tr 
+                key={allocation.id} 
+                className={`unified-table-row modern-table-row ${isSelected(allocation.id) ? 'selected' : ''}`}
+                onClick={(e) => toggleSelection(allocation.id, e)}
+              >
                 <td className="unified-table-cell">{renderCell(allocation, 'unit')}</td>
                 <td className="unified-table-cell">{renderCell(allocation, 'secondaryUnit')}</td>
                 <td className="unified-table-cell">{renderCell(allocation, 'owner')}</td>
@@ -727,6 +686,6 @@ export const AllocationsTab: React.FC = () => {
         message={notification.message}
         title={notification.title}
       />
-    </div>
+    </>
   );
 };

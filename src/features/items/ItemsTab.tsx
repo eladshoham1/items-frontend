@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal, SearchInput } from '../../shared/components';
+import { SelectionToolbar } from '../../shared/components';
+import { useModernTableSelection } from '../../hooks';
 import Modal from '../../shared/components/Modal';
 import ItemForm from './ItemForm';
 import { useItems } from '../../hooks';
@@ -18,7 +20,6 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -155,6 +156,19 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     UI_CONFIG.TABLE_PAGE_SIZE
   );
 
+  // Modern selection hook - use all filtered items for selection, not just paginated
+  const {
+    selectedIds,
+    isSelected,
+    toggleSelection,
+    clearSelection,
+    selectAll,
+    selectedCount
+  } = useModernTableSelection({
+    items: filteredAndSortedItems,
+    multiSelect: true
+  });
+
   const handleAddClick = () => {
     setSelectedItem(null);
     setIsModalOpen(true);
@@ -171,56 +185,40 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     refetch(); // Refresh the items list after modal closes
   };
 
-  const handleSelectAllItems = () => {
-    if (selectedItemIds.length === paginatedItems.length) {
-      setSelectedItemIds([]);
-    } else {
-      setSelectedItemIds(paginatedItems.map(item => item.id));
-    }
-  };
-
-  const handleToggleItemSelection = (itemId: string) => {
-    setSelectedItemIds(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    );
-  };
-
   // Reset page when search term changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
-    setSelectedItemIds([]);
+    clearSelection();
   };
 
   const handleBulkDelete = async () => {
-    if (selectedItemIds.length === 0) return;
+    if (selectedIds.length === 0) return;
 
-    const selectedItems = items.filter(item => selectedItemIds.includes(item.id));
+    const selectedItems = items.filter(item => selectedIds.includes(item.id));
     const itemNames = selectedItems.map(item => item.itemName?.name || 'אין שם').join(', ');
     
-    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את הפריטים הבאים?\n\n${itemNames}\n\n(${selectedItemIds.length} פריטים)`)) return;
+    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את הפריטים הבאים?\n\n${itemNames}\n\n(${selectedIds.length} פריטים)`)) return;
 
-    const result = await deleteManyItems(selectedItemIds);
+    const result = await deleteManyItems(selectedIds);
     if (result.success) {
-      setSelectedItemIds([]);
+      clearSelection();
     } else if (result.isConflict && result.bulkError) {
       // Show bulk delete error modal
       setBulkDeleteError({
         isOpen: true,
         message: result.bulkError.message,
         deletedCount: result.bulkError.deletedCount,
-        totalCount: selectedItemIds.length,
+        totalCount: selectedIds.length,
         errors: result.bulkError.errors,
       });
-      setSelectedItemIds([]);
+      clearSelection();
     } else if (result.isConflict) {
       // Show regular conflict error modal
       setConflictError({
         isOpen: true,
         message: result.error || 'שגיאת התנגשות במחיקת פריטים',
-        itemName: `${selectedItemIds.length} פריטים`,
+        itemName: `${selectedIds.length} פריטים`,
       });
     } else {
       showNotification('error', `שגיאה במחיקת הפריטים: ${result.error || 'שגיאה לא ידועה'}`);
@@ -246,9 +244,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
 
   if (loading) {
     return (
-      <div className="management-container">
-        <LoadingSpinner message="טוען פריטי ציוד..." />
-      </div>
+      <LoadingSpinner message="טוען פריטי ציוד..." />
     );
   }
 
@@ -257,63 +253,21 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
   }
 
   return (
-    <div className="management-container">
+    <>
       {/* Compact Header with Actions */}
       <div className="management-header-compact">
         <div className="management-search-section">
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="text"
-              className="management-search-input"
-              placeholder="חפש פריטים לפי שם, מספר צ', הקצאה או הערה..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              style={{ flex: 1 }}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                title="נקה חיפוש"
-                style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  padding: '0 12px',
-                  minWidth: 'auto'
-                }}
-              >
-                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
-                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
-              </button>
-            )}
-          </div>
-          {searchTerm && (
-            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
-              נמצאו {filteredAndSortedItems.length} פריטים מתוך {items.length}
-            </div>
-          )}
+          <SearchInput
+            value={searchTerm}
+            onChange={(value) => handleSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
+            placeholder="חפש פריטים לפי שם, מספר צ', הקצאה או הערה..."
+            resultsCount={filteredAndSortedItems.length}
+            resultsLabel="פריטים"
+          />
         </div>
         
         <div className="management-actions-compact">
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {selectedItemIds.length > 0 && (
-              <>
-                <span className="badge bg-primary" style={{ fontSize: '12px', padding: '4px 8px' }}>
-                  {selectedItemIds.length} נבחרו
-                </span>
-                <button 
-                  className="btn btn-danger btn-sm" 
-                  onClick={handleBulkDelete}
-                  disabled={selectedItemIds.length === 0}
-                  style={{ fontSize: '12px', padding: '6px 12px' }}
-                >
-                  <i className="fas fa-trash" style={{ marginLeft: '4px' }}></i>
-                  מחק נבחרים ({selectedItemIds.length})
-                </button>
-              </>
-            )}
             <button className="btn btn-primary btn-sm" onClick={handleAddClick}>
               <i className="fas fa-plus" style={{ marginLeft: '6px' }}></i>
               הוסף פריט חדש
@@ -322,19 +276,21 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
         </div>
       </div>
 
+      {/* Modern Selection Toolbar */}
+      <SelectionToolbar
+        selectedCount={selectedCount}
+        totalCount={filteredAndSortedItems.length}
+        onDelete={handleBulkDelete}
+        onClear={clearSelection}
+        onSelectAll={selectAll}
+        isDeleting={false}
+        isVisible={selectedCount > 0}
+      />
+
         <div className="unified-table-container">
           <table className="unified-table">
             <thead>
               <tr>
-                <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={selectedItemIds.length === paginatedItems.length && paginatedItems.length > 0}
-                    onChange={handleSelectAllItems}
-                    title="בחר הכל"
-                  />
-                </th>
                 <th 
                   className="unified-table-header unified-table-header-regular"
                   onClick={() => handleSort('name')}
@@ -390,15 +346,12 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
             </thead>
             <tbody>
               {paginatedItems.map((item: Item, index: number) => (
-                <tr key={item.id} className="unified-table-row">
-                  <td className={`unified-table-cell-sticky ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedItemIds.includes(item.id)}
-                      onChange={() => handleToggleItemSelection(item.id)}
-                    />
-                  </td>
+                <tr 
+                  key={item.id} 
+                  className={`unified-table-row modern-table-row ${isSelected(item.id) ? 'selected' : ''}`}
+                  onClick={(e) => toggleSelection(item.id, e)}
+                  title="לחץ לבחירה"
+                >
                   <td className="unified-table-cell">{item.itemName?.name || 'אין תערכה'}</td>
                   <td className="unified-table-cell">{item.idNumber || 'לא זמין'}</td>
                   <td className="unified-table-cell">{item.allocatedLocation?.name || 'לא מוקצה'}</td>
@@ -424,7 +377,10 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   <td className="unified-table-cell">
                     <button 
                       className="unified-action-btn unified-action-btn-primary" 
-                      onClick={() => handleItemClick(item)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleItemClick(item);
+                      }}
                     >
                       עדכן
                     </button>
@@ -491,7 +447,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
         message={notification.message}
         title={notification.title}
       />
-    </div>
+    </>
   );
 };
 

@@ -10,3 +10,7 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as PageContainer } from './PageContainer';
 export { ThemeToggle } from './ThemeToggle';
 export { ThemeDemo } from './ThemeDemo';
+export { SelectionToolbar } from './SelectionToolbar';
+export { SelectionGuide } from './SelectionGuide';
+export { TableSelectionGuide } from './TableSelectionGuide';
+export { default as SearchInput } from './SearchInput';

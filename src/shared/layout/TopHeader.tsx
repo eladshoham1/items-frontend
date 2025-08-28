@@ -19,6 +19,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({
   onSettingsClick
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,6 +40,14 @@ const TopHeader: React.FC<TopHeaderProps> = ({
 
   const toggleUserMenu = () => {
     setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const handleImageLoad = () => {
+    setImageError(false);
   };
 
   if (!user) {
@@ -71,11 +80,13 @@ const TopHeader: React.FC<TopHeaderProps> = ({
               aria-label="פתח תפריט משתמש"
             >
               <div className="user-avatar-container">
-                {user.photoURL ? (
+                {user.photoURL && !imageError ? (
                   <img 
                     src={user.photoURL} 
                     alt="Profile" 
                     className="user-avatar"
+                    onError={handleImageError}
+                    onLoad={handleImageLoad}
                   />
                 ) : (
                   <div className="user-avatar-placeholder">

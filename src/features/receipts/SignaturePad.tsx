@@ -95,8 +95,27 @@ export const SignaturePad: React.FC<Props> = ({ onSave }) => {
       <div className="text-center mt-3">
         <button 
           type="button" 
-          className="btn btn-outline-warning btn-sm"
+          className="btn btn-sm"
           onClick={handleClear}
+          style={{
+            background: 'rgba(255, 193, 7, 0.1)',
+            border: '1px solid #ffc107',
+            color: '#ffc107',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: '500',
+            transition: 'all 0.2s ease',
+            cursor: 'pointer'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 193, 7, 0.2)';
+            e.currentTarget.style.color = '#ffcd39';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 193, 7, 0.1)';
+            e.currentTarget.style.color = '#ffc107';
+          }}
         >
           <i className="fas fa-eraser me-2"></i>
           נקה חתימה

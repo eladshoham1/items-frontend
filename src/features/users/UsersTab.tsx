@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal, SelectionToolbar, SearchInput } from '../../shared/components';
 import Modal from '../../shared/components/Modal';
 import UserForm from './UserForm';
-import { useUsers } from '../../hooks';
+import { useUsers, useModernTableSelection } from '../../hooks';
 import { User } from '../../types';
 import { paginate, getConflictResolutionMessage } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
@@ -17,7 +17,6 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -154,6 +153,20 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
     UI_CONFIG.TABLE_PAGE_SIZE
   );
 
+  // Modern table selection
+  const {
+    selectedIds: selectedUserIds,
+    toggleSelection,
+    clearSelection,
+    selectAll,
+    hasSelection
+  } = useModernTableSelection({
+    items: filteredAndSortedUsers,
+    onSelectionChange: (ids) => {
+      // Optional: Handle selection changes
+    }
+  });
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
@@ -169,27 +182,11 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
     setIsModalOpen(true);
   };
 
-  const handleSelectAllUsers = () => {
-    if (selectedUserIds.length === paginatedUsers.length) {
-      setSelectedUserIds([]);
-    } else {
-      setSelectedUserIds(paginatedUsers.map(user => user.id));
-    }
-  };
-
-  const handleToggleUserSelection = (userId: string) => {
-    setSelectedUserIds(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
-  };
-
   // Reset page when search term changes
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
-    setSelectedUserIds([]);
+    clearSelection();
   };
 
   const handleBulkDelete = async () => {
@@ -202,7 +199,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
 
     const result = await deleteManyUsers(selectedUserIds);
     if (result.success) {
-      setSelectedUserIds([]);
+      clearSelection();
     } else if (result.isConflict && result.bulkError) {
       // Show bulk delete error modal
       setBulkDeleteError({
@@ -212,7 +209,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
         totalCount: selectedUserIds.length,
         errors: result.bulkError.errors,
       });
-      setSelectedUserIds([]);
+      clearSelection();
     } else if (result.isConflict) {
       // Show regular conflict error modal
       setConflictError({
@@ -227,9 +224,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
 
   if (loading) {
     return (
-      <div className="management-container">
-        <LoadingSpinner message="טוען משתמשים..." />
-      </div>
+      <LoadingSpinner message="טוען משתמשים..." />
     );
   }
 
@@ -238,88 +233,46 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
   }
 
   return (
-    <div className="management-container">
+    <>
       {/* Compact Header with Actions */}
       <div className="management-header-compact">
         <div className="management-search-section">
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="text"
-              className="management-search-input"
-              placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה, מיקום, מסגרת או סוג משתמש..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              style={{ flex: 1 }}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                title="נקה חיפוש"
-                style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  padding: '0 12px',
-                  minWidth: 'auto'
-                }}
-              >
-                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
-                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
-              </button>
-            )}
-          </div>
-          {searchTerm && (
-            <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
-              נמצאו {filteredAndSortedUsers.length} משתמשים מתוך {users.length}
-            </div>
-          )}
-        </div>
-        
-        <div className="management-actions-compact">
-          {selectedUserIds.length > 0 && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <span className="badge bg-primary" style={{ fontSize: '12px', padding: '4px 8px' }}>
-                {selectedUserIds.length} נבחרו
-              </span>
-              <button 
-                className="btn btn-danger btn-sm" 
-                onClick={handleBulkDelete}
-                disabled={selectedUserIds.length === 0}
-                style={{ fontSize: '12px', padding: '6px 12px' }}
-              >
-                <i className="fas fa-trash" style={{ marginLeft: '4px' }}></i>
-                מחק נבחרים ({selectedUserIds.length})
-              </button>
-            </div>
-          )}
+          <SearchInput
+            value={searchTerm}
+            onChange={(value) => handleSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
+            placeholder="חפש משתמשים לפי שם, מספר אישי, טלפון, דרגה, מיקום, מסגרת או סוג משתמש..."
+            resultsCount={filteredAndSortedUsers.length}
+            resultsLabel="משתמשים"
+          />
         </div>
       </div>
 
-        <div className="unified-table-container">
-          <table className="unified-table">
-            <thead>
-              <tr>
-                <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={selectedUserIds.length === paginatedUsers.length && paginatedUsers.length > 0}
-                    onChange={handleSelectAllUsers}
-                    title="בחר הכל"
-                  />
-                </th>
-                <th 
-                  className="unified-table-header unified-table-header-regular" 
-                  onClick={() => handleSort('name')}
-                  title="לחץ למיון לפי שם"
-                  data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
-                >
-                  <div className="d-flex align-items-center">
-                    <span>שם</span>
-                  </div>
-                </th>
+      {/* Modern Selection Toolbar */}
+      <SelectionToolbar
+        selectedCount={selectedUserIds.length}
+        totalCount={paginatedUsers.length}
+        onDelete={selectedUserIds.length > 0 ? handleBulkDelete : undefined}
+        onClear={clearSelection}
+        onSelectAll={selectAll}
+        isVisible={hasSelection}
+        deleteLabel="מחק משתמשים"
+        isDeleting={false}
+      />
+
+      <div className="unified-table-container">
+        <table className="unified-table">
+          <thead>
+            <tr>
+              <th 
+                className="unified-table-header unified-table-header-regular" 
+                onClick={() => handleSort('name')}
+                title="לחץ למיון לפי שם"
+                data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
+              >
+                <div className="d-flex align-items-center">
+                  <span>שם</span>
+                </div>
+              </th>
                 <th 
                   className="unified-table-header unified-table-header-regular" 
                   onClick={() => handleSort('personalNumber')}
@@ -385,15 +338,18 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
             </thead>
             <tbody>
               {paginatedUsers.map((user: User, index: number) => (
-                <tr key={user.id} className="unified-table-row">
-                  <td className={`unified-table-cell-sticky ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedUserIds.includes(user.id)}
-                      onChange={() => handleToggleUserSelection(user.id)}
-                    />
-                  </td>
+                <tr 
+                  key={user.id} 
+                  className={`unified-table-row selectable ${selectedUserIds.includes(user.id) ? 'selected' : ''}`}
+                  onClick={(e) => {
+                    // Don't trigger selection when clicking on action buttons
+                    if ((e.target as HTMLElement).closest('.unified-action-btn')) {
+                      return;
+                    }
+                    toggleSelection(user.id, e, index);
+                  }}
+                  title="לחץ לבחירה • Ctrl+לחץ לבחירה מרובה"
+                >
                   <td className="unified-table-cell">{user.name}</td>
                   <td className="unified-table-cell">{user.personalNumber}</td>
                   <td className="unified-table-cell">{user.phoneNumber}</td>
@@ -408,7 +364,10 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
                   <td className="unified-table-cell">
                     <button 
                       className="unified-action-btn unified-action-btn-primary" 
-                      onClick={() => handleSelectUser(user)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectUser(user);
+                      }}
                     >
                       עדכן
                     </button>
@@ -474,7 +433,7 @@ const UsersTab: React.FC<UsersTabProps> = ({ isAdmin = false }) => {
         message={notification.message}
         title={notification.title}
       />
-    </div>
+    </>
   );
 };
 

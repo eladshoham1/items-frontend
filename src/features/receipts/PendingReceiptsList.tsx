@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { Receipt, SignPendingReceiptRequest } from '../../types';
 import { SignaturePad } from './SignaturePad';
-import { Modal, BulkDeleteErrorModal, SmartPagination, NotificationModal } from '../../shared/components';
+import { Modal, SmartPagination, NotificationModal, SearchInput } from '../../shared/components';
 import ReceiptForm from './ReceiptForm';
 import ReceiptDetailsModal from './ReceiptDetailsModal';
+import DeleteReceiptModal from './DeleteReceiptModal';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import type { NotificationType } from '../../shared/components/NotificationModal';
@@ -29,17 +30,14 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [signature, setSignature] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Bulk selection state
-  const [selectedReceiptIds, setSelectedReceiptIds] = useState<string[]>([]);
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [bulkDeleteError, setBulkDeleteError] = useState<{
-    errors: string[];
-    deletedCount: number;
-  } | null>(null);
 
   // New: search and sort state
   const [searchTerm, setSearchTerm] = useState('');
@@ -156,57 +154,29 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
-    setSelectedReceiptIds([]);
   };
 
-  // Bulk selection functions
-  const handleSelectAllReceipts = () => {
-    if (selectedReceiptIds.length === paginatedReceipts.length) {
-      setSelectedReceiptIds([]);
-    } else {
-      setSelectedReceiptIds(paginatedReceipts.map(receipt => receipt.id));
-    }
+  const handleDeleteClick = (receipt: Receipt) => {
+    setSelectedReceipt(receipt);
+    setIsDeleteModalOpen(true);
   };
 
-  const handleToggleReceiptSelection = (receiptId: string) => {
-    setSelectedReceiptIds(prev => 
-      prev.includes(receiptId) 
-        ? prev.filter(id => id !== receiptId)
-        : [...prev, receiptId]
-    );
-  };
+  const handleConfirmDelete = async () => {
+    if (!selectedReceipt) return;
 
-  const handleBulkDelete = async () => {
-    if (selectedReceiptIds.length === 0) return;
-    
-    const confirmDelete = window.confirm(
-      `האם אתה בטוח שברצונך למחוק ${selectedReceiptIds.length} קבלות ממתינות?`
-    );
-    
-    if (!confirmDelete) return;
-
-    const errors: string[] = [];
-    let deletedCount = 0;
-
-    for (const receiptId of selectedReceiptIds) {
-      try {
-        await deleteReceipt(receiptId);
-        deletedCount++;
-      } catch (err) {
-        const receipt = pendingReceipts.find(r => r.id === receiptId);
-        const receiptName = receipt ? `קבלה #${receipt.id}` : `קבלה ${receiptId}`;
-        errors.push(`${receiptName}: ${err instanceof Error ? err.message : 'שגיאה לא ידועה'}`);
+    setIsDeleting(true);
+    try {
+      const success = await deleteReceipt(selectedReceipt.id);
+      if (success) {
+        handleCloseModal();
+        onRefresh();
+        showNotification('success', 'הקבלה נמחקה בהצלחה');
       }
+    } catch (error) {
+      showNotification('error', 'שגיאה במחיקת הקבלה');
+    } finally {
+      setIsDeleting(false);
     }
-
-    if (errors.length > 0) {
-      setBulkDeleteError({ errors, deletedCount });
-    } else {
-      showNotification('success', `נמחקו בהצלחה ${deletedCount} קבלות`);
-    }
-
-    setSelectedReceiptIds([]);
-    onRefresh();
   };
 
   const handleSignClick = (receipt: Receipt) => {
@@ -259,6 +229,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   const handleCloseModal = () => {
     setIsSignModalOpen(false);
     setIsUpdateModalOpen(false);
+    setIsDeleteModalOpen(false);
     setSelectedReceipt(null);
     setSignature('');
     setError(null);
@@ -280,53 +251,13 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
         {/* Compact Header with Actions */}
         <div className="management-header-compact">
           <div className="management-search-section">
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <input
-                type="text"
-                className="management-search-input"
-                placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                style={{ flex: 1 }}
-              />
-              {searchTerm && (
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                  title="נקה חיפוש"
-                  style={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    padding: '0 12px',
-                    minWidth: 'auto'
-                  }}
-                >
-                  <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
-                  <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
-                </button>
-              )}
-            </div>
-          </div>
-          
-          <div className="management-actions-compact">
-            {isAdmin && selectedReceiptIds.length > 0 && (
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span className="badge bg-primary" style={{ fontSize: '12px', padding: '4px 8px' }}>
-                  {selectedReceiptIds.length} נבחרו
-                </span>
-                <button 
-                  className="btn btn-danger btn-sm" 
-                  onClick={handleBulkDelete}
-                  disabled={selectedReceiptIds.length === 0}
-                  style={{ fontSize: '12px', padding: '6px 12px' }}
-                >
-                  <i className="fas fa-trash" style={{ marginLeft: '4px' }}></i>
-                  מחק נבחרים ({selectedReceiptIds.length})
-                </button>
-              </div>
-            )}
+            <SearchInput
+              value={searchTerm}
+              onChange={(value) => handleSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
+              placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+              resultsCount={filteredAndSorted.length}
+              resultsLabel="קבלות"
+            />
           </div>
         </div>
         
@@ -334,18 +265,6 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
           <table className="unified-table">
             <thead>
               <tr>
-                {isAdmin && (
-                  <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedReceiptIds.length === paginatedReceipts.length && paginatedReceipts.length > 0}
-                      onChange={handleSelectAllReceipts}
-                      title="בחר הכל"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </th>
-                )}
                 <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('createdBy')} data-sorted={sortConfig?.key === 'createdBy'}>
                   <div className="d-flex align-items-center">
                     <span>מנפיק</span>
@@ -375,7 +294,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
               </tr>
             </thead>
             <tbody>
-              {paginatedReceipts.map((receipt) => {
+              {paginatedReceipts.map((receipt, index) => {
                 const canSign = canUserSignReceipt(receipt);
                 return (
                   <tr 
@@ -384,21 +303,10 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     onClick={() => setDetailsReceipt(receipt)} 
                     style={{ 
                       cursor: 'pointer',
-                      opacity: !isAdmin && !canSign ? 0.6 : 1,
-                      backgroundColor: !isAdmin && !canSign ? 'rgba(255, 255, 255, 0.05)' : 'transparent'
+                      opacity: !isAdmin && !canSign ? 0.6 : 1
                     }}
+                    title="לחץ לפרטים"
                   >
-                    {isAdmin && (
-                      <td className="unified-table-cell" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={selectedReceiptIds.includes(receipt.id)}
-                          onChange={() => handleToggleReceiptSelection(receipt.id)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </td>
-                    )}
                     <td className="unified-table-cell">{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
                     <td className="unified-table-cell">
                       <div className="d-flex align-items-center">
@@ -427,14 +335,24 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         gap: '8px' 
                       }}>
                         {isAdmin && (
-                          <button 
-                            className="btn btn-primary btn-sm me-2 unified-action-btn" 
-                            onClick={() => handleUpdateClick(receipt)}
-                            title="עדכן קבלה"
-                          >
-                            <i className="fas fa-edit"></i>
-                            עדכן
-                          </button>
+                          <>
+                            <button 
+                              className="btn btn-primary btn-sm me-2 unified-action-btn" 
+                              onClick={() => handleUpdateClick(receipt)}
+                              title="עדכן קבלה"
+                            >
+                              <i className="fas fa-edit"></i>
+                              עדכן
+                            </button>
+                            <button 
+                              className="btn btn-danger btn-sm unified-action-btn" 
+                              onClick={() => handleDeleteClick(receipt)}
+                              title="מחק קבלה"
+                            >
+                              <i className="fas fa-trash"></i>
+                              מחק
+                            </button>
+                          </>
                         )}
                         {canSign && (
                           <button
@@ -754,17 +672,14 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
         </Modal>
       )}
 
-      {/* Bulk Delete Error Modal */}
-      {bulkDeleteError && (
-        <BulkDeleteErrorModal
-          isOpen={!!bulkDeleteError}
-          onClose={() => setBulkDeleteError(null)}
-          title="שגיאה במחיקת קבלות"
-          message="חלק מהקבלות לא נמחקו בהצלחה"
-          errors={bulkDeleteError.errors}
-          deletedCount={bulkDeleteError.deletedCount}
-          totalCount={selectedReceiptIds.length}
-          type="item"
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && selectedReceipt && (
+        <DeleteReceiptModal
+          isOpen={isDeleteModalOpen}
+          onClose={handleCloseModal}
+          onConfirm={handleConfirmDelete}
+          receiptId={selectedReceipt.id}
+          isLoading={isDeleting}
         />
       )}
 

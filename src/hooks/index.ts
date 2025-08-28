@@ -6,3 +6,4 @@ export { useReceipts } from './useReceipts';
 export { useAuth } from './useAuth';
 export { useUserProfile } from './useUserProfile';
 export { useTheme } from '../contexts/ThemeContext';
+export { useModernTableSelection } from './useModernTableSelection';

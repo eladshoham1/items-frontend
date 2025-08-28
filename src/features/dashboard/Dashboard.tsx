@@ -3,7 +3,7 @@ import { useDashboardStats } from '../../hooks';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { reportService, managementService } from '../../services';
 import ServerError from '../../shared/components/ServerError';
-import { SmartPagination, TabNavigation, LoadingSpinner } from '../../shared/components';
+import { SmartPagination, TabNavigation, LoadingSpinner, SearchInput } from '../../shared/components';
 import { SignUser, UnitEntity } from '../../types';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
@@ -552,9 +552,7 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="management-container">
-        <LoadingSpinner message="טוען נתוני לוח בקרה..." />
-      </div>
+      <LoadingSpinner message="טוען נתוני לוח בקרה..." />
     );
   }
 
@@ -613,38 +611,14 @@ const Dashboard: React.FC = () => {
 
           {/* Enhanced Search Input for Units Tab */}
           {activeTab === 'units' && (
-            <div className="dashboard-search-container">
-              <div className="dashboard-search-row">
-                <label htmlFor="unitsSearch" className="dashboard-search-label">
-                  חיפוש פריטים:
-                </label>
-                <div className="dashboard-search-input-wrapper">
-                  <input
-                    id="unitsSearch"
-                    type="text"
-                    value={unitsSearchTerm}
-                    onChange={(e) => setUnitsSearchTerm(e.target.value)}
-                    placeholder="הקלד שם פריט לחיפוש..."
-                    className="dashboard-input"
-                  />
-                </div>
-                <div className="dashboard-badge-container">
-                  {unitsSearchTerm && (
-                    <button
-                      type="button"
-                      onClick={() => setUnitsSearchTerm('')}
-                      className="dashboard-clear-btn"
-                      title="נקה חיפוש"
-                    >
-                      נקה
-                    </button>
-                  )}
-                  <span className="dashboard-results-badge">
-                    {filteredAndSortedItems.length} פריטים
-                  </span>
-                </div>
-              </div>
-            </div>
+            <SearchInput
+              value={unitsSearchTerm}
+              onChange={setUnitsSearchTerm}
+              placeholder="הקלד שם פריט לחיפוש..."
+              resultsCount={filteredAndSortedItems.length}
+              resultsLabel="פריטים"
+              id="unitsSearch"
+            />
           )}          {activeTab === 'units' && (
             <div className="unified-table-container">
               <div style={{ overflowX: 'auto' }}>
@@ -906,38 +880,14 @@ const Dashboard: React.FC = () => {
             ) : dashboardData && dashboardData.length > 0 ? (
               <>
                 {/* Enhanced Search Input */}
-                <div className="dashboard-search-container">
-                  <div className="dashboard-search-row">
-                    <label htmlFor="locationsSearch" className="dashboard-search-label">
-                      חיפוש פריטים:
-                    </label>
-                    <div className="dashboard-search-input-wrapper">
-                      <input
-                        id="locationsSearch"
-                        type="text"
-                        value={locationsSearchTerm}
-                        onChange={(e) => setLocationsSearchTerm(e.target.value)}
-                        placeholder="הקלד שם פריט לחיפוש..."
-                        className="dashboard-input"
-                      />
-                    </div>
-                    <div className="dashboard-badge-container">
-                      {locationsSearchTerm && (
-                        <button
-                          type="button"
-                          onClick={() => setLocationsSearchTerm('')}
-                          className="dashboard-clear-btn"
-                          title="נקה חיפוש"
-                        >
-                          נקה
-                        </button>
-                      )}
-                      <span className="dashboard-results-badge">
-                        {getFilteredAndSortedLocationsData().items.length} פריטים
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <SearchInput
+                  value={locationsSearchTerm}
+                  onChange={setLocationsSearchTerm}
+                  placeholder="הקלד שם פריט לחיפוש..."
+                  resultsCount={getFilteredAndSortedLocationsData().items.length}
+                  resultsLabel="פריטים"
+                  id="locationsSearch"
+                />
 
                 <div className="unified-table-container">
                   <div style={{ overflowX: 'auto' }}>
@@ -994,7 +944,7 @@ const Dashboard: React.FC = () => {
                               title={hasUserData ? `לחץ לפרטים נוספים` : hasAnyData ? 'יש הקצאות אך אין נתוני משתמשים' : 'אין נתונים'}
                             >
                               {hasAnyData ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', flexDirection: 'row', gap: '6px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
                                   {locationData.signed > 0 && (
                                     <span 
                                       className="dashboard-locations-badge-signed" 
@@ -1077,143 +1027,33 @@ const Dashboard: React.FC = () => {
 
       {/* User Details Table - Appears below main table when clicked */}
       {tooltipData.show && (
-        <div className="card shadow-lg border-0 mt-3" style={{ 
-          borderRadius: '16px', 
-          overflow: 'hidden',
-          backgroundColor: 'var(--color-surface, #2a2a2a)',
-          border: '1px solid var(--color-border, #404040)',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)',
-        }}>
-          <div 
-            className="card-header border-0" 
-            style={{ 
-              background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)',
-              color: 'var(--color-text, #ffffff)',
-              padding: '24px 28px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              direction: 'rtl',
-              borderBottom: '1px solid var(--color-border, #404040)'
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '24px' }}>👥</span>
-              <h5 style={{ 
-                fontSize: '18px', 
-                fontWeight: '700',
-                margin: 0,
-                color: 'var(--color-text, #ffffff)'
-              }}>
+        <div className="dashboard-modal-card">
+          <div className="dashboard-modal-header">
+            <div className="dashboard-modal-header-content">
+              <span className="dashboard-modal-icon">👥</span>
+              <h5 className="dashboard-modal-title">
                 פרטי משתמשים רשומים ({tooltipData.users.length})
               </h5>
-          </div>
+            </div>
             <button 
               type="button" 
               onClick={handleCloseTooltip}
-              style={{ 
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '8px',
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: 'var(--color-text, #ffffff)',
-                fontSize: '18px',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
+              className="dashboard-modal-close-btn"
             >
               ×
             </button>
-        </div>
-          <div className="card-body p-0" style={{ backgroundColor: 'var(--color-surface, #2a2a2a)' }}>
-            <div className="table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
-              <table className="table" style={{ margin: 0, backgroundColor: 'transparent' }}>
-                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+          </div>
+          <div className="dashboard-modal-body">
+            <div className="dashboard-modal-table-container">
+              <table className="dashboard-modal-table">
+                <thead>
                   <tr>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
-                      color: 'var(--color-text, #ffffff)',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
-                      textAlign: 'right'
-                    }}>
-                      שם החותם
-                    </th>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
-                      color: 'var(--color-text, #ffffff)',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
-                      textAlign: 'center'
-                    }}>
-                      מיקום
-                    </th>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
-                      color: 'var(--color-text, #ffffff)',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
-                      textAlign: 'center'
-                    }}>
-                      מספר צ'
-                    </th>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
-                      color: 'var(--color-text, #ffffff)',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
-                      textAlign: 'center'
-                    }}>
-                      האם חתום
-                    </th>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
-                      color: 'var(--color-text, #ffffff)',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
-                      textAlign: 'center'
-                    }}>
-                      הקצאה
-                    </th>
-                    <th style={{ 
-                      background: 'linear-gradient(135deg, #4a5568 0%, #2d3748 100%)', 
-                      color: 'var(--color-text, #ffffff)',
-                      padding: '16px 20px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      border: 'none',
-                      borderBottom: '2px solid var(--color-accent, #3b82f6)',
-                      textAlign: 'center'
-                    }}>
-                      הערות
-                    </th>
+                    <th className="dashboard-modal-th">שם החותם</th>
+                    <th className="dashboard-modal-th">מיקום</th>
+                    <th className="dashboard-modal-th">מספר צ'</th>
+                    <th className="dashboard-modal-th">האם חתום</th>
+                    <th className="dashboard-modal-th">הקצאה</th>
+                    <th className="dashboard-modal-th">הערות</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1221,227 +1061,60 @@ const Dashboard: React.FC = () => {
                     user.items && Array.isArray(user.items) ? user.items.map((item: { itemId: string; idNumber: string | null; note: string; allocatedLocationName: string | null }, itemIndex: number) => (
                       <tr 
                         key={`${user.id || userIndex}-${item.itemId || itemIndex}`}
-                        style={{ 
-                          backgroundColor: (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 
-                            ? 'var(--color-surface-alt, #333333)' 
-                            : 'var(--color-surface, #2a2a2a)',
-                          transition: 'all 0.2s ease',
-                          borderBottom: '1px solid var(--color-border, #404040)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--color-hover, #3d4852)';
-                          e.currentTarget.style.transform = 'scale(1.005)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = (userIndex * (user.items?.length || 1) + itemIndex) % 2 === 0 
-                            ? 'var(--color-surface-alt, #333333)' 
-                            : 'var(--color-surface, #2a2a2a)';
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
+                        className="dashboard-modal-tr"
                       >
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text, #ffffff)',
-                          fontWeight: '600',
-                          textAlign: 'right'
-                        }}>
+                        <td className="dashboard-modal-td dashboard-modal-td-name">
                           {user.name}
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text-secondary, #a0a0a0)',
-                          textAlign: 'center',
-                          fontWeight: '500'
-                        }}>
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
                           {(user as any).location || 'N/A'}
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text-secondary, #a0a0a0)',
-                          textAlign: 'center',
-                          fontFamily: 'monospace',
-                          fontWeight: '600'
-                        }}>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              backgroundColor: item.idNumber ? 'var(--color-accent, #3b82f6)' : 'var(--color-text-muted, #6b7280)',
-                              color: 'white',
-                              fontSize: '12px',
-                              padding: '6px 10px',
-                              borderRadius: '8px',
-                              fontWeight: '600',
-                              fontFamily: 'monospace',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
+                          <span className={`dashboard-modal-badge ${item.idNumber ? 'dashboard-modal-badge-primary' : 'dashboard-modal-badge-muted'}`}>
                             {item.idNumber || 'ללא מספר'}
                           </span>
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          textAlign: 'center'
-                        }}>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              backgroundColor: user.isSigned ? 'var(--color-success, #10b981)' : 'var(--color-danger, #ef4444)',
-                              color: 'white',
-                              fontSize: '12px',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              fontWeight: '600',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
+                          <span className={`dashboard-modal-badge ${user.isSigned ? 'dashboard-modal-badge-success' : 'dashboard-modal-badge-danger'}`}>
                             {user.isSigned ? 'כן' : 'לא'}
                           </span>
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          textAlign: 'center'
-                        }}>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              backgroundColor: item.allocatedLocationName ? 'var(--color-accent, #3b82f6)' : 'var(--color-text-muted, #6b7280)',
-                              color: 'white',
-                              fontSize: '12px',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              fontWeight: '600',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
+                          <span className={`dashboard-modal-badge ${item.allocatedLocationName ? 'dashboard-modal-badge-primary' : 'dashboard-modal-badge-muted'}`}>
                             {item.allocatedLocationName || 'לא הוקצה'}
                           </span>
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text-secondary, #a0a0a0)',
-                          textAlign: 'center',
-                          fontStyle: 'italic'
-                        }}>
+                        <td className="dashboard-modal-td dashboard-modal-td-center dashboard-modal-td-note">
                           {item.note || '-'}
                         </td>
                       </tr>
                     )) : (
                       <tr 
                         key={user.id || userIndex}
-                        style={{ 
-                          backgroundColor: userIndex % 2 === 0 
-                            ? 'var(--color-surface-alt, #333333)' 
-                            : 'var(--color-surface, #2a2a2a)',
-                          transition: 'all 0.2s ease',
-                          borderBottom: '1px solid var(--color-border, #404040)'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--color-hover, #3d4852)';
-                          e.currentTarget.style.transform = 'scale(1.005)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = userIndex % 2 === 0 
-                            ? 'var(--color-surface-alt, #333333)' 
-                            : 'var(--color-surface, #2a2a2a)';
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
+                        className="dashboard-modal-tr"
                       >
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text, #ffffff)',
-                          fontWeight: '600',
-                          textAlign: 'right'
-                        }}>
+                        <td className="dashboard-modal-td dashboard-modal-td-name">
                           {user.name}
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text-secondary, #a0a0a0)',
-                          textAlign: 'center',
-                          fontWeight: '500'
-                        }}>
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
                           {(user as any).location || 'N/A'}
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text-secondary, #a0a0a0)',
-                          textAlign: 'center',
-                          fontFamily: 'monospace'
-                        }}>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              backgroundColor: 'var(--color-text-muted, #6b7280)',
-                              color: 'white',
-                              fontSize: '12px',
-                              padding: '6px 10px',
-                              borderRadius: '8px',
-                              fontWeight: '600',
-                              fontFamily: 'monospace',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
+                          <span className="dashboard-modal-badge dashboard-modal-badge-muted">
                             ללא מספר
                           </span>
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          textAlign: 'center'
-                        }}>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              backgroundColor: user.isSigned ? 'var(--color-success, #10b981)' : 'var(--color-danger, #ef4444)',
-                              color: 'white',
-                              fontSize: '12px',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              fontWeight: '600',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
+                          <span className={`dashboard-modal-badge ${user.isSigned ? 'dashboard-modal-badge-success' : 'dashboard-modal-badge-danger'}`}>
                             {user.isSigned ? 'כן' : 'לא'}
                           </span>
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          textAlign: 'center'
-                        }}>
-                          <span 
-                            className="badge" 
-                            style={{ 
-                              backgroundColor: 'var(--color-text-muted, #6b7280)',
-                              color: 'white',
-                              fontSize: '12px',
-                              padding: '6px 12px',
-                              borderRadius: '8px',
-                              fontWeight: '600',
-                              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
-                              border: '1px solid rgba(255, 255, 255, 0.1)'
-                            }}
-                          >
+                        <td className="dashboard-modal-td dashboard-modal-td-center">
+                          <span className="dashboard-modal-badge dashboard-modal-badge-muted">
                             לא הוקצה
                           </span>
                         </td>
-                        <td style={{ 
-                          padding: '16px 20px', 
-                          fontSize: '14px', 
-                          color: 'var(--color-text-secondary, #a0a0a0)',
-                          textAlign: 'center',
-                          fontStyle: 'italic'
-                        }}>
+                        <td className="dashboard-modal-td dashboard-modal-td-center dashboard-modal-td-note">
                           -
                         </td>
                       </tr>
@@ -1449,26 +1122,14 @@ const Dashboard: React.FC = () => {
                   ).flat()}
                 </tbody>
               </table>
-          </div>
-            <div 
-              className="card-footer border-0"
-              style={{ 
-                background: 'linear-gradient(135deg, var(--color-accent, #3b82f6) 0%, var(--color-accent-dark, #2563eb) 100%)',
-                color: 'white',
-                padding: '16px 20px',
-                textAlign: 'center',
-                fontSize: '15px',
-                fontWeight: '600',
-                borderTop: '1px solid var(--color-border, #404040)',
-                boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              סה"כ פריטים מוקצים: <span style={{ fontSize: '18px', fontWeight: '700' }}>
+            </div>
+            <div className="dashboard-modal-footer">
+              סה"כ פריטים מוקצים: <span className="dashboard-modal-total">
                 {tooltipData.users.reduce((sum, user) => sum + (user.items?.length || 1), 0)}
               </span>
+            </div>
           </div>
         </div>
-      </div>
       )}
       </div>
     </div>

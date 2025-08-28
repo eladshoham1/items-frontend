@@ -1,7 +1,13 @@
 /* Unified Table System - Consistent Dashboard-Style Tables */
 
 /* Universal Table Container */
-.unified-table-container {
+.unified.unified-table-row:nth-child(odd) {
+  background-color: var(--color-odd, #1f2937);
+}
+
+.unified-table-row:hover:not(.selected) {
+  background-color: var(--color-hover, #3d4852) !important;
+}container {
   background: var(--color-surface);
   border-radius: 16px;
   overflow-x: auto;

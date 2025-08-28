@@ -117,7 +117,7 @@ const BackupRestoreTab: React.FC = () => {
   };
 
   return (
-    <div className="management-container">
+    <>
       {/* Compact Header with Actions */}
       <div className="management-header-compact">
         <div className="management-search-section">
@@ -415,7 +415,7 @@ const BackupRestoreTab: React.FC = () => {
           </div>
         </div>
       </Modal>
-    </div>
+    </>
   );
 };
 

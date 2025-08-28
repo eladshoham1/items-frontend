@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
+import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner, NotificationModal, SelectionToolbar, SearchInput } from '../../shared/components';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import { LocationEntity, UnitEntity } from '../../types';
 import { NotificationType } from '../../shared/components/NotificationModal';
+import { useModernTableSelection } from '../../hooks';
 
 interface LocationsTableProps {
   locations: LocationEntity[];
@@ -28,7 +29,6 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<LocationEntity | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [newLocationData, setNewLocationData] = useState({ name: '', unitId: '' });
@@ -105,6 +105,19 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
     UI_CONFIG.TABLE_PAGE_SIZE
   );
 
+  // Modern selection hook - use all sorted items for selection, not just paginated
+  const {
+    selectedIds,
+    isSelected,
+    toggleSelection,
+    clearSelection,
+    selectAll,
+    selectedCount
+  } = useModernTableSelection({
+    items: sortedLocations,
+    multiSelect: true
+  });
+
   const handleSort = (key: keyof LocationEntity | 'unitName') => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -112,16 +125,6 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
     }
     setSortConfig({ key, direction });
     setCurrentPage(1); // Reset to first page when sorting
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    setSelectedIds(checked ? paginatedItems.map(location => location.id) : []);
-  };
-
-  const handleSelectItem = (id: string, checked: boolean) => {
-    setSelectedIds(prev =>
-      checked ? [...prev, id] : prev.filter(selectedId => selectedId !== id)
-    );
   };
 
   const resetAddForm = () => {
@@ -212,7 +215,7 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
     try {
       const result = await onDelete(selectedIds);
       if (result.success) {
-        setSelectedIds([]);
+        clearSelection();
       } else {
         setNotification({
           isOpen: true,
@@ -248,44 +251,20 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
   }
 
   return (
-    <div className="management-container">
+    <>
       {/* Compact Header with Actions */}
       <div className="management-header-compact">
         <div className="management-search-section">
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="text"
-              className="management-search-input"
-              placeholder="חיפוש מיקומים או יחידות..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              style={{ flex: 1 }}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setCurrentPage(1);
-                }}
-                title="נקה חיפוש"
-                style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  padding: '0 12px',
-                  minWidth: 'auto'
-                }}
-              >
-                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
-                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
-              </button>
-            )}
-          </div>
+          <SearchInput
+            value={searchTerm}
+            onChange={(value) => {
+              setSearchTerm(value);
+              setCurrentPage(1);
+            }}
+            placeholder="חיפוש מיקומים או יחידות..."
+            resultsCount={filteredLocations.length}
+            resultsLabel="מיקומים"
+          />
         </div>
         
         <div className="management-actions-compact">
@@ -305,27 +284,19 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
             <i className="fas fa-plus" style={{ fontSize: '13px' }}></i>
             <span style={{ fontSize: '13px', fontWeight: '600' }}>הוסף חדש</span>
           </button>
-          
-          {selectedIds.length > 0 && (
-            <button
-              className="btn btn-danger btn-sm"
-              onClick={handleBulkDelete}
-              disabled={isSubmitting}
-              title={`מחק ${selectedIds.length} מיקומים נבחרים`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: '0 12px'
-              }}
-            >
-              <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
-              <span style={{ fontSize: '12px', fontWeight: '500' }}>מחק ({selectedIds.length})</span>
-            </button>
-          )}
         </div>
       </div>
+
+      {/* Modern Selection Toolbar */}
+      <SelectionToolbar
+        selectedCount={selectedCount}
+        totalCount={sortedLocations.length}
+        onDelete={handleBulkDelete}
+        onClear={clearSelection}
+        onSelectAll={selectAll}
+        isDeleting={isSubmitting}
+        isVisible={selectedCount > 0}
+      />
 
       {loading ? (
         <LoadingSpinner 
@@ -339,13 +310,6 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
             <table className="unified-table">
               <thead>
                 <tr>
-                  <th className="unified-table-header unified-table-header-sticky" style={{ width: '50px' }}>
-                    <input
-                      type="checkbox"
-                      checked={paginatedItems.length > 0 && selectedIds.length === paginatedItems.length}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                    />
-                  </th>
                   <th 
                     className="unified-table-header unified-table-header-regular sortable"
                     onClick={() => handleSort('name')}
@@ -391,14 +355,12 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
               </thead>
               <tbody>
                 {paginatedItems.map((location) => (
-                  <tr key={location.id} className="unified-table-row">
-                    <td className="unified-table-cell-sticky">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(location.id)}
-                        onChange={(e) => handleSelectItem(location.id, e.target.checked)}
-                      />
-                    </td>
+                  <tr 
+                    key={location.id} 
+                    className={`unified-table-row modern-table-row ${isSelected(location.id) ? 'selected' : ''}`}
+                    onClick={(e) => toggleSelection(location.id, e)}
+                    title="לחץ לבחירה"
+                  >
                     <td className="unified-table-cell">{location.name}</td>
                     <td className="unified-table-cell">{getUnitName(location.unitId)}</td>
                     <td className="unified-table-cell">{new Date(location.createdAt).toLocaleDateString('he-IL')}</td>
@@ -406,7 +368,10 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     <td className="unified-table-cell">
                       <button
                         className="btn btn-sm btn-ghost unified-action-btn"
-                        onClick={() => openEditModal(location)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditModal(location);
+                        }}
                       >
                         עדכן
                       </button>
@@ -532,6 +497,6 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
         message={notification.message}
         type={notification.type}
       />
-    </div>
+    </>
   );
 };

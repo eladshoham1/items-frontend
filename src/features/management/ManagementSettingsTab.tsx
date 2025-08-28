@@ -70,14 +70,12 @@ const ManagementSettingsTab: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="management-container">
-        <LoadingSpinner message="טוען הגדרות..." />
-      </div>
+      <LoadingSpinner message="טוען הגדרות..." />
     );
   }
 
   return (
-    <div className="management-container">
+    <>
       {/* Compact Header with Actions */}
       <div className="management-header-compact">
         <div className="management-search-section">
@@ -260,7 +258,7 @@ const ManagementSettingsTab: React.FC = () => {
           הגדרות נוספות יתווספו בעתיד
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

@@ -6,7 +6,7 @@ import { paginate } from '../../utils';
 import { receiptService } from '../../services';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
-import { SmartPagination, TabNavigation, NotificationModal } from '../../shared/components';
+import { SmartPagination, TabNavigation, NotificationModal, SearchInput } from '../../shared/components';
 import { NotificationType } from '../../shared/components/NotificationModal';
 import ReceiptForm from './ReceiptForm';
 import PendingReceiptsList from './PendingReceiptsList';
@@ -314,48 +314,42 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
         switch (activeTab) {
             case 'signed':
                 return (
-                    <div className="management-container">
-                        {/* Compact Header with Actions */}
+                    <>
+                        {/* Compact Header with Search and Action Button */}
                         <div className="management-header-compact">
                             <div className="management-search-section">
-                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input
-                                        type="text"
-                                        className="management-search-input"
-                                        placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
-                                        value={searchTerm}
-                                        onChange={handleSearchChange}
-                                        style={{ flex: 1 }}
-                                    />
-                                    {searchTerm && (
-                                        <button
-                                            className="btn btn-ghost btn-sm"
-                                            onClick={() => handleSearchChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
-                                            title="נקה חיפוש"
-                                            style={{ 
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                gap: '4px',
-                                                padding: '0 12px',
-                                                minWidth: 'auto'
-                                            }}
-                                        >
-                                            <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
-                                            <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
-                                        </button>
-                                    )}
-                                </div>
+                                <SearchInput
+                                    value={searchTerm}
+                                    onChange={(value) => handleSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
+                                    placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+                                    resultsCount={filteredAndSortedReceipts.length}
+                                    resultsLabel="קבלות"
+                                />
                             </div>
-                            
-                            <div className="management-actions-compact">
-                                {isAdmin && (
-                                    <button className="btn btn-primary btn-sm" onClick={handleCreateNewClick}>
-                                        <i className="fas fa-plus" style={{ marginLeft: '6px' }}></i>
-                                        צור קבלה חדשה
+                            {isAdmin && (
+                                <div className="management-action-section">
+                                    <button 
+                                        onClick={handleCreateNewClick}
+                                        className="btn btn-primary unified-action-btn"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            padding: '10px 16px',
+                                            borderRadius: '8px',
+                                            border: 'none',
+                                            whiteSpace: 'nowrap',
+                                            boxShadow: '0 2px 8px rgba(99, 102, 241, 0.15)',
+                                            transition: 'all 0.2s ease',
+                                        }}
+                                    >
+                                        <i className="fas fa-plus" style={{ fontSize: '12px' }}></i>
+                                        <span>צור קבלה חדשה</span>
                                     </button>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
 
                         {paginatedReceipts.length === 0 ? (
@@ -463,21 +457,19 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                 )}
                             </>
                         )}
-                    </div>
+                    </>
                 );
 
             case 'pending':
                 return (
-                    <div className="management-container">
-                        <PendingReceiptsList
-                            pendingReceipts={userPendingReceipts}
-                            onRefresh={handlePendingReceiptsRefresh}
-                            isAdmin={isAdmin}
-                            currentUserId={userProfile?.id}
-                            signPendingReceipt={signPendingReceipt}
-                            deleteReceipt={deleteReceipt}
-                        />
-                    </div>
+                    <PendingReceiptsList
+                        pendingReceipts={userPendingReceipts}
+                        onRefresh={handlePendingReceiptsRefresh}
+                        isAdmin={isAdmin}
+                        currentUserId={userProfile?.id}
+                        signPendingReceipt={signPendingReceipt}
+                        deleteReceipt={deleteReceipt}
+                    />
                 );
 
             default:
@@ -488,12 +480,10 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
     // Check if user has a location assigned
     if (!userProfile.location) {
         return (
-            <div className="surface receipts-tab-container">
-                <div style={{ padding: '20px' }}>
-                    <div className="alert alert-warning">
-                        <h4>אין לך גישה למערכת</h4>
-                        <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
-                    </div>
+            <div style={{ padding: '20px' }}>
+                <div className="alert alert-warning">
+                    <h4>אין לך גישה למערכת</h4>
+                    <p>המשתמש שלך לא שוייך למיקום. אנא פנה למנהל המערכת כדי לשייך אותך למיקום.</p>
                 </div>
             </div>
         );

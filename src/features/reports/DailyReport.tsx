@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ServerError, SmartPagination, ErrorNotificationModal, TabNavigation, LoadingSpinner } from '../../shared/components';
+import { ServerError, SmartPagination, ErrorNotificationModal, TabNavigation, LoadingSpinner, SearchInput } from '../../shared/components';
 import { useDailyReports } from '../../hooks';
 import { getCurrentDate, paginate } from '../../utils';
 import { User } from '../../types';
 import { UI_CONFIG } from '../../config/app.config';
 import DailyReportHistory from './DailyReportHistory';
+import './DailyReport.css';
 
 interface DailyReportProps {
   userProfile: User | null;
@@ -234,18 +235,18 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
 
   // Calculate reporting percentage for all users (admin sees all, users see only their items)
   const getReportingStats = () => {
-    // Use sortedReportItems which already has the correct filtering applied
-    const filteredItems = sortedReportItems;
+    // Use the raw dailyReportData items for calculation, not filtered by search
+    const allItems = dailyReportData?.items || [];
     
-    if (filteredItems.length === 0) return { percentage: 0, reported: 0, total: 0 };
+    if (allItems.length === 0) return { percentage: 0, reported: 0, total: 0 };
     
-    const reportedCount = filteredItems.filter(item => item.isReported).length;
-    const percentage = Math.round((reportedCount / filteredItems.length) * 100);
+    const reportedCount = allItems.filter(item => item.isReported).length;
+    const percentage = Math.round((reportedCount / allItems.length) * 100);
     
     return {
       percentage,
       reported: reportedCount,
-      total: filteredItems.length
+      total: allItems.length
     };
   };
 
@@ -300,9 +301,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           size="md"
         />
         
-        <div className="management-container">
-          <LoadingSpinner message="טוען נתוני דוח יומי..." />
-        </div>
+        <LoadingSpinner message="טוען נתוני דוח יומי..." />
       </div>
     );
   }
@@ -335,266 +334,95 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       />
 
       {activeReportTab === 'current' ? (
-        <div className="management-container">
+        <div className="daily-report-container">
           {/* Handle case when no daily report exists or report has no items */}
           {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) ? (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '400px',
-              textAlign: 'center',
-              background: 'var(--color-surface)',
-              borderRadius: '12px',
-              border: '1px solid var(--color-border)',
-              padding: '40px'
-            }}>
-              <div style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '24px',
-                boxShadow: '0 8px 32px rgba(59, 130, 246, 0.3)'
-              }}>
-                <i className="fas fa-clipboard-check" style={{ 
-                  fontSize: '32px', 
-                  color: 'white'
-                }}></i>
+            <div className="daily-report-empty-state">
+              <div className="daily-report-empty-icon">
+                <i className="fas fa-clipboard-check"></i>
               </div>
-              <h3 style={{ 
-                color: 'var(--color-text)', 
-                marginBottom: '12px',
-                fontWeight: '600',
-                fontSize: '24px'
-              }}>
+              <h3 className="daily-report-empty-title">
                 אין פריטים לדיווח
               </h3>
-              <p style={{ 
-                color: 'var(--color-text-muted)', 
-                fontSize: '16px',
-                lineHeight: '1.5',
-                maxWidth: '400px'
-              }}>
+              <p className="daily-report-empty-description">
                 כרגע אין פריטים הדורשים דיווח או שהם כבר דווחו.
                 הפריטים מתעדכנים אוטומטית כאשר יש צורך בדיווח.
               </p>
             </div>
           ) : (
             <>
-              {/* Modern Progress Card */}
-              <div style={{
-                background: 'linear-gradient(135deg, var(--color-primary-light), var(--color-primary))',
-                borderRadius: '16px',
-                border: '1px solid var(--color-border)',
-                padding: '24px',
-                marginBottom: '24px',
-                backdropFilter: 'blur(10px)'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '20px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '12px',
-                      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)'
-                    }}>
-                      <i className="fas fa-chart-line" style={{ 
-                        color: 'white', 
-                        fontSize: '20px' 
-                      }}></i>
+              {/* Progress Card Section */}
+              <div className="daily-report-progress-card">
+                <div className="daily-report-progress-header">
+                  <div className="daily-report-progress-info">
+                    <div className="daily-report-progress-icon">
+                      <i className="fas fa-chart-line"></i>
                     </div>
                     <div>
-                      <h3 style={{ 
-                        color: 'var(--color-text)', 
-                        margin: '0',
-                        fontSize: '20px',
-                        fontWeight: '600'
-                      }}>
+                      <h3 className="daily-report-progress-title">
                         {isAdmin ? 'סטטוס דיווח יומי' : 'הדיווח שלי היום'}
                       </h3>
-                      <p style={{ 
-                        color: 'var(--color-text-muted)', 
-                        margin: '4px 0 0 0',
-                        fontSize: '14px'
-                      }}>
+                      <p className="daily-report-progress-date">
                         {getCurrentDate()}
                       </p>
                     </div>
                   </div>
                   
-                  <div style={{
-                    background: reportingStats.percentage === 100 ? 
-                      'linear-gradient(135deg, #10b981, #059669)' : 
-                      reportingStats.percentage >= 70 ? 
-                      'linear-gradient(135deg, #f59e0b, #d97706)' : 
-                      'linear-gradient(135deg, #ef4444, #dc2626)',
-                    borderRadius: '12px',
-                    padding: '8px 16px',
-                    color: 'white',
-                    fontWeight: '600',
-                    fontSize: '16px',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
-                  }}>
+                  <div className={`daily-report-progress-badge ${
+                    reportingStats.percentage === 100 ? 'success' :
+                    reportingStats.percentage >= 70 ? 'warning' : 'danger'
+                  }`}>
                     {reportingStats.total} / {reportingStats.reported}
                   </div>
                 </div>
                 
-                {/* Modern Progress Bar */}
-                <div style={{
-                  background: 'var(--color-border)',
-                  borderRadius: '12px',
-                  height: '12px',
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}>
-                  <div style={{
-                    width: `${reportingStats.percentage}%`,
-                    height: '100%',
-                    background: reportingStats.percentage === 100 ? 
-                      'linear-gradient(90deg, #10b981, #059669)' :
-                      reportingStats.percentage >= 70 ?
-                      'linear-gradient(90deg, #f59e0b, #d97706)' :
-                      'linear-gradient(90deg, #ef4444, #dc2626)',
-                    borderRadius: '12px',
-                    transition: 'width 0.8s ease-in-out',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      position: 'absolute',
-                      top: '0',
-                      left: '0',
-                      right: '0',
-                      height: '100%',
-                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                      animation: 'shimmer 2s infinite'
-                    }}></div>
+                <div className="daily-report-progress-bar">
+                  <div 
+                    className={`daily-report-progress-fill ${
+                      reportingStats.percentage === 100 ? 'success' :
+                      reportingStats.percentage >= 70 ? 'warning' : 'danger'
+                    }`}
+                    style={{ width: `${reportingStats.percentage}%` }}
+                  >
                   </div>
                 </div>
                 
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginTop: '16px'
-                }}>
-                  <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>
+                <div className="daily-report-progress-footer">
+                  <div className="daily-report-progress-percentage">
                     {reportingStats.percentage.toFixed(1)}% הושלם
                   </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    color: 'var(--color-text)',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}>
+                  <div className="daily-report-progress-status">
                     {reportingStats.percentage === 100 ? (
                       <>
-                        <i className="fas fa-check-circle" style={{ color: '#10b981' }}></i>
-                        <span style={{ color: '#10b981' }}>מוכן להשלמה</span>
+                        <i className="fas fa-check-circle daily-report-progress-status-icon success"></i>
+                        <span className="daily-report-progress-status-text success">מוכן להשלמה</span>
                       </>
                     ) : (
                       <>
-                        <i className="fas fa-clock" style={{ color: '#f59e0b' }}></i>
-                        <span>נותרו {reportingStats.total - reportingStats.reported} פריטים</span>
+                        <i className="fas fa-clock daily-report-progress-status-icon warning"></i>
+                        <span className="daily-report-progress-status-text">נותרו {reportingStats.total - reportingStats.reported} פריטים</span>
                       </>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* Modern Search Bar */}
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  background: 'var(--color-surface)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--color-border)',
-                  padding: '4px',
-                  transition: 'all 0.2s ease'
-                }}>
-                  <i className="fas fa-search" style={{
-                    color: 'var(--color-text-muted)',
-                    paddingLeft: '12px'
-                  }}></i>
-                  <input
-                    type="text"
-                    placeholder="חיפוש לפי שם פריט, מספר צ', חתימה, מיקום, מי דיווח או הערות..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      outline: 'none',
-                      color: 'var(--color-text)',
-                      fontSize: '14px',
-                      flex: 1,
-                      padding: '12px 8px',
-                      direction: 'rtl'
-                    }}
-                  />
-                  {searchTerm && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchTerm('');
-                        setCurrentPage(1);
-                      }}
-                      title="נקה חיפוש"
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--color-text-muted)',
-                        cursor: 'pointer',
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.target as HTMLButtonElement).style.background = 'var(--color-surface-hover)';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.target as HTMLButtonElement).style.background = 'none';
-                      }}
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
-                </div>
-                {searchTerm && (
-                  <div style={{
-                    color: 'var(--color-text-muted)',
-                    fontSize: '14px',
-                    marginTop: '8px'
-                  }}>
-                    נמצאו {sortedReportItems.length} תוצאות עבור "{searchTerm}"
-                  </div>
-                )}
-              </div>
+              {/* Search Input */}
+              <SearchInput
+                value={searchTerm}
+                onChange={(value) => {
+                  setSearchTerm(value);
+                  setCurrentPage(1);
+                }}
+                placeholder="חיפוש לפי שם פריט, מספר צ', חתימה, מיקום, מי דיווח או הערות..."
+                resultsCount={sortedReportItems.length}
+                resultsLabel="תוצאות"
+              />
 
-              {/* Modern Table */}
-              <div className="unified-table-container">
-                <div style={{ overflowX: 'auto' }}>
+              {/* Table Section */}
+              <div className="daily-report-table-section">
+                <div className="unified-table-container">
+                  <div style={{ overflowX: 'auto' }}>
                   <table className="unified-table">
                     <thead>
                       <tr>
@@ -711,16 +539,18 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             {item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '-'}
                           </td>
                           <td className="unified-table-cell">
-                            <input
-                              type="checkbox"
-                              checked={item.isReported || false}
-                              onChange={() => handleCheckboxChange(item.id)}
-                              style={{
-                                accentColor: '#3b82f6',
-                                cursor: 'pointer',
-                                transform: 'scale(1.2)'
-                              }}
-                            />
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={item.isReported || false}
+                                onChange={() => handleCheckboxChange(item.id)}
+                                style={{
+                                  accentColor: '#3b82f6',
+                                  cursor: 'pointer',
+                                  transform: 'scale(1.2)'
+                                }}
+                              />
+                            </div>
                           </td>
                           <td className="unified-table-cell">
                             <input
@@ -752,12 +582,13 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 </div>
               </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
+                <div className="daily-report-pagination">
                   <SmartPagination
                     currentPage={currentPage}
                     totalPages={totalPages}
@@ -766,128 +597,64 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                 </div>
               )}
 
-              {/* Action Buttons */}
+              {/* Action Buttons Section */}
               {sortedReportItems.length > 0 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginTop: '24px',
-                  padding: '20px',
-                  background: 'var(--color-surface)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--color-border)'
-                }}>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <button 
-                      onClick={handleSubmitReport}
-                      style={{
-                        background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '12px 24px',
-                        color: 'white',
-                        fontWeight: '600',
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)'
-                      }}
-                    >
-                      <i className="fas fa-save" style={{ marginLeft: '8px' }}></i>
-                      שמור דיווח
-                    </button>
-                    
-                    {isAdmin && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <button 
-                          onClick={handleCompleteReport}
-                          disabled={completing || !allItemsReported}
-                          title={!allItemsReported ? "לא ניתן להשלים דוח כאשר יש פריטים שלא דווחו" : "השלם מחזור דיווח נוכחי"}
-                          style={{
-                            background: completing || !allItemsReported ? 
-                              'rgba(255, 255, 255, 0.1)' : 
-                              'linear-gradient(135deg, #10b981, #059669)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            padding: '12px 24px',
-                            color: 'white',
-                            fontWeight: '600',
-                            fontSize: '14px',
-                            cursor: completing || !allItemsReported ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2s ease',
-                            boxShadow: completing || !allItemsReported ? 'none' : '0 4px 16px rgba(16, 185, 129, 0.3)'
-                          }}
-                        >
-                          {completing ? (
-                            <>
-                              <i className="fas fa-spinner fa-spin" style={{ marginLeft: '8px' }}></i>
-                              מושלם...
-                            </>
-                          ) : (
-                            <>
-                              <i className="fas fa-check-circle" style={{ marginLeft: '8px' }}></i>
-                              השלם מחזור דיווח
-                            </>
+                <div className="daily-report-actions-section">
+                  <div className="daily-report-actions">
+                    <div className="daily-report-actions-buttons">
+                      <button 
+                        onClick={handleSubmitReport}
+                        className="daily-report-btn daily-report-btn-primary"
+                      >
+                        <i className="fas fa-save"></i>
+                        שמור דיווח
+                      </button>
+                      
+                      {isAdmin && (
+                        <div className="daily-report-admin-controls">
+                          <button 
+                            onClick={handleCompleteReport}
+                            disabled={completing || !allItemsReported}
+                            title={!allItemsReported ? "לא ניתן להשלים דוח כאשר יש פריטים שלא דווחו" : "השלם מחזור דיווח נוכחי"}
+                            className={`daily-report-btn ${
+                              completing || !allItemsReported ? 'daily-report-btn-disabled' : 'daily-report-btn-success'
+                            }`}
+                          >
+                            {completing ? (
+                              <>
+                                <i className="fas fa-spinner fa-spin"></i>
+                                מושלם...
+                              </>
+                            ) : (
+                              <>
+                                <i className="fas fa-check-circle"></i>
+                                השלם מחזור דיווח
+                              </>
+                            )}
+                          </button>
+                          {!allItemsReported && (
+                            <div className="daily-report-warning">
+                              <i className="fas fa-exclamation-triangle"></i>
+                              יש לדווח על כל הפריטים לפני השלמת המחזור
+                            </div>
                           )}
-                        </button>
-                        {!allItemsReported && (
-                          <div style={{
-                            color: '#f59e0b',
-                            fontSize: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}>
-                            <i className="fas fa-exclamation-triangle"></i>
-                            יש לדווח על כל הפריטים לפני השלמת המחזור
-                          </div>
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Empty State */}
+              {/* Empty Search State */}
               {sortedReportItems.length === 0 && searchTerm && (
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minHeight: '300px',
-                  textAlign: 'center',
-                  background: 'var(--color-surface)',
-                  borderRadius: '12px',
-                  border: '1px solid var(--color-border)',
-                  padding: '40px'
-                }}>
-                  <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #6b7280, #4b5563)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '24px'
-                  }}>
-                    <i className="fas fa-search" style={{ fontSize: '32px', color: 'white' }}></i>
+                <div className="daily-report-empty-state">
+                  <div className="daily-report-empty-icon">
+                    <i className="fas fa-search"></i>
                   </div>
-                  <h3 style={{ 
-                    color: 'var(--color-text)', 
-                    marginBottom: '12px',
-                    fontWeight: '600',
-                    fontSize: '24px'
-                  }}>
+                  <h3 className="daily-report-empty-title">
                     לא נמצאו תוצאות
                   </h3>
-                  <p style={{ 
-                    color: 'var(--color-text-muted)', 
-                    fontSize: '16px',
-                    lineHeight: '1.5'
-                  }}>
+                  <p className="daily-report-empty-description">
                     לא נמצאו פריטים התואמים לחיפוש "{searchTerm}"
                   </p>
                 </div>

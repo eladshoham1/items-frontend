@@ -1,5 +1,6 @@
 /* Modern Component Styles - Unified Design System */
 @import './unified-table.css';
+@import './modern-table-selection.css';
 
 /* ====================
    LAYOUT & CONTAINERS
@@ -767,26 +768,26 @@ textarea.form-control {
   border-bottom: none;
 }
 
-/* Enhanced Management Table Styles - Compact & Professional */
+/* Enhanced Management Table Styles - Clean Dashboard Style */
 .management-container {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  margin-bottom: var(--spacing-xl);
-  border: 1px solid var(--color-border);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+  margin-bottom: 0;
 }
 
-/* Compact Header Design */
+/* Clean Header Design */
 .management-header-compact {
-  padding: 16px 20px;
-  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-table-header) 100%);
-  border-bottom: 1px solid var(--color-border);
+  padding: 0;
+  background: transparent;
+  border: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  margin-bottom: 32px;
 }
 
 .management-search-section {
@@ -886,7 +887,8 @@ textarea.form-control {
   .management-header-compact {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 16px;
+    margin-bottom: 24px;
   }
   
   .management-search-section {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner, NotificationModal } from '../../shared/components';
+import { Modal, ConflictErrorModal, SmartPagination, LoadingSpinner, NotificationModal, SelectionToolbar, SearchInput } from '../../shared/components';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import { NotificationType } from '../../shared/components/NotificationModal';
+import { useModernTableSelection } from '../../hooks';
 
 interface BaseEntity {
   id: string;
@@ -34,7 +35,6 @@ export function ManagementTable<T extends BaseEntity>({
 }: ManagementTableProps<T>) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<T | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [newItemName, setNewItemName] = useState('');
@@ -103,6 +103,20 @@ export function ManagementTable<T extends BaseEntity>({
     currentPage,
     UI_CONFIG.TABLE_PAGE_SIZE
   );
+
+  // Modern table selection
+  const {
+    selectedIds,
+    toggleSelection,
+    clearSelection,
+    selectAll,
+    hasSelection
+  } = useModernTableSelection({
+    items: sortedItems,
+    onSelectionChange: (ids) => {
+      // Optional: Handle selection changes
+    }
+  });
 
   const handleSort = (key: keyof BaseEntity) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -179,7 +193,7 @@ export function ManagementTable<T extends BaseEntity>({
     try {
       const result = await onDelete(selectedIds);
       if (result.success) {
-        setSelectedIds([]);
+        clearSelection();
       } else {
         setNotification({
           isOpen: true,
@@ -196,10 +210,6 @@ export function ManagementTable<T extends BaseEntity>({
     }
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    setSelectedIds(checked ? paginatedItems.map(item => item.id) : []);
-  };
-
   const openEditModal = (item: T) => {
     setEditingItem(item);
     setEditItemName(item.name);
@@ -207,9 +217,7 @@ export function ManagementTable<T extends BaseEntity>({
 
   if (loading) {
     return (
-      <div className="management-container">
-        <LoadingSpinner message={`טוען ${title}...`} />
-      </div>
+      <LoadingSpinner message={`טוען ${title}...`} />
     );
   }
 
@@ -225,44 +233,20 @@ export function ManagementTable<T extends BaseEntity>({
   }
 
   return (
-    <div className="management-container">
+    <>
       {/* Compact Header with Actions */}
       <div className="management-header-compact">
         <div className="management-search-section">
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="text"
-              className="management-search-input"
-              placeholder={`חיפוש ${title}...`}
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              style={{ flex: 1 }}
-            />
-            {searchTerm && (
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setCurrentPage(1);
-                }}
-                title="נקה חיפוש"
-                style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '4px',
-                  padding: '0 12px',
-                  minWidth: 'auto'
-                }}
-              >
-                <i className="fas fa-times" style={{ fontSize: '12px' }}></i>
-                <span style={{ fontSize: '12px', fontWeight: '500' }}>נקה</span>
-              </button>
-            )}
-          </div>
+          <SearchInput
+            value={searchTerm}
+            onChange={(value) => {
+              setSearchTerm(value);
+              setCurrentPage(1);
+            }}
+            placeholder={`חיפוש ${title}...`}
+            resultsCount={filteredItems.length}
+            resultsLabel={title}
+          />
         </div>
         
         <div className="management-actions-compact">
@@ -282,27 +266,20 @@ export function ManagementTable<T extends BaseEntity>({
             <i className="fas fa-plus" style={{ fontSize: '13px' }}></i>
             <span style={{ fontSize: '13px', fontWeight: '600' }}>הוסף חדש</span>
           </button>
-          
-          {selectedIds.length > 0 && (
-            <button
-              className="btn btn-danger btn-sm"
-              onClick={handleDelete}
-              disabled={isSubmitting}
-              title={`מחק ${selectedIds.length} פריטים נבחרים`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px',
-                padding: '0 12px'
-              }}
-            >
-              <i className="fas fa-trash" style={{ fontSize: '12px' }}></i>
-              <span style={{ fontSize: '12px', fontWeight: '500' }}>מחק ({selectedIds.length})</span>
-            </button>
-          )}
         </div>
       </div>
+
+      {/* Modern Selection Toolbar */}
+      <SelectionToolbar
+        selectedCount={selectedIds.length}
+        totalCount={paginatedItems.length}
+        onDelete={selectedIds.length > 0 ? handleDelete : undefined}
+        onClear={clearSelection}
+        onSelectAll={selectAll}
+        isVisible={hasSelection}
+        deleteLabel={`מחק ${title}`}
+        isDeleting={isSubmitting}
+      />
 
       {loading ? (
         <LoadingSpinner 
@@ -316,14 +293,6 @@ export function ManagementTable<T extends BaseEntity>({
             <table className="unified-table">
               <thead>
                 <tr>
-                  <th className="unified-table-header unified-table-header-sticky">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.length === paginatedItems.length && paginatedItems.length > 0}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      title="בחר הכל"
-                    />
-                  </th>
                   <th 
                     className="unified-table-header unified-table-header-regular"
                     onClick={() => handleSort('name')}
@@ -359,28 +328,28 @@ export function ManagementTable<T extends BaseEntity>({
               </thead>
               <tbody>
                 {paginatedItems.map((item, index) => (
-                  <tr key={item.id} className="unified-table-row">
-                    <td className={`unified-table-cell-sticky ${index % 2 === 0 ? 'even' : 'odd'}`}>
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedIds.includes(item.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedIds([...selectedIds, item.id]);
-                          } else {
-                            setSelectedIds(selectedIds.filter(id => id !== item.id));
-                          }
-                        }}
-                      />
-                    </td>
+                  <tr 
+                    key={item.id} 
+                    className={`unified-table-row selectable ${selectedIds.includes(item.id) ? 'selected' : ''}`}
+                    onClick={(e) => {
+                      // Don't trigger selection when clicking on action buttons
+                      if ((e.target as HTMLElement).closest('.unified-action-btn')) {
+                        return;
+                      }
+                      toggleSelection(item.id, e, index);
+                    }}
+                    title="לחץ לבחירה • Ctrl+לחץ לבחירה מרובה"
+                  >
                     <td className="unified-table-cell">{item.name}</td>
                     <td className="unified-table-cell">{new Date(item.createdAt).toLocaleDateString('he-IL')}</td>
                     <td className="unified-table-cell">{new Date(item.updatedAt).toLocaleDateString('he-IL')}</td>
                     <td className="unified-table-cell">
                       <button
                         className="unified-action-btn unified-action-btn-primary"
-                        onClick={() => openEditModal(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditModal(item);
+                        }}
                         title="עריכה"
                       >
                         עדכן
@@ -521,6 +490,6 @@ export function ManagementTable<T extends BaseEntity>({
         message={notification.message}
         type={notification.type}
       />
-    </div>
+    </>
   );
 }
