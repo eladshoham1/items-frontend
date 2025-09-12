@@ -49,7 +49,7 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
             <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>מנפיק:</label>
             <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.createdBy?.name || 'משתמש לא ידוע'}</div>
             <small style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              {receipt.createdBy?.personalNumber && `צ': ${receipt.createdBy.personalNumber}`}
+              {receipt.createdBy?.personalNumber && `מספר אישי: ${receipt.createdBy.personalNumber}`}
             </small>
           </div>
           
@@ -57,7 +57,7 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
             <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>מקבל:</label>
             <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.signedBy?.name || 'משתמש לא ידוע'}</div>
             <small style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-              {receipt.signedBy?.personalNumber && `צ': ${receipt.signedBy.personalNumber}`}
+              {receipt.signedBy?.personalNumber && `מספר אישי: ${receipt.signedBy.personalNumber}`}
             </small>
           </div>
           
