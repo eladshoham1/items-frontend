@@ -1359,3 +1359,58 @@
     padding: 10px 4px;
   }
 }
+
+/* User Dashboard Summary Styles */
+.dashboard-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 12px 16px;
+  background: var(--color-surface-variant, #2d2d2d);
+  border: 1px solid var(--color-border, #404040);
+  border-radius: 8px;
+  min-width: 120px;
+}
+
+.dashboard-summary-number {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.dashboard-summary-label {
+  font-size: 12px;
+  color: var(--color-text-muted, #8e8e93);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dashboard-summary-total {
+  color: var(--color-primary, #3b82f6);
+}
+
+.dashboard-summary-signed {
+  color: var(--color-success, #10b981);
+}
+
+.dashboard-summary-pending {
+  color: var(--color-warning, #f59e0b);
+}
+
+@media (max-width: 768px) {
+  .dashboard-summary-item {
+    min-width: 100px;
+    padding: 10px 12px;
+  }
+  
+  .dashboard-summary-number {
+    font-size: 20px;
+  }
+  
+  .dashboard-summary-label {
+    font-size: 11px;
+  }
+}

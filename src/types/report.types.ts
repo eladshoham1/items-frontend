@@ -281,3 +281,60 @@ export interface UnitDashboardResponse {
   tableStructure: UnitDashboardTableStructure;
   metadata: UnitDashboardMetadata;
 }
+
+// User Dashboard Types (for regular users)
+export interface UserDashboardItem {
+  id: string;                    // Receipt ID
+  itemId: string;               // Item ID
+  itemName: string;             // Item name (e.g., "M16")
+  itemIdNumber?: string | null; // Physical item serial number
+  status: 'signed' | 'pending'; // Receipt status
+  createdAt: string;            // ISO date string
+  signedAt?: string | null;     // ISO date string (only if signed)
+  signature?: string | null;    // Base64 signature (only if signed)
+  requiresReporting?: boolean;  // Whether this item requires reporting
+  createdBy: {                  // Who created the receipt
+    id: string;
+    name: string;
+    rank: string;
+  };
+}
+
+export interface UserDashboardSummary {
+  totalSigned: number;
+  totalPending: number;
+  totalItems: number;
+}
+
+export interface UserDashboardData {
+  user: {
+    id: string;
+    name: string;
+    personalNumber: number;
+    rank: string;
+    location: string;
+    unit: string;
+  };
+  summary: UserDashboardSummary;
+  items: UserDashboardItem[];
+}
+
+export interface UserDashboardResponse {
+  success: true;
+  data: UserDashboardData;
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+}
+
+export interface UserDashboardQueryParams {
+  page?: number;
+  limit?: number;
+  status?: 'signed' | 'pending' | 'all';
+  sortBy?: 'itemName' | 'createdAt' | 'status';
+  sortOrder?: 'asc' | 'desc';
+  search?: string;
+}

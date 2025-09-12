@@ -4,7 +4,8 @@ import {
   CurrentReportingStatusResponse,
   UpdateReportItemsRequest,
   ReportCompletionHistoryResponse,
-  UnitDashboardResponse
+  UnitDashboardResponse,
+  UserDashboardResponse
 } from '../types';
 
 export const reportService = {
@@ -41,5 +42,10 @@ export const reportService = {
   // Get dashboard data for specific unit (admin only)
   async getDashboardByUnit(unitId: string): Promise<UnitDashboardResponse> {
     return apiService.get<UnitDashboardResponse>(`/reports/dashboard/${unitId}`);
+  },
+
+  // Get user dashboard data (regular users only)
+  async getUserDashboard(): Promise<UserDashboardResponse> {
+    return apiService.get<UserDashboardResponse>('/reports/dashboard');
   },
 };

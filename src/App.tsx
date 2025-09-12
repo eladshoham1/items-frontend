@@ -172,7 +172,7 @@ const App: React.FC = () => {
     if (isAdmin) {
       return ['dashboard', 'dailyReport', 'receipts', 'users', 'items', 'management'];
     } else {
-      return ['dailyReport', 'receipts'];
+      return ['dashboard', 'dailyReport', 'receipts'];
     }
   };
 
@@ -186,7 +186,7 @@ const App: React.FC = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return isAdmin ? <Dashboard /> : null;
+        return <Dashboard />;
       case 'dailyReport':
         return <DailyReport userProfile={userProfile} isAdmin={isAdmin} />;
       case 'receipts':
