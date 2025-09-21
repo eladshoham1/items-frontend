@@ -31,6 +31,19 @@ export interface Item {
   }[];
   // Note: isAvailable is computed server-side and may not always be present
   isAvailable?: boolean;
+  receiptInfo?: {
+    receiptId: string;
+    isSigned: boolean;
+    signedBy: {
+      name: string;
+      location: {
+        name: string;
+        unit: {
+          name: string;
+        };
+      };
+    };
+  };
 }
 
 export type CreateItemRequest = {

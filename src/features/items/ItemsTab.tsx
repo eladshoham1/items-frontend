@@ -81,17 +81,24 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     setSortConfig({ key, direction });
   };
 
+  // Helper function to get receipt location
+  const getReceiptLocation = (item: Item) => {
+    return item.receiptInfo?.signedBy?.location?.name || '—';
+  };
+
   // Filter and sort items based on search term and sort config
   const filteredAndSortedItems = (() => {
     let filtered = items.filter(item => {
       const statusText = !item.isOperational ? 'תקול' : (item.isAvailable ?? false) ? 'זמין' : 'לא זמין';
       const locationText = item.allocatedLocation?.name || 'לא מוקצה';
+      const receiptLocationText = getReceiptLocation(item);
       
       return (item.itemName?.name && item.itemName.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
         statusText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        locationText.toLowerCase().includes(searchTerm.toLowerCase());
+        locationText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        receiptLocationText.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
     if (sortConfig) {
@@ -111,6 +118,10 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
           case 'allocatedLocation':
             aValue = a.allocatedLocation?.name || '';
             bValue = b.allocatedLocation?.name || '';
+            break;
+          case 'receiptLocation':
+            aValue = getReceiptLocation(a) || '';
+            bValue = getReceiptLocation(b) || '';
             break;
           case 'status':
             // Status priority: תקול (0) < לא זמין (1) < זמין (2)
@@ -260,7 +271,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
           <SearchInput
             value={searchTerm}
             onChange={(value) => handleSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
-            placeholder="חפש פריטים לפי שם, מספר צ', הקצאה או הערה..."
+            placeholder="חפש פריטים לפי שם, מספר צ', הקצאה, מיקום או הערה..."
             resultsCount={filteredAndSortedItems.length}
             resultsLabel="פריטים"
           />
@@ -323,6 +334,16 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                 </th>
                 <th 
                   className="unified-table-header unified-table-header-regular"
+                  onClick={() => handleSort('receiptLocation')}
+                  title="לחץ למיון לפי מיקום"
+                  data-sorted={sortConfig?.key === 'receiptLocation' ? 'true' : 'false'}
+                >
+                  <div className="d-flex align-items-center">
+                    <span>מיקום</span>
+                  </div>
+                </th>
+                <th 
+                  className="unified-table-header unified-table-header-regular"
                   onClick={() => handleSort('status')}
                   title="לחץ למיון לפי סטטוס"
                   data-sorted={sortConfig?.key === 'status' ? 'true' : 'false'}
@@ -355,6 +376,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   <td className="unified-table-cell">{item.itemName?.name || 'אין תערכה'}</td>
                   <td className="unified-table-cell">{item.idNumber || 'לא זמין'}</td>
                   <td className="unified-table-cell">{item.allocatedLocation?.name || 'לא מוקצה'}</td>
+                  <td className="unified-table-cell">{getReceiptLocation(item)}</td>
                   <td className="unified-table-cell">
                     <span 
                       className={`unified-badge ${

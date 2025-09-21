@@ -98,11 +98,11 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       filteredItems = filteredItems.filter(item => 
         (item.itemName?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
         (item.idNumber?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
-        (item.signedByUserName?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
-        (item.location?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.signedBy?.name?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
+        (item.signedBy?.location?.name?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
         (item.reportedBy?.name?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
         (item.reportedBy?.rank?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
-        (item.notes?.toLowerCase().normalize('NFC') || '').includes(searchLower)
+        (item.reportNotes?.toLowerCase().normalize('NFC') || '').includes(searchLower)
       );
     }
 
@@ -134,12 +134,12 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           bValue = b.reportedBy?.name || '';
           break;
         case 'signedBy':
-          aValue = a.signedByUserName || '';
-          bValue = b.signedByUserName || '';
+          aValue = a.signedBy?.name || '';
+          bValue = b.signedBy?.name || '';
           break;
         case 'location':
-          aValue = a.location || '';
-          bValue = b.location || '';
+          aValue = a.signedBy?.location?.name || '';
+          bValue = b.signedBy?.location?.name || '';
           break;
         default:
           return 0;
@@ -188,8 +188,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
     const reportItems = sortedReportItems
       .filter(item => item.isReported) // Only send reported items
       .map(item => ({
-        itemId: item.itemId,
-        notes: item.notes || undefined,
+        itemId: item.id, // Use item.id as itemId for the API
+        notes: item.reportNotes || undefined,
       }));
 
     const success = await updateDailyReport('', { reportItems }); // ID not needed in new API
@@ -212,8 +212,8 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
       const reportItems = sortedReportItems
         .filter(item => item.isReported) // Only send reported items
         .map(item => ({
-          itemId: item.itemId,
-          notes: item.notes || undefined,
+          itemId: item.id, // Use item.id as itemId for the API
+          notes: item.reportNotes || undefined,
         }));
 
       await updateDailyReport('', { reportItems }); // Save current state
@@ -524,10 +524,10 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             {item.idNumber || '-'}
                           </td>
                           <td className="unified-table-cell">
-                            {item.signedByUserName || '-'}
+                            {item.signedBy?.name || '-'}
                           </td>
                           <td className="unified-table-cell">
-                            {item.location || '-'}
+                            {item.signedBy?.location?.name || '-'}
                           </td>
                           <td className="unified-table-cell">
                             {item.reportedAt ? (() => {
@@ -555,7 +555,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                           <td className="unified-table-cell">
                             <input
                               type="text"
-                              value={item.notes || ''}
+                              value={item.reportNotes || ''}
                               onChange={(e) => updateItemNotes(item.id, e.target.value)}
                               placeholder="הערות..."
                               style={{

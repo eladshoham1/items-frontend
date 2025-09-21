@@ -134,21 +134,9 @@ export const useDailyReports = () => {
 
   // Map new structure to legacy structure
   const dailyReportData = currentStatus ? {
-    report: {
-      id: 'current',
-      createdBy: { id: '', name: '', rank: '' },
-      totalItems: currentStatus.totalItems,
-      reportedItems: currentStatus.reportedItems,
-      isCompleted: false, // New API doesn't track completion status the same way
-      createdAt: new Date().toISOString()
-    },
-    items: currentStatus.items.map(item => ({
-      ...item,
-      itemId: item.id,
-      createdAt: new Date().toISOString()
-    })),
-    userLocation: currentStatus.userLocation || '',
-    isAdmin: currentStatus.isAdmin
+    status: currentStatus.status,
+    items: currentStatus.items,
+    userInfo: currentStatus.userInfo
   } : null;
 
   const createDailyReport = async (): Promise<boolean> => {

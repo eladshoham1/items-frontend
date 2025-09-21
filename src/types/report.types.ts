@@ -1,6 +1,44 @@
 // New Simplified Report Types - matching new server controller
 
-// Individual report item data structure
+// Individual report item data structure for daily reports
+export interface DailyReportItem {
+  id: string;
+  idNumber?: string;
+  itemName: string;
+  note?: string;
+  isReported: boolean;
+  reportedAt?: string | null;
+  reportNotes?: string | null;
+  reportedBy?: {
+    id: string;
+    name: string;
+    rank: string;
+  } | null;
+  allocatedLocation?: {
+    id: string;
+    name: string;
+    unit: {
+      name: string;
+    };
+  } | null;
+  signedBy?: {
+    id: string;
+    name: string;
+    rank: string;
+    location: {
+      name: string;
+      unit: {
+        name: string;
+      };
+    };
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+  // Legacy field for compatibility (will be derived from signedBy)
+  notes?: string | null;
+}
+
+// Individual report item data structure (legacy support)
 export interface ReportItemData {
   id: string; // This is the item ID, not report item ID
   itemName: string;
@@ -19,11 +57,26 @@ export interface ReportItemData {
 
 // Current reporting status response
 export interface CurrentReportingStatusResponse {
-  items: ReportItemData[];
-  totalItems: number;
-  reportedItems: number;
-  userLocation?: string;
-  isAdmin: boolean;
+  status: {
+    totalItems: number;
+    reportedItems: number;
+    pendingItems: number;
+    completionPercentage: number;
+    isReadyForCompletion: boolean;
+  };
+  items: DailyReportItem[];
+  userInfo: {
+    id: string;
+    isAdmin: boolean;
+    location: {
+      id: string;
+      name: string;
+      unit: {
+        id: string;
+        name: string;
+      };
+    };
+  };
 }
 
 // Request to update report items
@@ -192,20 +245,39 @@ export interface DashboardStatistics {
 // Legacy types - keeping for backward compatibility
 export interface DailyReportItem {
   id: string;
-  itemId: string;
-  itemName: string;
   idNumber?: string;
-  location: string;
-  signedByUserName?: string;
+  itemName: string;
+  note?: string;
   isReported: boolean;
-  reportedAt?: string;
+  reportedAt?: string | null;
+  reportNotes?: string | null;
   reportedBy?: {
     id: string;
     name: string;
     rank: string;
-  };
-  notes?: string | null;
+  } | null;
+  allocatedLocation?: {
+    id: string;
+    name: string;
+    unit: {
+      name: string;
+    };
+  } | null;
+  signedBy?: {
+    id: string;
+    name: string;
+    rank: string;
+    location: {
+      name: string;
+      unit: {
+        name: string;
+      };
+    };
+  } | null;
   createdAt: string;
+  updatedAt: string;
+  // Legacy field for compatibility (will be derived from signedBy)
+  notes?: string | null;
 }
 
 export interface DailyReport {
@@ -222,10 +294,26 @@ export interface DailyReport {
 }
 
 export interface DailyReportResponse {
-  report: DailyReport;
+  status: {
+    totalItems: number;
+    reportedItems: number;
+    pendingItems: number;
+    completionPercentage: number;
+    isReadyForCompletion: boolean;
+  };
   items: DailyReportItem[];
-  userLocation: string;
-  isAdmin: boolean;
+  userInfo: {
+    id: string;
+    isAdmin: boolean;
+    location: {
+      id: string;
+      name: string;
+      unit: {
+        id: string;
+        name: string;
+      };
+    };
+  };
 }
 
 export interface CreateDailyReportRequest {
@@ -234,7 +322,6 @@ export interface CreateDailyReportRequest {
 
 export interface UpdateDailyReportItemRequest {
   itemId: string;
-  isReported: boolean;
   notes?: string;
 }
 
