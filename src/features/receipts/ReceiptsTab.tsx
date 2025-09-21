@@ -111,6 +111,9 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
 
     // Helper: get unit name (prefer receiver, fallback to issuer)
     const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
+    
+    // Helper: get location name (prefer receiver, fallback to issuer)
+    const getLocation = (r: Receipt) => r.signedBy?.location?.name || r.createdBy?.location?.name || '—';
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -125,9 +128,21 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
             const issuer = (r.createdBy?.name?.toLowerCase() || '').normalize('NFC');
             const receiver = (r.signedBy?.name?.toLowerCase() || '').normalize('NFC');
             const unit = getUnit(r).toLowerCase().normalize('NFC');
+            const location = getLocation(r).toLowerCase().normalize('NFC');
             const count = (r.receiptItems?.length || 0).toString();
             const dateStr = timestampToDate(r.updatedAt.toString()).toLowerCase().normalize('NFC');
-            return issuer.includes(term) || receiver.includes(term) || unit.includes(term) || count.includes(term) || dateStr.includes(term);
+            const note = (r.note?.toLowerCase() || '').normalize('NFC');
+            
+            // Search in receipt items (item names and ID numbers)
+            const itemsMatch = r.receiptItems?.some(receiptItem => {
+                const itemName = (receiptItem.item?.itemName?.name?.toLowerCase() || '').normalize('NFC');
+                const itemIdNumber = (receiptItem.item?.idNumber?.toLowerCase() || '').normalize('NFC');
+                return itemName.includes(term) || itemIdNumber.includes(term);
+            }) || false;
+            
+            return issuer.includes(term) || receiver.includes(term) || unit.includes(term) || 
+                   location.includes(term) || count.includes(term) || dateStr.includes(term) || 
+                   note.includes(term) || itemsMatch;
         });
 
         if (sortConfig) {
@@ -147,9 +162,17 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                         aVal = getUnit(a) || '';
                         bVal = getUnit(b) || '';
                         break;
+                    case 'location':
+                        aVal = getLocation(a) || '';
+                        bVal = getLocation(b) || '';
+                        break;
                     case 'itemCount':
                         aVal = a.receiptItems?.length || 0;
                         bVal = b.receiptItems?.length || 0;
+                        break;
+                    case 'note':
+                        aVal = a.note || '';
+                        bVal = b.note || '';
                         break;
                     case 'updatedAt':
                         aVal = new Date(a.updatedAt).getTime();
@@ -321,7 +344,7 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                 <SearchInput
                                     value={searchTerm}
                                     onChange={(value) => handleSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
-                                    placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+                                    placeholder="חפש לפי מנפיק, מקבל, יחידה, מיקום, פריטים, הערה או תאריך..."
                                     resultsCount={filteredAndSortedReceipts.length}
                                     resultsLabel="קבלות"
                                 />
@@ -379,9 +402,19 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                                         <span>יחידה</span>
                                                     </div>
                                                 </th>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('location')} data-sorted={sortConfig?.key === 'location'}>
+                                                    <div className="d-flex align-items-center">
+                                                        <span>מיקום</span>
+                                                    </div>
+                                                </th>
                                                 <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
                                                     <div className="d-flex align-items-center">
                                                         <span>כמות פריטים</span>
+                                                    </div>
+                                                </th>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('note')} data-sorted={sortConfig?.key === 'note'}>
+                                                    <div className="d-flex align-items-center">
+                                                        <span>הערה</span>
                                                     </div>
                                                 </th>
                                                 <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
@@ -398,7 +431,27 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
                                                 <td className="unified-table-cell">{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
                                                 <td className="unified-table-cell">{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
                                                 <td className="unified-table-cell">{getUnit(receipt)}</td>
+                                                <td className="unified-table-cell">{getLocation(receipt)}</td>
                                                 <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
+                                                <td className="unified-table-cell" style={{ maxWidth: '200px' }}>
+                                                    {receipt.note ? (
+                                                        <span 
+                                                            title={receipt.note}
+                                                            style={{ 
+                                                                display: 'block',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                whiteSpace: 'nowrap'
+                                                            }}
+                                                        >
+                                                            {receipt.note}
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ color: 'rgba(255, 255, 255, 0.4)', fontStyle: 'italic' }}>
+                                                            ללא הערה
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td className="unified-table-cell">{timestampToDate(receipt.updatedAt.toString())}</td>
                                                 <td className="unified-table-cell">
                                                     <div className="action-buttons" onClick={(e) => e.stopPropagation()}>

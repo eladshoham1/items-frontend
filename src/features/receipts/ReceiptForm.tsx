@@ -410,6 +410,8 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
   const { availableItems: serverAvailableItems, loading: itemsLoading, error: itemsError } = useAvailableItems();
   const { updateReceipt, receipts } = useReceipts();
   const [selectedUserId, setSelectedUserId] = useState<string>(originalReceipt?.signedById || '');
+  const [note, setNote] = useState<string>(originalReceipt?.note || '');
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
 
   // Item selection state
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>(
@@ -573,6 +575,27 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
       setSelectedQuantity(1);
     }
   }, [selectedItem, maxAvailableQuantity]);
+
+  // Track changes for update mode
+  React.useEffect(() => {
+    if (!isUpdateMode || !originalReceipt) {
+      setHasChanges(false);
+      return;
+    }
+
+    // Check if any field has changed
+    const userChanged = selectedUserId !== originalReceipt.signedById;
+    const noteChanged = (note.trim() || null) !== (originalReceipt.note || null);
+    
+    // Check if items changed
+    const originalItems = originalReceipt.receiptItems?.map(item => item.itemId) || [];
+    const currentItems = receiptItems.map(item => item.id);
+    const itemsChanged = originalItems.length !== currentItems.length || 
+      !originalItems.every(itemId => currentItems.includes(itemId)) ||
+      !currentItems.every(itemId => originalItems.includes(itemId));
+
+    setHasChanges(userChanged || noteChanged || itemsChanged);
+  }, [selectedUserId, note, receiptItems, isUpdateMode, originalReceipt]);
 
   // Add item directly to receipt (used when clicking from dropdown)
   const addItemDirectly = (itemToAdd: AvailableItemForForm, quantity: number = 1) => {
@@ -753,16 +776,48 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
       });
 
       if (isUpdateMode && originalReceipt) {
-        // Update existing receipt
-        await updateReceipt(originalReceipt.id, {
-          signedById: selectedUserId,
-          items: serverItems,
-        });
+        // Only send attributes that have changed
+        const updateData: any = {};
+        
+        // Check if signedById changed
+        if (selectedUserId !== originalReceipt.signedById) {
+          updateData.signedById = selectedUserId;
+        }
+        
+        // Check if note changed (normalize both values for comparison)
+        const currentNote = note.trim() || null;
+        const originalNote = originalReceipt.note || null;
+        if (currentNote !== originalNote) {
+          updateData.note = currentNote;
+        }
+        
+        // Check if items changed
+        const originalItems = originalReceipt.receiptItems?.map(item => item.itemId) || [];
+        const currentItems = serverItems;
+        
+        // Compare arrays (order doesn't matter for this comparison)
+        const itemsChanged = originalItems.length !== currentItems.length || 
+          !originalItems.every(itemId => currentItems.includes(itemId)) ||
+          !currentItems.every(itemId => originalItems.includes(itemId));
+        
+        if (itemsChanged) {
+          updateData.items = serverItems;
+        }
+        
+        // Only make the API call if there are changes
+        if (Object.keys(updateData).length === 0) {
+          setError('לא נעשו שינויים בקבלה');
+          return;
+        }
+        
+        // Update existing receipt with only changed fields
+        await updateReceipt(originalReceipt.id, updateData);
       } else {
         // Create new receipt
         await receiptService.create({
           createdById: userProfile.id,
           signedById: selectedUserId,
+          note: note.trim() || null,
           items: serverItems,
         });
       }
@@ -807,6 +862,25 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
         </div>
         {isUpdateMode ? 'עדכון קבלה' : 'יצירת קבלה חדשה'}
       </h3>
+      
+      {/* Changes indicator for update mode */}
+      {isUpdateMode && hasChanges && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05))',
+          borderRadius: '12px',
+          border: '1px solid rgba(245, 158, 11, 0.2)',
+          padding: '12px 16px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <i className="fas fa-edit" style={{ color: '#f59e0b', fontSize: '16px' }}></i>
+          <span style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '14px' }}>
+            יש לך שינויים שלא נשמרו
+          </span>
+        </div>
+      )}
       
       {(error || itemsError) && (
         <div style={{
@@ -890,7 +964,6 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
               בחר משתמש...
             </option>
             {users
-              .filter(user => user.id !== userProfile?.id)
               .map((user: User) => (
                 <option 
                   key={user.id} 
@@ -901,6 +974,7 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
                   }}
                 >
                   {user.name} ({user.personalNumber})
+                  {user.id === userProfile?.id && ' - אני'}
                 </option>
               ))}
           </select>
@@ -917,19 +991,82 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
               לא נמצאו משתמשים זמינים
             </div>
           )}
-          {users.length > 0 && users.filter(user => user.id !== userProfile?.id).length === 0 && (
+          {users.length > 0 && users.length === 1 && users[0].id === userProfile?.id && (
             <div style={{
-              color: '#ef4444',
+              color: '#f59e0b',
               fontSize: '12px',
               marginTop: '4px',
               display: 'flex',
               alignItems: 'center',
               gap: '4px'
             }}>
-              <i className="fas fa-exclamation-circle"></i>
-              אין משתמשים אחרים זמינים
+              <i className="fas fa-info-circle"></i>
+              ניתן ליצור קבלה רק עבור עצמך כרגע
             </div>
           )}
+        </div>
+
+        {/* Note Field */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'rgba(255, 255, 255, 0.9)',
+            marginBottom: '8px'
+          }}>
+            הערה (אופציונלי)
+          </label>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="הכנס הערה או הסבר נוסף עבור הקבלה..."
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '8px',
+              color: 'rgba(255, 255, 255, 0.9)',
+              fontSize: '14px',
+              transition: 'all 0.2s ease',
+              outline: 'none',
+              resize: 'vertical',
+              minHeight: '80px',
+              fontFamily: 'inherit',
+              lineHeight: '1.5'
+            }}
+            onFocus={(e) => {
+              (e.target as HTMLTextAreaElement).style.borderColor = 'rgba(59, 130, 246, 0.5)';
+              (e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.15)';
+            }}
+            onBlur={(e) => {
+              (e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              (e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
+          />
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '6px'
+          }}>
+            <small style={{ 
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontSize: '12px'
+            }}>
+              הערה זו תוצג בפרטי הקבלה ובדוחות
+            </small>
+            <small style={{ 
+              color: note.length > 450 ? '#ef4444' : 'rgba(255, 255, 255, 0.6)',
+              fontSize: '12px',
+              fontWeight: note.length > 450 ? '600' : 'normal'
+            }}>
+              {note.length}/500 תווים
+            </small>
+          </div>
         </div>
 
         {/* Items Selection */}
@@ -1237,9 +1374,9 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
           </button>
           <button 
             type="submit" 
-            disabled={isLoading}
+            disabled={isLoading || (isUpdateMode && !hasChanges)}
             style={{
-              background: isLoading ? 
+              background: (isLoading || (isUpdateMode && !hasChanges)) ? 
                 'rgba(255, 255, 255, 0.1)' : 
                 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
               border: 'none',
@@ -1248,12 +1385,16 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
               color: 'white',
               fontSize: '14px',
               fontWeight: '600',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
+              cursor: (isLoading || (isUpdateMode && !hasChanges)) ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: isLoading ? 'none' : '0 4px 16px rgba(59, 130, 246, 0.3)'
+              boxShadow: (isLoading || (isUpdateMode && !hasChanges)) ? 'none' : '0 4px 16px rgba(59, 130, 246, 0.3)'
             }}
+            title={isUpdateMode && !hasChanges ? 'לא בוצעו שינויים' : undefined}
           >
-            {isUpdateMode ? 'עדכן קבלה' : 'צור קבלה'}
+            {isUpdateMode ? 
+              (hasChanges ? 'עדכן קבלה' : 'אין שינויים') : 
+              'צור קבלה'
+            }
           </button>
         </div>
       </form>

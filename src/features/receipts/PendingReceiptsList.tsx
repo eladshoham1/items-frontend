@@ -72,6 +72,9 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   // Helper: safely get unit (prefer receiver unit, fallback to issuer)
   const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
 
+  // Helper: safely get location (prefer receiver location, fallback to issuer)
+  const getLocation = (r: Receipt) => r.signedBy?.location?.name || r.createdBy?.location?.name || '—';
+
   // Helper: check if current user can sign this receipt
   const canUserSignReceipt = (receipt: Receipt) => {
     if (!currentUserId) return false; // No user ID provided
@@ -95,14 +98,27 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
       const issuer = (r.createdBy?.name?.toLowerCase() || '').normalize('NFC');
       const receiver = (r.signedBy?.name?.toLowerCase() || '').normalize('NFC');
       const unit = getUnit(r).toLowerCase().normalize('NFC');
+      const location = getLocation(r).toLowerCase().normalize('NFC');
       const count = (r.receiptItems?.length || 0).toString();
       const date = new Date(r.createdAt).toLocaleDateString('he-IL');
+      const note = (r.note?.toLowerCase() || '').normalize('NFC');
+
+      // Check if any items match the search term
+      const itemsMatch = r.receiptItems?.some(receiptItem => {
+        const itemName = (receiptItem.item?.itemName?.name?.toLowerCase() || '').normalize('NFC');
+        const itemId = (receiptItem.item?.idNumber?.toLowerCase() || '').normalize('NFC');
+        return itemName.includes(term) || itemId.includes(term);
+      }) || false;
+
       return (
         issuer.includes(term) ||
         receiver.includes(term) ||
         unit.includes(term) ||
+        location.includes(term) ||
         count.includes(term) ||
-        date.includes(term)
+        date.includes(term) ||
+        note.includes(term) ||
+        itemsMatch
       );
     });
 
@@ -123,6 +139,10 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
             aVal = getUnit(a) || '';
             bVal = getUnit(b) || '';
             break;
+          case 'location':
+            aVal = getLocation(a) || '';
+            bVal = getLocation(b) || '';
+            break;
           case 'itemCount':
             aVal = a.receiptItems?.length || 0;
             bVal = b.receiptItems?.length || 0;
@@ -130,6 +150,10 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
           case 'createdAt':
             aVal = new Date(a.createdAt).getTime();
             bVal = new Date(b.createdAt).getTime();
+            break;
+          case 'note':
+            aVal = a.note || '';
+            bVal = b.note || '';
             break;
           default:
             return 0;
@@ -254,7 +278,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
             <SearchInput
               value={searchTerm}
               onChange={(value) => handleSearchChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)}
-              placeholder="חפש לפי מנפיק, מקבל, יחידה או תאריך..."
+              placeholder="חפש לפי מנפיק, מקבל, יחידה, מיקום, הערה, פריטים או תאריך..."
               resultsCount={filteredAndSorted.length}
               resultsLabel="קבלות"
             />
@@ -280,6 +304,11 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     <span>יחידה</span>
                   </div>
                 </th>
+                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('location')} data-sorted={sortConfig?.key === 'location'}>
+                  <div className="d-flex align-items-center">
+                    <span>מיקום</span>
+                  </div>
+                </th>
                 <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('itemCount')} data-sorted={sortConfig?.key === 'itemCount'}>
                   <div className="d-flex align-items-center">
                     <span>כמות פריטים</span>
@@ -288,6 +317,11 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                 <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('createdAt')} data-sorted={sortConfig?.key === 'createdAt'}>
                   <div className="d-flex align-items-center">
                     <span>תאריך יצירה</span>
+                  </div>
+                </th>
+                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('note')} data-sorted={sortConfig?.key === 'note'}>
+                  <div className="d-flex align-items-center">
+                    <span>הערה</span>
                   </div>
                 </th>
                 <th className="unified-table-header unified-table-header-regular" style={{ width: '200px' }}>פעולות</th>
@@ -325,8 +359,24 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                       </div>
                     </td>
                     <td className="unified-table-cell">{getUnit(receipt)}</td>
+                    <td className="unified-table-cell">{getLocation(receipt)}</td>
                     <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
                     <td className="unified-table-cell">{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
+                    <td className="unified-table-cell">
+                      {receipt.note ? (
+                        <span title={receipt.note} style={{ 
+                          maxWidth: '150px', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis', 
+                          whiteSpace: 'nowrap',
+                          display: 'inline-block'
+                        }}>
+                          {receipt.note}
+                        </span>
+                      ) : (
+                        <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>—</span>
+                      )}
+                    </td>
                     <td className="unified-table-cell" style={{ textAlign: 'center' }}>
                       <div className="action-buttons" onClick={(e) => e.stopPropagation()} style={{ 
                         display: 'flex', 

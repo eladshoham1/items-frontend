@@ -5,6 +5,7 @@ export interface Receipt {
   id: string;
   createdById: string;
   signedById: string;
+  note?: string | null;
   signature: string | null;
   isSigned: boolean;
   createdAt: Date;
@@ -99,11 +100,13 @@ export interface ReceiptItem {
 export interface CreateReceiptRequest {
   createdById: string;
   signedById: string;
+  note?: string | null;
   items: string[]; // Array of item IDs
 }
 
 export interface UpdateReceiptRequest {
   signedById?: string;
+  note?: string | null;
   items?: string[]; // Array of item IDs
 }
 
