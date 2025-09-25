@@ -100,7 +100,7 @@
 }
 
 .advanced-filter-panel.open {
-  max-height: 600px;
+  max-height: 800px; /* Increased for mobile screens */
   opacity: 1;
   padding: 0;
 }
@@ -337,6 +337,13 @@
   border-color: #68d391;
 }
 
+/* Dark theme mobile scrollbar */
+@media (max-width: 480px) {
+  [data-theme="dark"] .filter-panel-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+  }
+}
+
 [data-theme="dark"] .filter-panel-header {
   border-bottom-color: #4a5568;
 }
@@ -383,6 +390,10 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .advanced-filter-panel.open {
+    max-height: 1000px; /* More space on mobile */
+  }
+  
   .filter-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -390,12 +401,20 @@
   
   .filter-panel-content {
     padding: 16px;
+    max-height: calc(100vh - 200px); /* Ensure it fits within viewport */
+    overflow-y: auto; /* Add scroll if needed */
   }
   
   .filter-panel-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
+    position: sticky;
+    top: 0;
+    background: inherit;
+    z-index: 10;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
   }
   
   .advanced-filter-toggle {
@@ -403,9 +422,11 @@
     font-size: 16px; /* Better touch targets on mobile */
   }
   
-  .filter-select {
+  .filter-select,
+  .filter-input {
     padding: 12px;
     font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 48px; /* Better touch targets */
   }
   
   .active-filters-list {
@@ -416,15 +437,30 @@
     font-size: 12px;
     padding: 4px 8px;
   }
+  
+  /* Ensure active filters summary is visible */
+  .active-filters-summary {
+    margin-top: 12px;
+    position: sticky;
+    bottom: 0;
+    background: inherit;
+    z-index: 10;
+  }
 }
 
 @media (max-width: 480px) {
+  .advanced-filter-panel.open {
+    max-height: 1200px; /* Even more space on small screens */
+  }
+  
   .filter-grid {
     gap: 10px;
   }
   
   .filter-panel-content {
     padding: 12px;
+    max-height: calc(100vh - 150px); /* More space for content */
+    overflow-y: auto;
   }
   
   .advanced-filter-toggle {
@@ -439,6 +475,31 @@
   .filter-count-badge {
     padding: 1px 6px;
     font-size: 11px;
+  }
+  
+  .filter-select,
+  .filter-input {
+    min-height: 50px; /* Even larger touch targets on small screens */
+    font-size: 16px;
+  }
+  
+  .filter-label {
+    font-size: 13px;
+    font-weight: 600; /* Make labels more prominent on small screens */
+  }
+  
+  /* Ensure scroll area is properly defined */
+  .filter-panel-content::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .filter-panel-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .filter-panel-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
   }
 }
 
