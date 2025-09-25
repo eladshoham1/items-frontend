@@ -377,18 +377,18 @@ const AdminDashboard: React.FC = () => {
     setSelectedLocation('');
   }, [selectedUnit]);
 
-  // Extract unique locations for selected unit
-  const locations = useMemo(() => {
-    if (!stats || typeof stats !== 'object' || !selectedUnit) return [];
+  // Helper function to extract unique locations from dashboardData
+  const extractLocationsFromDashboardData = (data: any[]) => {
+    if (!data || !Array.isArray(data)) return [];
     
     try {
       const locationSet = new Set<string>();
       
-      Object.keys(stats).forEach(item => {
-        if (stats[item] && stats[item].units && stats[item].units[selectedUnit] && stats[item].units[selectedUnit].locations) {
-          Object.keys(stats[item].units[selectedUnit].locations).forEach(location => {
-            if (location && typeof location === 'string') {
-              locationSet.add(location);
+      data.forEach(item => {
+        if (item.locations && Array.isArray(item.locations)) {
+          item.locations.forEach((loc: any) => {
+            if (loc.locationName) {
+              locationSet.add(loc.locationName);
             }
           });
         }
@@ -396,10 +396,15 @@ const AdminDashboard: React.FC = () => {
       
       return Array.from(locationSet).sort();
     } catch (error) {
-      console.error('Error processing locations:', error);
+      console.error('Error extracting locations from dashboard data:', error);
       return [];
     }
-  }, [stats, selectedUnit]);
+  };
+
+  // Extract unique locations for selected unit from dashboardData (same source as table)
+  const locations = useMemo(() => {
+    return extractLocationsFromDashboardData(dashboardData);
+  }, [dashboardData]);
 
   const handleCellClick = (event: React.MouseEvent, users: SignUser[], itemName: string, unitName: string) => {
     if (users.length === 0) return;
@@ -694,19 +699,8 @@ const AdminDashboard: React.FC = () => {
       return { items: [], locations: [] };
     }
 
-    // Extract all unique locations from all items
-    const locationSet = new Set<string>();
-    dashboardData.forEach(item => {
-      if (item.locations && Array.isArray(item.locations)) {
-        item.locations.forEach((loc: any) => {
-          if (loc.locationName) {
-            locationSet.add(loc.locationName);
-          }
-        });
-      }
-    });
-
-    const locations = Array.from(locationSet).sort();
+    // Extract all unique locations using shared helper function
+    const locations = extractLocationsFromDashboardData(dashboardData);
 
     // Transform data to table format
     const items = dashboardData.map(item => {
