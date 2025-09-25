@@ -313,7 +313,8 @@ class ManagementService {
   // --- Admin only: Import / Export entire database ---
   async exportDatabase(): Promise<ManagementResponse<any>> {
     try {
-      const response = await apiService.get<any>('/backup/export');
+      // Use no timeout for export operations as they can take a long time with large datasets
+      const response = await apiService.get<any>('/backup/export', { timeout: 0 });
       return {
         success: true,
         data: response,
@@ -373,7 +374,8 @@ class ManagementService {
   async importDatabase(payload: any, override: boolean = false): Promise<ManagementResponse<any>> {
     try {
       const requestBody = { data: payload, isOverride: override };
-      const response = await apiService.post<any>('/backup/import', requestBody);
+      // Use no timeout for import operations as they can take a very long time
+      const response = await apiService.post<any>('/backup/import', requestBody, { timeout: 0 });
       return {
         success: true,
         data: response,

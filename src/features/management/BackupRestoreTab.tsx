@@ -80,6 +80,7 @@ const BackupRestoreTab: React.FC = () => {
       setIsConfirmOpen(false);
       return;
     }
+    
     try {
       setBusy(true);
       setError(null);
@@ -90,24 +91,83 @@ const BackupRestoreTab: React.FC = () => {
       
       setSuccess('ייבוא החל - אנא המתן, פעולה זו עלולה לקחת זמן רב...');
       
-      const resp = await managementService.importDatabase(pendingPayload, override);
+      // Start the import process
+      const startResp = await managementService.startImport(pendingPayload, override);
       
-      if (!resp.success) {
+      if (!startResp.success) {
         setBusy(false);
-        setError(resp.error || 'שגיאה בייבוא');
+        setError(startResp.error || 'שגיאה בתחילת ייבוא');
         setSuccess(null);
         return;
       }
       
-      setImportResult(resp.data);
-      setSuccess('ייבוא הושלם בהצלחה');
-      setBusy(false);
+      const importId = startResp.data?.id;
+      if (!importId) {
+        setBusy(false);
+        setError('לא התקבל מזהה תהליך ייבוא');
+        setSuccess(null);
+        return;
+      }
       
-      await loadAllData();
+      // Poll for status updates
+      let completed = false;
+      let lastProgress = 0;
+      
+      while (!completed) {
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds between polls
+        
+        try {
+          const statusResp = await managementService.getImportStatus(importId);
+          
+          if (!statusResp.success) {
+            setBusy(false);
+            setError(statusResp.error || 'שגיאה בבדיקת סטטוס ייבוא');
+            setSuccess(null);
+            return;
+          }
+          
+          const statusData = statusResp.data;
+          const progress = statusData?.progress ?? 0;
+          const done = statusData?.done ?? false;
+          const message = statusData?.message;
+          const status = statusData?.status;
+          const result = statusData?.result;
+          
+          // Update progress message
+          if (progress !== lastProgress || message) {
+            const progressText = progress > 0 ? ` (${Math.round(progress)}%)` : '';
+            const statusMessage = message || `מבצע ייבוא${progressText} - אנא המתן...`;
+            setSuccess(statusMessage);
+            lastProgress = progress;
+          }
+          
+          if (done || status === 'completed') {
+            completed = true;
+            setImportResult(result || {});
+            setSuccess('ייבוא הושלם בהצלחה');
+            setBusy(false);
+            await loadAllData();
+          } else if (status === 'failed' || status === 'error') {
+            setBusy(false);
+            setError(message || 'ייבוא נכשל');
+            setSuccess(null);
+            return;
+          }
+        } catch (pollError: any) {
+          // If polling fails, continue trying for a bit longer
+          console.warn('Status polling error:', pollError);
+          // Don't break immediately - server might be busy
+        }
+      }
       
     } catch (e: any) {
       setBusy(false);
-      setError(e?.message || 'שגיאה בייבוא');
+      // Don't show timeout errors as user errors - they're expected for long imports
+      if (e?.code === 'ECONNABORTED' || e?.message?.includes('timeout')) {
+        setError('הייבוא עדיין פועל ברקע. אנא המתן מספר דקות נוספות ורענן את הדף.');
+      } else {
+        setError(e?.message || 'שגיאה בייבוא');
+      }
       setSuccess(null);
     } finally {
       setPendingPayload(null);
