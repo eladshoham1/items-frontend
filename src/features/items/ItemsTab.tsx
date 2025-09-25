@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal, SearchInput } from '../../shared/components';
+import { ServerError, ConflictErrorModal, BulkDeleteErrorModal, SmartPagination, LoadingSpinner, NotificationModal, SearchInput, AdvancedFilter, AdvancedFilterCriteria } from '../../shared/components';
 import { SelectionToolbar } from '../../shared/components';
 import { useModernTableSelection } from '../../hooks';
 import Modal from '../../shared/components/Modal';
@@ -25,6 +25,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     key: string;
     direction: 'asc' | 'desc';
   } | null>(null);
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterCriteria>({});
+  const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
   const [conflictError, setConflictError] = useState<{
     isOpen: boolean;
     message: string;
@@ -86,19 +88,76 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     return item.receiptInfo?.signedBy?.location?.name || '—';
   };
 
-  // Filter and sort items based on search term and sort config
+  // Filter and sort items based on search term, advanced filters, and sort config
   const filteredAndSortedItems = (() => {
     let filtered = items.filter(item => {
-      const statusText = !item.isOperational ? 'תקול' : (item.isAvailable ?? false) ? 'זמין' : 'לא זמין';
-      const locationText = item.allocatedLocation?.name || 'לא מוקצה';
-      const receiptLocationText = getReceiptLocation(item);
-      
-      return (item.itemName?.name && item.itemName.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        statusText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        locationText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        receiptLocationText.toLowerCase().includes(searchTerm.toLowerCase());
+      // Basic text search filter
+      if (searchTerm) {
+        const statusText = !item.isOperational ? 'תקול' : (item.isAvailable ?? false) ? 'זמין' : 'לא זמין';
+        const locationText = item.allocatedLocation?.name || 'לא מוקצה';
+        const receiptLocationText = getReceiptLocation(item);
+        
+        const matchesSearch = (item.itemName?.name && item.itemName.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.idNumber && item.idNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.note && item.note.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          statusText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          locationText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          receiptLocationText.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        if (!matchesSearch) return false;
+      }
+
+      // Advanced filters
+      if (advancedFilters.itemNameId && item.nameId !== advancedFilters.itemNameId) {
+        return false;
+      }
+
+      if (advancedFilters.allocatedLocationId && item.allocatedLocationId !== advancedFilters.allocatedLocationId) {
+        return false;
+      }
+
+      if (advancedFilters.receiptLocationName) {
+        const itemReceiptLocation = getReceiptLocation(item);
+        if (itemReceiptLocation !== advancedFilters.receiptLocationName) {
+          return false;
+        }
+      }
+
+      if (advancedFilters.status) {
+        const isOperational = item.isOperational;
+        const isAvailable = item.isAvailable ?? false;
+        
+        switch (advancedFilters.status) {
+          case 'operational':
+            if (!isOperational) return false;
+            break;
+          case 'non-operational':
+            if (isOperational) return false;
+            break;
+          case 'available':
+            if (!isAvailable || !isOperational) return false;
+            break;
+          case 'not-available':
+            if (isAvailable || !isOperational) return false;
+            break;
+        }
+      }
+
+      if (advancedFilters.hasIdNumber !== undefined) {
+        const hasIdNumber = Boolean(item.idNumber && item.idNumber.trim());
+        if (hasIdNumber !== advancedFilters.hasIdNumber) {
+          return false;
+        }
+      }
+
+      if (advancedFilters.noteText) {
+        const itemNote = item.note || '';
+        if (!itemNote.toLowerCase().includes(advancedFilters.noteText.toLowerCase())) {
+          return false;
+        }
+      }
+
+      return true;
     });
 
     if (sortConfig) {
@@ -203,6 +262,18 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
     clearSelection();
   };
 
+  // Handle advanced filter changes
+  const handleAdvancedFiltersChange = (filters: AdvancedFilterCriteria) => {
+    setAdvancedFilters(filters);
+    setCurrentPage(1);
+    clearSelection();
+  };
+
+  // Toggle advanced filter panel
+  const handleAdvancedFilterToggle = () => {
+    setIsAdvancedFilterOpen(!isAdvancedFilterOpen);
+  };
+
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
 
@@ -286,6 +357,16 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
           </div>
         </div>
       </div>
+
+      {/* Advanced Filter Component */}
+      <AdvancedFilter
+        items={items}
+        filters={advancedFilters}
+        onFiltersChange={handleAdvancedFiltersChange}
+        isOpen={isAdvancedFilterOpen}
+        onToggle={handleAdvancedFilterToggle}
+        isAdmin={isAdmin}
+      />
 
       {/* Modern Selection Toolbar */}
       <SelectionToolbar
