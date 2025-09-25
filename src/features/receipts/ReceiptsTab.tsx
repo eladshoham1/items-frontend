@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { format } from 'date-fns';
 import { Receipt, User } from '../../types';
 import { useReceipts } from '../../hooks';
@@ -24,7 +24,11 @@ interface ReceiptsTabProps {
     isAdmin: boolean;
 }
 
-const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
+export interface ReceiptsTabRef {
+    switchToPendingTab: () => void;
+}
+
+const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile, isAdmin }, ref) => {
     const { receipts, pendingReceipts, deleteReceipt, fetchReceipts, signPendingReceipt } = useReceipts();
     
     const [currentPage, setCurrentPage] = useState(1);
@@ -67,6 +71,14 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
             )
         },
     ];
+
+    // Expose function to parent component to switch to pending tab
+    useImperativeHandle(ref, () => ({
+        switchToPendingTab: () => {
+            setActiveTab('pending');
+            setCurrentPage(1);
+        }
+    }), []);
 
     const handleTabChange = (tabId: string) => {
         setActiveTab(tabId as 'signed' | 'pending');
@@ -605,6 +617,6 @@ const ReceiptsTab: React.FC<ReceiptsTabProps> = ({ userProfile, isAdmin }) => {
             />
         </div>
     );
-};
+});
 
 export default ReceiptsTab;

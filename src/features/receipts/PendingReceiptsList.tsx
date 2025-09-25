@@ -8,6 +8,7 @@ import DeleteReceiptModal from './DeleteReceiptModal';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import type { NotificationType } from '../../shared/components/NotificationModal';
+import { usePendingReceiptsContext } from '../../contexts';
 import './ReceiptsTab.css';
 
 interface PendingReceiptsListProps {
@@ -27,6 +28,9 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
   signPendingReceipt,
   deleteReceipt,
 }) => {
+  // Get context for immediate count updates
+  const { decrementPendingCount, refreshPendingCount } = usePendingReceiptsContext();
+  
   const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -192,9 +196,15 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
     try {
       const success = await deleteReceipt(selectedReceipt.id);
       if (success) {
+        // Immediately update the header count for responsive UI with specific receipt ID
+        decrementPendingCount(selectedReceipt.id);
+        
         handleCloseModal();
         onRefresh();
         showNotification('success', 'הקבלה נמחקה בהצלחה');
+        
+        // Also refresh the global count to ensure accuracy
+        await refreshPendingCount();
       }
     } catch (error) {
       showNotification('error', 'שגיאה במחיקת הקבלה');
@@ -238,10 +248,16 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
     try {
       const success = await signPendingReceipt(selectedReceipt.id, { signature });
       if (success) {
+        // Immediately update the header count for responsive UI with specific receipt ID
+        decrementPendingCount(selectedReceipt.id);
+        
         setIsSignModalOpen(false);
         setSelectedReceipt(null);
         setSignature('');
         onRefresh();
+        
+        // Also refresh the global count to ensure accuracy
+        await refreshPendingCount();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to sign receipt');

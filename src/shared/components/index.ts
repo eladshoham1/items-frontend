@@ -14,3 +14,6 @@ export { SelectionToolbar } from './SelectionToolbar';
 export { SelectionGuide } from './SelectionGuide';
 export { TableSelectionGuide } from './TableSelectionGuide';
 export { default as SearchInput } from './SearchInput';
+export { default as PendingReceiptsBadge } from './PendingReceiptsBadge';
+export { default as PendingReceiptsToast } from './PendingReceiptsToast';
+export { default as ErrorBoundary } from './ErrorBoundary';

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { User } from '../../types';
+import { usePendingReceiptsCount } from '../../hooks';
+import { PendingReceiptsBadge, ErrorBoundary } from '../components';
 import './TopHeader.css';
 
 interface TopHeaderProps {
@@ -9,6 +11,7 @@ interface TopHeaderProps {
   isAdmin?: boolean;
   onLogout?: () => void;
   onSettingsClick?: () => void;
+  onPendingReceiptsClick?: () => void;
 }
 
 const TopHeader: React.FC<TopHeaderProps> = ({ 
@@ -16,11 +19,15 @@ const TopHeader: React.FC<TopHeaderProps> = ({
   userProfile,
   isAdmin,
   onLogout,
-  onSettingsClick
+  onSettingsClick,
+  onPendingReceiptsClick
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  
+  // Get pending receipts count
+  const { userSpecificCount: pendingCount } = usePendingReceiptsCount(userProfile, isAdmin);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -73,6 +80,16 @@ const TopHeader: React.FC<TopHeaderProps> = ({
 
         {/* Right side - User Profile */}
         <div className="header-right">
+          {/* Pending Receipts Badge */}
+          {onPendingReceiptsClick && (
+            <ErrorBoundary fallback={<div></div>}>
+              <PendingReceiptsBadge 
+                count={pendingCount} 
+                onClick={onPendingReceiptsClick}
+              />
+            </ErrorBoundary>
+          )}
+          
           <div className="user-menu-container" ref={menuRef}>
             <button 
               className="user-profile-button"

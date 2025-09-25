@@ -1,0 +1,240 @@
+/* PendingReceiptsBadge.css - Mobile-friendly pending receipts badge */
+
+.pending-receipts-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  border-radius: var(--radius-full);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  outline: none;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  position: relative;
+  overflow: visible;
+  min-width: auto;
+}
+
+.pending-receipts-badge:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.pending-receipts-badge:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+}
+
+.badge-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.badge-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.badge-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #dc2626;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  border: 2px solid var(--color-sidebar);
+  animation: pulse-badge 2s infinite;
+  z-index: 1;
+}
+
+.badge-text {
+  white-space: nowrap;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Pulse animation for the count badge */
+@keyframes pulse-badge {
+  0%, 70%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  35% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+}
+
+/* Bounce animation for when badge appears */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.8) translateY(10px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05) translateY(-2px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Apply bounce animation when badge appears */
+.pending-receipts-badge {
+  animation: bounce-in 0.4s ease-out;
+}
+
+/* Urgent state for high count */
+.pending-receipts-badge.urgent {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  animation: bounce-in 0.4s ease-out, urgent-pulse 2s infinite;
+}
+
+.pending-receipts-badge.urgent:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
+
+.pending-receipts-badge.urgent .badge-count {
+  background: #fbbf24;
+  color: #92400e;
+  font-weight: var(--font-weight-bold);
+}
+
+/* Urgent pulse animation */
+@keyframes urgent-pulse {
+  0%, 50%, 100% {
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+  }
+  25%, 75% {
+    box-shadow: 0 4px 16px rgba(220, 38, 38, 0.5);
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .pending-receipts-badge {
+    padding: var(--spacing-xs);
+    gap: 6px;
+    min-width: 44px; /* Minimum touch target size */
+    min-height: 44px;
+    border-radius: var(--radius-full);
+    justify-content: center;
+  }
+  
+  .badge-text {
+    display: none; /* Hide text on mobile to save space */
+  }
+  
+  .badge-icon {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .badge-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .badge-count {
+    top: -6px;
+    right: -6px;
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    border-width: 1px;
+  }
+}
+
+/* Very small mobile screens */
+@media (max-width: 480px) {
+  .pending-receipts-badge {
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  .badge-icon {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .badge-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .badge-count {
+    top: -5px;
+    right: -5px;
+    width: 14px;
+    height: 14px;
+    font-size: 8px;
+  }
+}
+
+/* High DPI / Retina displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .badge-count {
+    font-size: 9px;
+  }
+  
+  @media (max-width: 768px) {
+    .badge-count {
+      font-size: 8px;
+    }
+  }
+}
+
+/* Focus styles for accessibility */
+.pending-receipts-badge:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .pending-receipts-badge {
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="dark"] .pending-receipts-badge:hover {
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* RTL support */
+[dir="rtl"] .badge-count {
+  right: auto;
+  left: -8px;
+}
+
+@media (max-width: 768px) {
+  [dir="rtl"] .badge-count {
+    left: -6px;
+  }
+}
+
+@media (max-width: 480px) {
+  [dir="rtl"] .badge-count {
+    left: -5px;
+  }
+}

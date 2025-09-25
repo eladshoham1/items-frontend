@@ -68,6 +68,7 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
+  overflow: visible;
 }
 
 .theme-toggle-container-header {
@@ -346,4 +347,46 @@
   background: var(--color-sidebar);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile adjustments for header right section */
+@media (max-width: 768px) {
+  .header-right {
+    gap: var(--spacing-sm);
+  }
+  
+  .user-profile-button {
+    min-width: auto;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+  
+  .user-info {
+    display: none; /* Hide user info text on mobile */
+  }
+  
+  .user-avatar-container {
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-right {
+    gap: 8px;
+  }
+  
+  .user-profile-button {
+    padding: 4px 8px;
+  }
+  
+  .user-avatar-container {
+    min-width: 28px;
+    min-height: 28px;
+  }
+  
+  .user-avatar,
+  .user-avatar-placeholder {
+    width: 28px;
+    height: 28px;
+  }
 }

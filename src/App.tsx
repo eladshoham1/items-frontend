@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Layout, Navigation, TopHeader } from './shared/layout';
 import { Dashboard } from './features/dashboard';
 import { DailyReport } from './features/reports';
 import { ReceiptsTab } from './features/receipts';
+import type { ReceiptsTabRef } from './features/receipts';
 import { UsersTab } from './features/users';
 import { ItemsTab } from './features/items';
 import { ManagementTab } from './features/management';
 import { SettingsTab } from './features/settings';
 import GoogleAuth from './features/auth/GoogleAuth';
-import { ManagementProvider, ThemeProvider } from './contexts';
+import { ManagementProvider, ThemeProvider, PendingReceiptsProvider } from './contexts';
 import { useAuth, useUserProfile } from './hooks';
+import { ErrorBoundary } from './shared/components';
 import { UserProfileSetup } from './components/auth';
 import { User } from 'firebase/auth';
 import './shared/styles';
@@ -19,6 +21,7 @@ type Tab = 'dashboard' | 'dailyReport' | 'receipts' | 'users' | 'items' | 'manag
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [authError, setAuthError] = useState<string | null>(null);
+  const receiptsTabRef = useRef<ReceiptsTabRef>(null);
   const { user: firebaseUser, isLoading: authLoading, logout } = useAuth();
   const { 
     userProfile, 
@@ -49,6 +52,8 @@ const App: React.FC = () => {
     };
   }, []);
 
+
+
   const handleAuthSuccess = (user: User) => {
     setAuthError(null);
   };
@@ -71,6 +76,14 @@ const App: React.FC = () => {
     } catch (error) {
       // Swallow profile creation errors (UI already shows errors)
     }
+  };
+
+  const handlePendingReceiptsClick = () => {
+    setActiveTab('receipts');
+    // Use setTimeout to ensure ReceiptsTab is rendered before calling the function
+    setTimeout(() => {
+      receiptsTabRef.current?.switchToPendingTab();
+    }, 0);
   };
 
   // Show loading spinner while checking authentication or profile
@@ -190,7 +203,11 @@ const App: React.FC = () => {
       case 'dailyReport':
         return <DailyReport userProfile={userProfile} isAdmin={isAdmin} />;
       case 'receipts':
-        return <ReceiptsTab userProfile={userProfile} isAdmin={isAdmin} />;
+        return <ReceiptsTab 
+          ref={receiptsTabRef}
+          userProfile={userProfile} 
+          isAdmin={isAdmin}
+        />;
       case 'users':
         return isAdmin ? <UsersTab isAdmin={isAdmin} /> : null;
       case 'items':
@@ -205,34 +222,39 @@ const App: React.FC = () => {
   };
 
   return (
-    <ThemeProvider>
-      <ManagementProvider>
-        <Layout 
-          topHeader={
-            <TopHeader
-              user={firebaseUser}
-              userProfile={userProfile}
-              isAdmin={isAdmin}
-              onLogout={handleLogout}
-              onSettingsClick={() => setActiveTab('settings')}
-            />
-          }
-          sidebar={
-            <Navigation 
-              activeTab={activeTab}
-              availableTabs={[...availableTabs, 'settings']}
-              onTabChange={(tab: string) => setActiveTab(tab as Tab)}
-              user={firebaseUser}
-              userProfile={userProfile}
-              isAdmin={isAdmin}
-              onLogout={handleLogout}
-            />
-          }
-        >
-          {renderTabContent()}
-        </Layout>
-      </ManagementProvider>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <PendingReceiptsProvider>
+          <ManagementProvider>
+          <Layout 
+            topHeader={
+              <TopHeader
+                user={firebaseUser}
+                userProfile={userProfile}
+                isAdmin={isAdmin}
+                onLogout={handleLogout}
+                onSettingsClick={() => setActiveTab('settings')}
+                onPendingReceiptsClick={handlePendingReceiptsClick}
+              />
+            }
+            sidebar={
+              <Navigation 
+                activeTab={activeTab}
+                availableTabs={[...availableTabs, 'settings']}
+                onTabChange={(tab: string) => setActiveTab(tab as Tab)}
+                user={firebaseUser}
+                userProfile={userProfile}
+                isAdmin={isAdmin}
+                onLogout={handleLogout}
+              />
+            }
+          >
+            {renderTabContent()}
+          </Layout>
+          </ManagementProvider>
+        </PendingReceiptsProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 };
 

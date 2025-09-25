@@ -1,0 +1,30 @@
+/* Slide in animation */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile responsiveness for toast */
+@media (max-width: 768px) {
+  .pending-receipts-toast {
+    right: 10px !important;
+    left: 10px !important;
+    max-width: none !important;
+    top: 70px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .pending-receipts-toast {
+    right: 8px !important;
+    left: 8px !important;
+    top: 65px !important;
+    padding: 10px 12px !important;
+  }
+}

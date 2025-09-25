@@ -8,3 +8,4 @@ export { useAuth } from './useAuth';
 export { useUserProfile } from './useUserProfile';
 export { useTheme } from '../contexts/ThemeContext';
 export { useModernTableSelection } from './useModernTableSelection';
+export { usePendingReceiptsCount } from './usePendingReceiptsCount';
