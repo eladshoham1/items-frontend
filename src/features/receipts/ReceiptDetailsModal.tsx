@@ -1,7 +1,24 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { format } from 'date-fns';
 import { Receipt } from '../../types';
 import Modal from '../../shared/components/Modal';
+
+interface ModalReceiptItem {
+  name: string;
+  idNumber?: string;
+  requiresReporting?: boolean;
+  note?: string;
+  // Add location info if available in the future
+}
+
+interface MergedModalReceiptItem {
+  name: string;
+  idNumber?: string;
+  requiresReporting?: boolean;
+  note?: string;
+  quantity: number;
+  originalItems: ModalReceiptItem[];
+}
 
 interface ReceiptDetailsModalProps {
   receipt: Receipt | null;
@@ -9,11 +26,54 @@ interface ReceiptDetailsModalProps {
   onClose: () => void;
 }
 
+// Function to merge items with identical attributes for display
+const mergeModalReceiptItems = (items: ModalReceiptItem[]): MergedModalReceiptItem[] => {
+  const mergedMap = new Map<string, MergedModalReceiptItem>();
+
+  items.forEach(item => {
+    // Create a unique key based on name, idNumber, requiresReporting, and note
+    const idNumber = item.idNumber || 'no-id';
+    const note = item.note || 'no-note';
+    const key = `${item.name}-${idNumber}-${item.requiresReporting}-${note}`;
+
+    if (mergedMap.has(key)) {
+      const existingItem = mergedMap.get(key)!;
+      existingItem.quantity += 1;
+      existingItem.originalItems.push(item);
+    } else {
+      mergedMap.set(key, {
+        name: item.name,
+        idNumber: item.idNumber,
+        requiresReporting: item.requiresReporting,
+        note: item.note,
+        quantity: 1,
+        originalItems: [item]
+      });
+    }
+  });
+
+  return Array.from(mergedMap.values());
+};
+
 const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
   receipt,
   isOpen,
   onClose
 }) => {
+  // Convert receipt items to modal format and merge identical ones
+  const modalItems: ModalReceiptItem[] = useMemo(() => {
+    if (!receipt?.receiptItems) return [];
+    
+    return receipt.receiptItems.map(receiptItem => ({
+      name: receiptItem.item?.itemName?.name || 'פריט לא ידוע',
+      idNumber: receiptItem.item?.idNumber || undefined,
+      requiresReporting: receiptItem.item?.requiresReporting || false,
+      note: receiptItem.item?.note || undefined
+    }));
+  }, [receipt?.receiptItems]);
+
+  const mergedItems = useMemo(() => mergeModalReceiptItems(modalItems), [modalItems]);
+
   if (!receipt) return null;
 
   const formatDate = (date: Date | string) => {
@@ -123,7 +183,7 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
               fontSize: '12px',
               fontWeight: '600'
             }}>
-              {receipt.receiptItems?.length || 0} פריטים
+              {mergedItems.length} סוגים, {modalItems.length} פריטים
             </span>
           </div>
 
@@ -131,7 +191,7 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
             maxHeight: '400px', 
             overflowY: 'auto' 
           }}>
-            {!receipt.receiptItems || receipt.receiptItems.length === 0 ? (
+            {modalItems.length === 0 ? (
               <div style={{ 
                 textAlign: 'center', 
                 padding: '32px 16px', 
@@ -157,24 +217,25 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                       borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>שם הפריט</th>
                     <th style={{ 
-                      width: '150px', 
+                      width: '130px', 
                       color: 'rgba(255, 255, 255, 0.8)',
                       fontWeight: '600',
                       borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>מספר צ'</th>
                     <th style={{ 
-                      width: '100px', 
+                      width: '80px', 
                       textAlign: 'center', 
                       color: 'rgba(255, 255, 255, 0.8)',
                       fontWeight: '600',
                       borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                     }}>צופן</th>
                     <th style={{ 
-                      width: '120px', 
+                      width: '80px', 
+                      textAlign: 'center', 
                       color: 'rgba(255, 255, 255, 0.8)',
                       fontWeight: '600',
                       borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                    }}>מיקום</th>
+                    }}>כמות</th>
                     <th style={{ 
                       color: 'rgba(255, 255, 255, 0.8)',
                       fontWeight: '600',
@@ -183,50 +244,82 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {receipt.receiptItems.map((receiptItem, index) => {
-                    const item = receiptItem.item;
-                    return (
-                      <tr key={receiptItem.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                        <td style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
-                          {index + 1}
-                        </td>
-                        <td style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
-                          {item?.itemName?.name || 'פריט לא ידוע'}
-                        </td>
-                        <td style={{ 
-                          fontFamily: 'monospace', 
-                          fontSize: '14px',
-                          color: item?.idNumber ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)'
-                        }}>
-                          {item?.idNumber || '—'}
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
+                  {mergedItems.map((mergedItem, index) => (
+                    <tr key={`${mergedItem.name}-${mergedItem.idNumber || 'no-id'}-${index}`} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                      <td style={{ textAlign: 'center', color: 'rgba(255, 255, 255, 0.6)' }}>
+                        {index + 1}
+                      </td>
+                      <td style={{ fontWeight: '600', color: 'rgba(255, 255, 255, 0.9)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {mergedItem.name}
+                          {mergedItem.requiresReporting && (
+                            <span style={{ marginLeft: '8px' }}>
+                              <i 
+                                className="fas fa-shield-alt" 
+                                style={{ 
+                                  color: '#ef4444',
+                                  fontSize: '14px'
+                                }} 
+                                title="פריט צופן"
+                              ></i>
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ 
+                        fontFamily: 'monospace', 
+                        fontSize: '14px',
+                        color: mergedItem.idNumber ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)'
+                      }}>
+                        {mergedItem.idNumber ? (
                           <span style={{
-                            background: item?.requiresReporting 
-                              ? 'linear-gradient(135deg, #ffc107, #ffb300)' 
-                              : 'linear-gradient(135deg, #4caf50, #388e3c)',
-                            color: item?.requiresReporting ? 'black' : 'white',
+                            background: 'rgba(34, 197, 94, 0.2)',
+                            color: '#22c55e',
                             padding: '4px 8px',
-                            borderRadius: '12px',
+                            borderRadius: '6px',
                             fontSize: '12px',
                             fontWeight: '600'
                           }}>
-                            {item?.requiresReporting ? 'כן' : 'לא'}
+                            {mergedItem.idNumber}
                           </span>
-                        </td>
-                        <td style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)' }}>
-                          {/* Note: allocatedLocation might not be directly available in receiptItem */}
+                        ) : (
                           <span>—</span>
-                        </td>
-                        <td style={{ 
-                          color: item?.note ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)',
-                          fontSize: '14px' 
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          background: mergedItem.requiresReporting 
+                            ? 'linear-gradient(135deg, #ffc107, #ffb300)' 
+                            : 'linear-gradient(135deg, #4caf50, #388e3c)',
+                          color: mergedItem.requiresReporting ? 'black' : 'white',
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '600'
                         }}>
-                          {item?.note || '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          {mergedItem.requiresReporting ? 'כן' : 'לא'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span style={{
+                          background: 'rgba(59, 130, 246, 0.2)',
+                          color: '#3b82f6',
+                          padding: '6px 12px',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '600'
+                        }}>
+                          {mergedItem.quantity}
+                        </span>
+                      </td>
+                      <td style={{ 
+                        color: mergedItem.note ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.5)',
+                        fontSize: '14px' 
+                      }}>
+                        {mergedItem.note || '—'}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             )}

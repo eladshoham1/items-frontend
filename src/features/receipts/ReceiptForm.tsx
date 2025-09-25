@@ -34,16 +34,66 @@ interface ReceiptItem {
   };
 }
 
+interface MergedReceiptItem {
+  name: string;
+  idNumber?: string;
+  requiresReporting?: boolean;
+  allocatedLocation?: {
+    id: string;
+    name: string;
+    unit?: { name: string };
+  };
+  quantity: number;
+  originalItems: ReceiptItem[]; // Keep track of original items for removal
+}
+
 interface SelectedItemsTableProps {
   items: ReceiptItem[];
   onRemove: (id: string) => void;
+  availableItems: any[]; // Use any[] to accept server items
+  onAddItem: (itemToAdd: any) => void;
 }
+
+// Function to merge items with identical attributes
+const mergeIdenticalItems = (items: ReceiptItem[]): MergedReceiptItem[] => {
+  const mergedMap = new Map<string, MergedReceiptItem>();
+
+  items.forEach(item => {
+    // Create a unique key based on name, idNumber, and allocatedLocation
+    const locationId = item.allocatedLocation?.id || 'no-location';
+    const locationName = item.allocatedLocation?.name || 'no-allocation';
+    const idNumber = item.idNumber || 'no-id';
+    const key = `${item.name}-${idNumber}-${locationId}-${locationName}-${item.requiresReporting}`;
+
+    if (mergedMap.has(key)) {
+      const existingItem = mergedMap.get(key)!;
+      existingItem.quantity += (item.quantity || 1);
+      existingItem.originalItems.push(item);
+    } else {
+      mergedMap.set(key, {
+        name: item.name,
+        idNumber: item.idNumber,
+        requiresReporting: item.requiresReporting,
+        allocatedLocation: item.allocatedLocation,
+        quantity: item.quantity || 1,
+        originalItems: [item]
+      });
+    }
+  });
+
+  return Array.from(mergedMap.values());
+};
 
 const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({ 
   items, 
-  onRemove
+  onRemove,
+  availableItems,
+  onAddItem
 }) => {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+
+  // Merge identical items
+  const mergedItems = useMemo(() => mergeIdenticalItems(items), [items]);
 
   // Handle sorting
   const handleSort = (field: SortField) => {
@@ -64,11 +114,11 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
     });
   };
 
-  // Sort items based on current sort config
+  // Sort merged items based on current sort config
   const sortedItems = useMemo(() => {
-    if (!sortConfig) return items;
+    if (!sortConfig) return mergedItems;
 
-    return [...items].sort((a, b) => {
+    return [...mergedItems].sort((a, b) => {
       let aValue: string;
       let bValue: string;
 
@@ -92,7 +142,79 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
       const comparison = aValue.localeCompare(bValue, 'he');
       return sortConfig.direction === 'asc' ? comparison : -comparison;
     });
-  }, [items, sortConfig]);
+  }, [mergedItems, sortConfig]);
+
+  // Handle remove merged item
+  const handleRemoveMergedItem = (mergedItem: MergedReceiptItem) => {
+    // Remove all original items that make up this merged item
+    mergedItem.originalItems.forEach(originalItem => {
+      onRemove(originalItem.id);
+    });
+  };
+
+  // Handle increase quantity - add one more item with same attributes
+  const handleIncreaseQuantity = (mergedItem: MergedReceiptItem) => {
+    // Find an available item with the same attributes that is NOT already in the current receipt
+    const availableItem = availableItems.find(availableItem => {
+      const locationId = availableItem.allocatedLocation?.id || 'no-location';
+      const mergedLocationId = mergedItem.allocatedLocation?.id || 'no-location';
+      const locationName = availableItem.allocatedLocation?.name || 'no-allocation';
+      const mergedLocationName = mergedItem.allocatedLocation?.name || 'no-allocation';
+      const idNumber = (availableItem.idNumber || null) || 'no-id';
+      const mergedIdNumber = mergedItem.idNumber || 'no-id';
+      
+      // Check if attributes match
+      const attributesMatch = availableItem.itemName?.name === mergedItem.name &&
+                             idNumber === mergedIdNumber &&
+                             locationId === mergedLocationId &&
+                             locationName === mergedLocationName &&
+                             (availableItem.requiresReporting || false) === (mergedItem.requiresReporting || false);
+      
+      // Check if this specific item is NOT already in the current receipt
+      const notInReceipt = !items.some(receiptItem => receiptItem.id === availableItem.id);
+      
+      return attributesMatch && notInReceipt;
+    });
+    
+    if (availableItem) {
+      onAddItem(availableItem);
+    }
+  };
+
+  // Handle decrease quantity - remove one item from the merged group
+  const handleDecreaseQuantity = (mergedItem: MergedReceiptItem) => {
+    if (mergedItem.originalItems.length > 0) {
+      // Remove the first item from the merged group
+      onRemove(mergedItem.originalItems[0].id);
+    }
+  };
+
+  // Check if more items with same attributes are available
+  const getAvailableQuantity = (mergedItem: MergedReceiptItem) => {
+    // Filter items that match the merged item's attributes and are not already in the current receipt
+    const matchingItems = availableItems.filter(availableItem => {
+      const locationId = availableItem.allocatedLocation?.id || 'no-location';
+      const mergedLocationId = mergedItem.allocatedLocation?.id || 'no-location';
+      const locationName = availableItem.allocatedLocation?.name || 'no-allocation';
+      const mergedLocationName = mergedItem.allocatedLocation?.name || 'no-allocation';
+      const idNumber = (availableItem.idNumber || null) || 'no-id';
+      const mergedIdNumber = mergedItem.idNumber || 'no-id';
+      
+      // Check if attributes match
+      const attributesMatch = availableItem.itemName?.name === mergedItem.name &&
+                             idNumber === mergedIdNumber &&
+                             locationId === mergedLocationId &&
+                             locationName === mergedLocationName &&
+                             (availableItem.requiresReporting || false) === (mergedItem.requiresReporting || false);
+      
+      // Check if this specific item is not already in the current receipt
+      const notInReceipt = !items.some(receiptItem => receiptItem.id === availableItem.id);
+      
+      return attributesMatch && notInReceipt;
+    });
+    
+    return matchingItems.length;
+  };
 
   if (items.length === 0) {
     return (
@@ -146,7 +268,7 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
           fontWeight: '600',
           fontSize: '16px'
         }}>
-          פריטים נבחרים ({items.length})
+          פריטים נבחרים ({mergedItems.length} סוגים, {items.length} פריטים)
         </span>
       </div>
       
@@ -171,7 +293,7 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
               </th>
               <th 
                 style={{ 
-                  width: '42%', 
+                  width: '36%', 
                   cursor: 'pointer',
                   padding: '12px 16px',
                   color: 'rgba(255, 255, 255, 0.8)',
@@ -192,7 +314,7 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
               </th>
               <th 
                 style={{ 
-                  width: '18%', 
+                  width: '16%', 
                   cursor: 'pointer',
                   textAlign: 'center',
                   padding: '12px 8px',
@@ -213,7 +335,7 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
               </th>
               <th 
                 style={{ 
-                  width: '22%', 
+                  width: '18%', 
                   cursor: 'pointer',
                   textAlign: 'center',
                   padding: '12px 8px',
@@ -233,6 +355,17 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
                 </div>
               </th>
               <th style={{ 
+                width: '12%', 
+                textAlign: 'center',
+                padding: '12px 8px',
+                color: 'rgba(255, 255, 255, 0.8)',
+                fontWeight: '600',
+                fontSize: '14px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                כמות
+              </th>
+              <th style={{ 
                 width: '10%', 
                 textAlign: 'center',
                 padding: '12px 8px',
@@ -248,7 +381,7 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
           <tbody>
             {sortedItems.map((item, index) => (
               <tr 
-                key={`${item.id}-${index}`}
+                key={`${item.name}-${item.idNumber || 'no-id'}-${item.allocatedLocation?.id || 'no-location'}-${index}`}
                 style={{ 
                   transition: 'all 0.2s ease',
                   borderBottom: '1px solid rgba(255, 255, 255, 0.05)'
@@ -337,9 +470,84 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
                   textAlign: 'center', 
                   padding: '12px 8px'
                 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '8px' 
+                  }}>
+                    {/* Decrease button - only show if quantity > 1 */}
+                    {item.quantity > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleDecreaseQuantity(item)}
+                        style={{
+                          background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                          border: 'none',
+                          borderRadius: '4px',
+                          width: '24px',
+                          height: '24px',
+                          color: 'white',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="הפחת כמות"
+                      >
+                        −
+                      </button>
+                    )}
+                    
+                    <span style={{
+                      background: 'rgba(59, 130, 246, 0.2)',
+                      color: '#3b82f6',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      minWidth: '32px'
+                    }}>
+                      {item.quantity}
+                    </span>
+                    
+                    {/* Increase button - only show if more items are available */}
+                    {getAvailableQuantity(item) > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleIncreaseQuantity(item)}
+                        style={{
+                          background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                          border: 'none',
+                          borderRadius: '4px',
+                          width: '24px',
+                          height: '24px',
+                          color: 'white',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                        title="הוסף כמות"
+                      >
+                        +
+                      </button>
+                    )}
+                  </div>
+                </td>
+                <td style={{ 
+                  textAlign: 'center', 
+                  padding: '12px 8px'
+                }}>
                   <button 
                     type="button" 
-                    onClick={() => onRemove(item.id)}
+                    onClick={() => handleRemoveMergedItem(item)}
                     title="הסר פריט"
                     style={{
                       background: 'linear-gradient(135deg, #ef4444, #dc2626)',
@@ -380,7 +588,7 @@ const SelectedItemsTable: React.FC<SelectedItemsTableProps> = ({
           alignItems: 'center'
         }}>
           <i className="fas fa-info-circle" style={{ marginLeft: '6px' }}></i>
-          סה"כ {items.length} פריטים נבחרו
+          סה"כ {mergedItems.length} סוגי פריטים, {items.length} פריטים
         </small>
       </div>
     </div>
@@ -1341,6 +1549,18 @@ const ReceiptForm: React.FC<ReceiptFormProps> = ({
               onRemove={(id) => {
                 // Remove the specific item by ID
                 removeItem(id);
+              }}
+              availableItems={serverAvailableItems || []}
+              onAddItem={(serverItem) => {
+                // Convert server item to AvailableItemForForm format
+                const itemToAdd: AvailableItemForForm = {
+                  id: serverItem.id,
+                  idNumber: serverItem.idNumber || undefined,
+                  itemName: serverItem.itemName || { name: 'Unknown Item' },
+                  requiresReporting: serverItem.requiresReporting || false,
+                  allocatedLocation: serverItem.allocatedLocation || undefined,
+                };
+                addItemDirectly(itemToAdd, 1);
               }}
             />
           </div>

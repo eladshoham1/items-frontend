@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { format } from 'date-fns';
 import { Receipt, User } from '../../types';
 import { useReceipts } from '../../hooks';
