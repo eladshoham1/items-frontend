@@ -295,6 +295,7 @@ const AdminDashboard: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [activeTab, setActiveTab] = useState<'units' | 'locations'>('units');
   const [selectedUnit, setSelectedUnit] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [tooltipData, setTooltipData] = useState<{
     show: boolean;
     users: SignUser[];
@@ -370,6 +371,11 @@ const AdminDashboard: React.FC = () => {
       setSelectedUnit(allUnits[0].name);
     }
   }, [allUnits, selectedUnit]);
+
+  // Reset selected location when unit changes
+  React.useEffect(() => {
+    setSelectedLocation('');
+  }, [selectedUnit]);
 
   // Extract unique locations for selected unit
   const locations = useMemo(() => {
@@ -636,6 +642,9 @@ const AdminDashboard: React.FC = () => {
       );
     }
 
+    // Filter locations based on selection
+    const filteredLocations = selectedLocation ? [selectedLocation] : tableData.locations;
+
     // Sort items
     if (locationsSortConfig) {
       filteredItems = [...filteredItems].sort((a, b) => {
@@ -676,7 +685,7 @@ const AdminDashboard: React.FC = () => {
       });
     }
 
-    return { ...tableData, items: filteredItems };
+    return { ...tableData, items: filteredItems, locations: filteredLocations };
   };
 
   // Unified table helper functions for new API
@@ -890,6 +899,36 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 )}
               </div>
+              
+              {/* Location Selection - Only show when unit is selected */}
+              {selectedUnit && locations.length > 0 && (
+                <div className="dashboard-select-row" style={{ marginTop: '16px' }}>
+                  <label htmlFor="locationSelect" className="dashboard-select-label">
+                    בחר מיקום:
+                  </label>
+                  <div className="dashboard-select-wrapper">
+                    <select
+                      id="locationSelect"
+                      className="dashboard-select"
+                      value={selectedLocation}
+                      onChange={(e) => setSelectedLocation(e.target.value)}
+                      disabled={dashboardLoading}
+                    >
+                      <option value="">כל המיקומים</option>
+                      {locations.map(location => (
+                        <option key={location} value={location}>{location}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {selectedLocation && (
+                    <div className="dashboard-badge-container">
+                      <span className="dashboard-results-badge">
+                        מיקום נבחר: {selectedLocation}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             )}
         </div>
@@ -1188,19 +1227,34 @@ const AdminDashboard: React.FC = () => {
                               <span>פריט</span>
                             </div>
                           </th>
-                          {getFilteredAndSortedLocationsData().locations.map(location => (
+                          {selectedLocation ? (
+                            // Show only selected location column
                             <th 
-                              key={location} 
                               className="unified-table-header unified-table-header-regular sortable"
-                              onClick={() => handleLocationsSort(`location_${location}`)}
-                              title={`לחץ למיון לפי ${location}`}
-                              data-sorted={locationsSortConfig?.key === `location_${location}` ? 'true' : 'false'}
+                              onClick={() => handleLocationsSort(`location_${selectedLocation}`)}
+                              title={`לחץ למיון לפי ${selectedLocation}`}
+                              data-sorted={locationsSortConfig?.key === `location_${selectedLocation}` ? 'true' : 'false'}
                             >
                               <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <span>{location}</span>
+                                <span>{selectedLocation}</span>
                               </div>
                             </th>
-                          ))}
+                          ) : (
+                            // Show all locations (original behavior)
+                            getFilteredAndSortedLocationsData().locations.map(location => (
+                              <th 
+                                key={location} 
+                                className="unified-table-header unified-table-header-regular sortable"
+                                onClick={() => handleLocationsSort(`location_${location}`)}
+                                title={`לחץ למיון לפי ${location}`}
+                                data-sorted={locationsSortConfig?.key === `location_${location}` ? 'true' : 'false'}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                  <span>{location}</span>
+                                </div>
+                              </th>
+                            ))
+                          )}
                         </tr>
                       </thead>
                   <tbody>
@@ -1212,56 +1266,109 @@ const AdminDashboard: React.FC = () => {
                         <td className="unified-table-cell">
                           {item.itemName}
                         </td>
-                        {getFilteredAndSortedLocationsData().locations.map(location => {
-                          const locationData = item.locations[location];
-                          const hasUserData = locationData && (locationData.signed > 0 || locationData.pending > 0);
-                          const hasAnyData = locationData && (locationData.signed > 0 || locationData.pending > 0 || locationData.allocation > 0);
-                          
-                          return (
-                            <td 
-                              key={`${item.itemName}-${location}`}
-                              className="unified-table-cell"
-                              style={{ 
-                                cursor: hasUserData ? 'pointer' : 'default'
-                              }}
-                              onClick={(e) => hasUserData && handleUnifiedLocationsCellClick(e, locationData, item.itemName, location)}
-                              title={hasUserData ? `לחץ לפרטים נוספים` : hasAnyData ? 'יש הקצאות אך אין נתוני משתמשים' : 'אין נתונים'}
-                            >
-                              {hasAnyData ? (
-                                <div style={{ display: 'flex', flexDirection: 'row', gap: '6px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                  {locationData.signed > 0 && (
-                                    <span 
-                                      className="dashboard-locations-badge-signed" 
-                                      title={`חתומים: ${locationData.signed}`}
-                                    >
-                                      ✓ {locationData.signed}
-                                    </span>
-                                  )}
-                                  {locationData.pending > 0 && (
-                                    <span 
-                                      className="dashboard-locations-badge-pending" 
-                                      title={`ממתינים: ${locationData.pending}`}
-                                    >
-                                      ⏳ {locationData.pending}
-                                    </span>
-                                  )}
-                                  {locationData.allocation > 0 && (
-                                    <span 
-                                      className="dashboard-locations-badge-allocation" 
-                                      title={`הקצאה: ${locationData.allocation}`}
-                                    >
-                                      📋 {locationData.allocation}
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="dashboard-locations-badge-empty">
-                                  0
-                                </span>
-                              )}
-                            </td>
-                          );
-                        })}
+                        {selectedLocation ? (
+                          // Show only selected location column
+                          (() => {
+                            const locationData = item.locations[selectedLocation];
+                            const hasUserData = locationData && (locationData.signed > 0 || locationData.pending > 0);
+                            const hasAnyData = locationData && (locationData.signed > 0 || locationData.pending > 0 || locationData.allocation > 0);
+                            
+                            return (
+                              <td 
+                                key={`${item.itemName}-${selectedLocation}`}
+                                className="unified-table-cell"
+                                style={{ 
+                                  cursor: hasUserData ? 'pointer' : 'default'
+                                }}
+                                onClick={(e) => hasUserData && handleUnifiedLocationsCellClick(e, locationData, item.itemName, selectedLocation)}
+                                title={hasUserData ? `לחץ לפרטים נוספים` : hasAnyData ? 'יש הקצאות אך אין נתוני משתמשים' : 'אין נתונים'}
+                              >
+                                {hasAnyData ? (
+                                  <div style={{ display: 'flex', flexDirection: 'row', gap: '6px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    {locationData.signed > 0 && (
+                                      <span 
+                                        className="dashboard-locations-badge-signed" 
+                                        title={`חתומים: ${locationData.signed}`}
+                                      >
+                                        ✓ {locationData.signed}
+                                      </span>
+                                    )}
+                                    {locationData.pending > 0 && (
+                                      <span 
+                                        className="dashboard-locations-badge-pending" 
+                                        title={`ממתינים: ${locationData.pending}`}
+                                      >
+                                        ⏳ {locationData.pending}
+                                      </span>
+                                    )}
+                                    {locationData.allocation > 0 && (
+                                      <span 
+                                        className="dashboard-locations-badge-allocation" 
+                                        title={`הקצאה: ${locationData.allocation}`}
+                                      >
+                                        📋 {locationData.allocation}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="dashboard-badge-empty">0</span>
+                                )}
+                              </td>
+                            );
+                          })()
+                        ) : (
+                          // Show all locations (original behavior)
+                          getFilteredAndSortedLocationsData().locations.map(location => {
+                            const locationData = item.locations[location];
+                            const hasUserData = locationData && (locationData.signed > 0 || locationData.pending > 0);
+                            const hasAnyData = locationData && (locationData.signed > 0 || locationData.pending > 0 || locationData.allocation > 0);
+                            
+                            return (
+                              <td 
+                                key={`${item.itemName}-${location}`}
+                                className="unified-table-cell"
+                                style={{ 
+                                  cursor: hasUserData ? 'pointer' : 'default'
+                                }}
+                                onClick={(e) => hasUserData && handleUnifiedLocationsCellClick(e, locationData, item.itemName, location)}
+                                title={hasUserData ? `לחץ לפרטים נוספים` : hasAnyData ? 'יש הקצאות אך אין נתוני משתמשים' : 'אין נתונים'}
+                              >
+                                {hasAnyData ? (
+                                  <div style={{ display: 'flex', flexDirection: 'row', gap: '6px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    {locationData.signed > 0 && (
+                                      <span 
+                                        className="dashboard-locations-badge-signed" 
+                                        title={`חתומים: ${locationData.signed}`}
+                                      >
+                                        ✓ {locationData.signed}
+                                      </span>
+                                    )}
+                                    {locationData.pending > 0 && (
+                                      <span 
+                                        className="dashboard-locations-badge-pending" 
+                                        title={`ממתינים: ${locationData.pending}`}
+                                      >
+                                        ⏳ {locationData.pending}
+                                      </span>
+                                    )}
+                                    {locationData.allocation > 0 && (
+                                      <span 
+                                        className="dashboard-locations-badge-allocation" 
+                                        title={`הקצאה: ${locationData.allocation}`}
+                                      >
+                                        📋 {locationData.allocation}
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="dashboard-locations-badge-empty">
+                                    0
+                                  </span>
+                                )}
+                              </td>
+                            );
+                          })
+                        )}
                       </tr>
                     ))}
                   </tbody>
