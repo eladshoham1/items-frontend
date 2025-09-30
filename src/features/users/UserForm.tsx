@@ -24,6 +24,7 @@ interface FormErrors {
 
 interface FormData extends CreateUserRequest {
   isAdmin?: boolean;
+  isAdminInUnit?: boolean;
 }
 
 const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, onCancel }) => {
@@ -41,6 +42,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
     locationId: '',
     rank: '',
     isAdmin: false,
+    isAdminInUnit: false,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,6 +92,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         locationId: matchingLocation?.id || '',
         rank: user.rank,
         isAdmin: user.isAdmin,
+        isAdminInUnit: user.isAdminInUnit || false,
       });
     }
   }, [user, locations]);
@@ -129,6 +132,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
         [field]: field === 'name' ? value : 
                  field === 'personalNumber' ? (value === '' ? 0 : parseInt(value as string, 10) || 0) :
                  field === 'isAdmin' ? value as boolean :
+                 field === 'isAdminInUnit' ? value as boolean :
                  sanitizeInput(value as string),
       };
       
@@ -170,9 +174,13 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
           updateData.locationId = formData.locationId;
         }
         
-        // Only allow admin to update isAdmin
+        // Only allow admin to update isAdmin and isAdminInUnit
         if (isAdmin && formData.isAdmin !== undefined) {
           updateData.isAdmin = formData.isAdmin;
+        }
+        
+        if (isAdmin && formData.isAdminInUnit !== undefined) {
+          updateData.isAdminInUnit = formData.isAdminInUnit;
         }
         
         result = await updateUser(user.id, updateData);
@@ -596,68 +604,133 @@ const UserForm: React.FC<UserFormProps> = ({ user, isAdmin = false, onSuccess, o
           )}
           
           {isAdmin && user && (
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                padding: '16px',
-                transition: 'all 0.2s ease'
-              }}>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  gap: '12px'
+            <>
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '16px',
+                  transition: 'all 0.2s ease'
                 }}>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      type="checkbox"
-                      checked={formData.isAdmin || false}
-                      onChange={e => handleInputChange('isAdmin', e.target.checked)}
-                      style={{
-                        position: 'absolute',
-                        opacity: 0,
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <div style={{
-                      width: '20px',
-                      height: '20px',
-                      borderRadius: '4px',
-                      border: '2px solid rgba(255, 255, 255, 0.3)',
-                      background: formData.isAdmin ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(255, 255, 255, 0.1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.2s ease'
-                    }}>
-                      {formData.isAdmin && (
-                        <i className="fas fa-check" style={{ 
-                          color: 'white', 
-                          fontSize: '12px' 
-                        }}></i>
-                      )}
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    gap: '12px'
+                  }}>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.isAdmin || false}
+                        onChange={e => handleInputChange('isAdmin', e.target.checked)}
+                        style={{
+                          position: 'absolute',
+                          opacity: 0,
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '4px',
+                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                        background: formData.isAdmin ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s ease'
+                      }}>
+                        {formData.isAdmin && (
+                          <i className="fas fa-check" style={{ 
+                            color: 'white', 
+                            fontSize: '12px' 
+                          }}></i>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div style={{
-                      color: 'rgba(255, 255, 255, 0.9)',
-                      fontWeight: '600',
-                      fontSize: '14px'
-                    }}>
-                      מנהל מערכת?
+                    <div>
+                      <div style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontWeight: '600',
+                        fontSize: '14px'
+                      }}>
+                        מנהל מערכת?
+                      </div>
+                      <div style={{
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '12px'
+                      }}>
+                        האם המשתמש הוא מנהל מערכת?
+                      </div>
                     </div>
-                    <div style={{
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      fontSize: '12px'
-                    }}>
-                      האם המשתמש הוא מנהל מערכת?
-                    </div>
-                  </div>
-                </label>
+                  </label>
+                </div>
               </div>
-            </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  padding: '16px',
+                  transition: 'all 0.2s ease'
+                }}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    gap: '12px'
+                  }}>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.isAdminInUnit || false}
+                        onChange={e => handleInputChange('isAdminInUnit', e.target.checked)}
+                        style={{
+                          position: 'absolute',
+                          opacity: 0,
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '4px',
+                        border: '2px solid rgba(255, 255, 255, 0.3)',
+                        background: formData.isAdminInUnit ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : 'rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s ease'
+                      }}>
+                        {formData.isAdminInUnit && (
+                          <i className="fas fa-check" style={{ 
+                            color: 'white', 
+                            fontSize: '12px' 
+                          }}></i>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        fontWeight: '600',
+                        fontSize: '14px'
+                      }}>
+                        מנהל יחידה?
+                      </div>
+                      <div style={{
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontSize: '12px'
+                      }}>
+                        האם המשתמש הוא מנהל ביחידה שלו?
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </>
           )}
 
           <div style={{

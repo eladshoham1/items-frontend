@@ -17,6 +17,7 @@ export interface User {
   unit: string;
   rank: string;
   isAdmin: boolean;
+  isAdminInUnit?: boolean;
   emailSubscribed?: boolean;
   firebaseUid?: string;
   createdAt: string;
@@ -38,6 +39,7 @@ export interface UpdateUserRequest {
   phoneNumber?: string;
   rank?: string;
   isAdmin?: boolean;
+  isAdminInUnit?: boolean;
   emailSubscribed?: boolean;
   firebaseUid?: string;
   locationId?: string;
