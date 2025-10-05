@@ -7,9 +7,18 @@ interface ManagementSettings {
   emailNotificationsEnabled: boolean;
 }
 
+interface NotificationSettings {
+  enabled: boolean;
+  dayOfWeek: number; // 0 = Sunday, 6 = Saturday
+}
+
 const ManagementSettingsTab: React.FC = () => {
   const [settings, setSettings] = useState<ManagementSettings>({ 
     emailNotificationsEnabled: false 
+  });
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>({
+    enabled: false,
+    dayOfWeek: 0 // Default to Sunday
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -25,12 +34,23 @@ const ManagementSettingsTab: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const result = await managementService.getSettings();
       
-      if (result.success && result.data) {
-        setSettings(result.data);
+      // Load both general settings and notification settings
+      const [settingsResult, notificationResult] = await Promise.all([
+        managementService.getSettings(),
+        managementService.getNotificationSettings()
+      ]);
+      
+      if (settingsResult.success && settingsResult.data) {
+        setSettings(settingsResult.data);
       } else {
-        setError(result.error || 'שגיאה בטעינת הגדרות');
+        setError(settingsResult.error || 'שגיאה בטעינת הגדרות');
+      }
+
+      if (notificationResult.success && notificationResult.data) {
+        setNotificationSettings(notificationResult.data);
+      } else {
+        console.warn('Failed to load notification settings:', notificationResult.error);
       }
     } catch (err) {
       setError('שגיאה בטעינת הגדרות');
@@ -45,17 +65,22 @@ const ManagementSettingsTab: React.FC = () => {
       setError(null);
       setSuccessMessage(null);
 
-      const result = await managementService.updateSettings(settings);
+      // Update both general settings and notification settings
+      const [settingsResult, notificationResult] = await Promise.all([
+        managementService.updateSettings(settings),
+        managementService.updateNotificationSettings(notificationSettings)
+      ]);
 
-      if (result.success && result.data) {
-        setSettings(result.data);
+      if (settingsResult.success && settingsResult.data && notificationResult.success && notificationResult.data) {
+        setSettings(settingsResult.data);
+        setNotificationSettings(notificationResult.data);
         setSuccessMessage('הגדרות נשמרו בהצלחה');
         // Immediately refetch to ensure view mirrors server state
         await loadSettings();
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        setError(result.error || 'שגיאה בשמירת הגדרות');
+        setError(settingsResult.error || notificationResult.error || 'שגיאה בשמירת הגדרות');
       }
     } catch (err) {
       setError('שגיאה בשמירת הגדרות');
@@ -67,6 +92,19 @@ const ManagementSettingsTab: React.FC = () => {
   const handleToggleSwitch = () => {
     setSettings({ ...settings, emailNotificationsEnabled: !settings.emailNotificationsEnabled });
   };
+
+  const handleNotificationToggle = () => {
+    setNotificationSettings({ ...notificationSettings, enabled: !notificationSettings.enabled });
+  };
+
+  const handleDayChange = (dayOfWeek: number) => {
+    setNotificationSettings({ ...notificationSettings, dayOfWeek });
+  };
+
+  // Day names in Hebrew (Sunday to Saturday)
+  const dayNames = [
+    'ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'
+  ];
 
   if (loading) {
     return (
@@ -239,6 +277,148 @@ const ManagementSettingsTab: React.FC = () => {
                   boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
                 }} />
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Notification Schedule Settings Section */}
+        <div style={{
+          padding: '24px 28px',
+          borderBottom: '1px solid var(--color-border)'
+        }}>
+          {/* Header with title and toggle - responsive layout */}
+          <div style={{
+            display: 'flex',
+            flexDirection: window.innerWidth <= 768 ? 'column' : 'row',
+            alignItems: window.innerWidth <= 768 ? 'flex-start' : 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            marginBottom: '16px'
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '6px'
+              }}>
+                <i className="fas fa-calendar-alt" style={{ 
+                  color: 'var(--color-text-secondary)', 
+                  fontSize: '18px' 
+                }}></i>
+                <span style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: 'var(--color-text)'
+                }}>
+                  תזמון התראות שבועיות
+                </span>
+              </div>
+              <p style={{
+                fontSize: '14px',
+                color: 'var(--color-text-secondary)',
+                margin: '0 0 8px 0',
+                paddingRight: window.innerWidth <= 768 ? '0' : '30px'
+              }}>
+                בחר את היום בשבוע בו כל המשתמשים יקבלו התראת מייל
+              </p>
+            </div>
+
+            {/* Toggle Switch - responsive positioning */}
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px',
+              alignSelf: window.innerWidth <= 768 ? 'flex-start' : 'flex-start',
+              marginTop: window.innerWidth <= 768 ? '0' : '4px'
+            }}>
+              <span style={{
+                fontSize: '13px',
+                fontWeight: '500',
+                color: notificationSettings.enabled ? '#22c55e' : 'var(--color-text-muted)'
+              }}>
+                {notificationSettings.enabled ? 'פעיל' : 'כבוי'}
+              </span>
+              
+              <button
+                onClick={handleNotificationToggle}
+                disabled={saving}
+                style={{
+                  position: 'relative',
+                  width: '48px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  background: notificationSettings.enabled 
+                    ? 'linear-gradient(45deg, #22c55e, #16a34a)' 
+                    : 'var(--color-surface-alt)',
+                  transition: 'all 0.3s ease',
+                  outline: 'none',
+                  opacity: saving ? 0.6 : 1
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: notificationSettings.enabled ? '26px' : '2px',
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: '#ffffff',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
+                }} />
+              </button>
+            </div>
+          </div>
+
+          {/* Day Selection - responsive grid */}
+          <div style={{ 
+            paddingRight: window.innerWidth <= 768 ? '0' : '30px',
+            marginTop: '16px'
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: window.innerWidth <= 480 
+                ? 'repeat(2, 1fr)' 
+                : window.innerWidth <= 768 
+                ? 'repeat(3, 1fr)' 
+                : 'repeat(auto-fit, minmax(100px, 1fr))',
+              gap: '8px'
+            }}>
+              {dayNames.map((dayName, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleDayChange(index)}
+                  disabled={saving || !notificationSettings.enabled}
+                  style={{
+                    padding: window.innerWidth <= 480 ? '10px 8px' : '8px 12px',
+                    border: '2px solid',
+                    borderColor: notificationSettings.dayOfWeek === index 
+                      ? '#3b82f6' 
+                      : 'var(--color-border)',
+                    borderRadius: '8px',
+                    background: notificationSettings.dayOfWeek === index 
+                      ? '#3b82f6' 
+                      : 'var(--color-surface)',
+                    color: notificationSettings.dayOfWeek === index 
+                      ? '#ffffff' 
+                      : 'var(--color-text)',
+                    fontSize: window.innerWidth <= 480 ? '12px' : '13px',
+                    fontWeight: '500',
+                    cursor: (saving || !notificationSettings.enabled) ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    opacity: !notificationSettings.enabled ? 0.5 : 1,
+                    minHeight: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {dayName}
+                </button>
+              ))}
             </div>
           </div>
         </div>

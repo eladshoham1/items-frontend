@@ -243,6 +243,37 @@ class ManagementService {
     }
   }
 
+  // Notification settings methods
+  async getNotificationSettings(): Promise<ManagementResponse<{enabled: boolean; dayOfWeek: number}>> {
+    try {
+      const response = await apiService.get<{enabled: boolean; dayOfWeek: number}>('/management/notification-settings');
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בטעינת הגדרות התראות',
+      };
+    }
+  }
+
+  async updateNotificationSettings(data: {enabled: boolean; dayOfWeek: number}): Promise<ManagementResponse<{enabled: boolean; dayOfWeek: number}>> {
+    try {
+      const response = await apiService.patch<{enabled: boolean; dayOfWeek: number}>('/management/notification-settings', data);
+      return {
+        success: true,
+        data: response,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'שגיאה בעדכון הגדרות התראות',
+      };
+    }
+  }
+
   // Allocation methods
   async getAllAllocations(): Promise<ManagementResponse<AllocationEntity[]>> {
     try {
@@ -392,28 +423,110 @@ class ManagementService {
   async startImport(payload: any, override: boolean = false): Promise<ManagementResponse<{ id: string }>> {
     try {
       // Server starts import on POST /backup/import and returns an OperationStatus with id
-      const requestBody = { override, ...payload };
-      const response = await apiService.post<{ id?: string; processId?: string; operationId?: string; data?: any }>(
+      const requestBody = { isOverride: override, data: payload };
+      const response = await apiService.post<any>(
         `/backup/import`,
         requestBody,
         { timeout: 0 }
       );
-      const id =
-        (response as any)?.operationId ||
-        (response as any)?.id ||
-        (response as any)?.processId ||
-        (response as any)?.data?.operationId ||
-        (response as any)?.data?.id ||
-        (response as any)?.data?.processId;
-      if (id) return { success: true, data: { id } };
-      return { success: false, error: 'שגיאה בתחילת ייבוא: מזהה תהליך לא התקבל' };
+
+      // Enhanced ID extraction with better logging
+      console.log('Import response:', response);
+      
+      // Check if this is a direct import result (synchronous) vs async process start
+      const hasImportResultStructure = response && typeof response === 'object' && 
+        (response.allocation || response.itemName || response.location || response.receipt);
+      
+      if (hasImportResultStructure) {
+        console.log('Server returned direct import results (synchronous import)');
+        // Generate a fake ID for compatibility with the polling logic
+        const fakeId = `sync-${Date.now()}`;
+        
+        // Store the result for immediate retrieval in getImportStatus
+        (window as any).__tempImportResult = {
+          id: fakeId,
+          result: response,
+          status: 'completed',
+          done: true,
+          progress: 100
+        };
+        
+        console.log('Generated fake ID for synchronous import:', fakeId);
+        return { success: true, data: { id: fakeId } };
+      }
+      
+      // Try normal async ID extraction for async imports
+      const extractIdFromNestedResponse = (obj: any, path: string = ''): string | null => {
+        if (!obj || typeof obj !== 'object') return null;
+        
+        // Check direct ID fields
+        for (const idField of ['id', 'operationId', 'processId', 'importId']) {
+          if (obj[idField]) {
+            console.log(`Found ID "${obj[idField]}" at path: ${path}.${idField}`);
+            return String(obj[idField]);
+          }
+        }
+        
+        // Recursively search in nested objects (up to 3 levels deep)
+        if (path.split('.').length < 3) {
+          for (const key of Object.keys(obj)) {
+            if (typeof obj[key] === 'object' && obj[key] !== null) {
+              const nestedId = extractIdFromNestedResponse(obj[key], path ? `${path}.${key}` : key);
+              if (nestedId) return nestedId;
+            }
+          }
+        }
+        
+        return null;
+      };
+
+      const id = extractIdFromNestedResponse(response);
+
+      if (id) {
+        console.log('Successfully extracted import ID:', id);
+        return { success: true, data: { id } };
+      }
+
+      // Log the full response for debugging
+      console.error('No ID found in import response:', JSON.stringify(response, null, 2));
+      return { 
+        success: false, 
+        error: `שגיאה בתחילת ייבוא: מזהה תהליך לא התקבל. Response: ${JSON.stringify(response)}` 
+      };
     } catch (error: any) {
-      return { success: false, error: error.response?.data?.message || error.message || 'שגיאה בתחילת ייבוא' };
+      console.error('Import start error:', error);
+      return { 
+        success: false, 
+        error: error.response?.data?.message || error.message || 'שגיאה בתחילת ייבוא' 
+      };
     }
   }
 
   async getImportStatus(id: string): Promise<ManagementResponse<{ progress: number; done?: boolean; tables?: any[]; totalStatistics?: any; message?: string; status?: string; result?: any }>> {
     try {
+      // Check if this is a synchronous import with stored results
+      if (id.startsWith('sync-')) {
+        const tempResult = (window as any).__tempImportResult;
+        if (tempResult && tempResult.id === id) {
+          console.log('Returning stored synchronous import result');
+          // Clear the temp result after first retrieval
+          delete (window as any).__tempImportResult;
+          return { 
+            success: true, 
+            data: { 
+              progress: tempResult.progress,
+              done: tempResult.done,
+              status: tempResult.status,
+              result: tempResult.result,
+              message: 'ייבוא הושלם בהצלחה',
+              tables: [],
+              totalStatistics: {}
+            } 
+          };
+        }
+      }
+      
+      // Normal async import status check
       const raw = await apiService.get<any>(`/backup/import/status/${id}`);
       const nested = raw?.result?.currentProgress || {};
       const progress =
