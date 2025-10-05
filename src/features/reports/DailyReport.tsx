@@ -12,7 +12,7 @@ interface DailyReportProps {
   isAdmin: boolean;
 }
 
-type ReportTab = 'current' | 'history';
+type ReportTab = 'current' | 'history' | 'users-status';
 
 const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   const [activeReportTab, setActiveReportTab] = useState<ReportTab>('current');
@@ -53,6 +53,15 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
           icon: (
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+            </svg>
+          )
+        },
+        {
+          id: 'users-status',
+          label: 'סטטוס משתמשים',
+          icon: (
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5s-3 1.34-3 3 1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05C15.64 13.36 17 14.28 17 15.5V19h6v-2.5c0-2.22-4.36-3.5-7-3.5z"/>
             </svg>
           )
         }
@@ -255,22 +264,92 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
   // Check if all items are reported (for completion validation)
   const allItemsReported = sortedReportItems.length > 0 && sortedReportItems.every(item => item.isReported);
 
-  // Render history tab
-  if (activeReportTab === 'history') {
-    return (
-      <div>
-        {/* Tab Navigation */}
-        <TabNavigation
-          tabs={availableReportTabs}
-          activeTab={activeReportTab}
-          onTabChange={handleTabChange}
-          variant="primary"
-          size="md"
-        />
-        <DailyReportHistory userProfile={userProfile} isAdmin={isAdmin} />
-      </div>
-    );
-  }
+  // Prepare users status data for the tab
+  const getUsersStatusData = () => {
+    if (!isAdmin || !dailyReportData?.items) return [];
+    
+    const items = dailyReportData.items;
+    const userStats: Record<string, { id: string; name: string; total: number; reported: number; percentage: number }> = {};
+    
+    items.forEach(item => {
+      const user = item.signedBy;
+      if (!user || !user.id) return;
+      if (!userStats[user.id]) {
+        userStats[user.id] = {
+          id: user.id,
+          name: user.name || user.id,
+          total: 0,
+          reported: 0,
+          percentage: 0
+        };
+      }
+      userStats[user.id].total += 1;
+      if (item.isReported) userStats[user.id].reported += 1;
+    });
+    
+    // Calculate percentage for each user
+    Object.values(userStats).forEach(stat => {
+      stat.percentage = stat.total > 0 ? Math.round((stat.reported / stat.total) * 100) : 0;
+    });
+    
+    return Object.values(userStats);
+  };
+
+  // Get users data and apply search/sort for users status tab
+  const usersData = getUsersStatusData();
+  
+  // Apply search filter for users
+  const filteredUsersData = usersData.filter(user => {
+    if (!searchTerm.trim()) return true;
+    const searchLower = searchTerm.toLowerCase().trim().normalize('NFC');
+    return user.name.toLowerCase().normalize('NFC').includes(searchLower);
+  });
+
+  // Sort users data based on sort config
+  const sortedUsersData = (() => {
+    if (!sortConfig || activeReportTab !== 'users-status') return filteredUsersData;
+
+    return [...filteredUsersData].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortConfig.key) {
+        case 'userName':
+          aValue = a.name;
+          bValue = b.name;
+          break;
+        case 'totalItems':
+          aValue = a.total;
+          bValue = b.total;
+          break;
+        case 'reportedItems':
+          aValue = a.reported;
+          bValue = b.reported;
+          break;
+        case 'percentage':
+          aValue = a.percentage;
+          bValue = b.percentage;
+          break;
+        default:
+          return 0;
+      }
+
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortConfig.direction === 'asc' 
+          ? aValue.localeCompare(bValue, 'he') 
+          : bValue.localeCompare(aValue, 'he');
+      }
+
+      if (sortConfig.direction === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  })();
+
+  // Get paginated users for display
+  const { paginatedItems: paginatedUsers, totalPages: usersTotalPages } = paginate(sortedUsersData, currentPage, UI_CONFIG.TABLE_PAGE_SIZE);
 
   // Check if user has a location assigned
   if (userProfile && !userProfile.location) {
@@ -333,7 +412,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         size="md"
       />
 
-      {activeReportTab === 'current' ? (
+      {activeReportTab === 'current' && (
         <div className="daily-report-container">
           {/* Handle case when no daily report exists or report has no items */}
           {(!dailyReportData || !dailyReportData.items || dailyReportData.items.length === 0) ? (
@@ -662,8 +741,148 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
             </>
           )}
         </div>
-      ) : (
-        activeReportTab === 'history' && <div>History reports would go here</div>
+      )}
+
+      {activeReportTab === 'history' && (
+        <DailyReportHistory userProfile={userProfile} isAdmin={isAdmin} />
+      )}
+
+      {activeReportTab === 'users-status' && isAdmin && (
+        <div className="daily-report-container">
+          {/* Users Status Tab Content */}
+          {usersData.length === 0 ? (
+            <div className="daily-report-empty-state">
+              <div className="daily-report-empty-icon">
+                <i className="fas fa-users"></i>
+              </div>
+              <h3 className="daily-report-empty-title">
+                אין משתמשים בדוח
+              </h3>
+              <p className="daily-report-empty-description">
+                אין נתוני דיווח למשתמשים בדוח הנוכחי.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Search Input */}
+              <SearchInput
+                value={searchTerm}
+                onChange={(value) => {
+                  setSearchTerm(value);
+                  setCurrentPage(1);
+                }}
+                placeholder="חיפוש לפי שם משתמש..."
+                resultsCount={sortedUsersData.length}
+                resultsLabel="משתמשים"
+              />
+
+              {/* Users Table Section */}
+              <div className="daily-report-table-section">
+                <div className="unified-table-container">
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="unified-table">
+                      <thead>
+                        <tr>
+                          <th 
+                            className="unified-table-header unified-table-header-regular sortable"
+                            onClick={() => handleSort('userName')}
+                            title="לחץ למיון לפי שם משתמש"
+                            data-sorted={sortConfig?.key === 'userName' ? 'true' : 'false'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span>משתמש</span>
+                            </div>
+                          </th>
+                          <th 
+                            className="unified-table-header unified-table-header-regular sortable"
+                            onClick={() => handleSort('totalItems')}
+                            title="לחץ למיון לפי סה״כ פריטים"
+                            data-sorted={sortConfig?.key === 'totalItems' ? 'true' : 'false'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span>סה״כ פריטים</span>
+                            </div>
+                          </th>
+                          <th 
+                            className="unified-table-header unified-table-header-regular sortable"
+                            onClick={() => handleSort('reportedItems')}
+                            title="לחץ למיון לפי פריטים מדווחים"
+                            data-sorted={sortConfig?.key === 'reportedItems' ? 'true' : 'false'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span>פריטים מדווחים</span>
+                            </div>
+                          </th>
+                          <th 
+                            className="unified-table-header unified-table-header-regular sortable"
+                            onClick={() => handleSort('percentage')}
+                            title="לחץ למיון לפי אחוז השלמה"
+                            data-sorted={sortConfig?.key === 'percentage' ? 'true' : 'false'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <span>אחוז השלמה</span>
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedUsers.map((user) => (
+                          <tr key={user.id} className="unified-table-row">
+                            <td className="unified-table-cell">
+                              {user.name}
+                            </td>
+                            <td className="unified-table-cell">
+                              {user.total}
+                            </td>
+                            <td className="unified-table-cell">
+                              {user.reported}
+                            </td>
+                            <td className="unified-table-cell">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span className={`daily-report-progress-badge ${
+                                  user.percentage === 100 ? 'success' :
+                                  user.percentage >= 70 ? 'warning' : 'danger'
+                                }`}>
+                                  {user.percentage}%
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pagination */}
+              {usersTotalPages > 1 && (
+                <div className="daily-report-pagination">
+                  <SmartPagination
+                    currentPage={currentPage}
+                    totalPages={usersTotalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              )}
+
+              {/* Empty Search State */}
+              {sortedUsersData.length === 0 && searchTerm && (
+                <div className="daily-report-empty-state">
+                  <div className="daily-report-empty-icon">
+                    <i className="fas fa-search"></i>
+                  </div>
+                  <h3 className="daily-report-empty-title">
+                    לא נמצאו תוצאות
+                  </h3>
+                  <p className="daily-report-empty-description">
+                    לא נמצאו משתמשים התואמים לחיפוש "{searchTerm}"
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       )}
 
       {/* Error Notification Modal */}
