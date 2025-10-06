@@ -39,7 +39,7 @@ const UserDashboard: React.FC = () => {
   const [sortConfig, setSortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
-  } | null>({ key: 'createdAt', direction: 'desc' });
+  } | null>({ key: 'signedAt', direction: 'desc' });
 
   // Fetch all data once without pagination/sorting params
   const { data, loading, error, refetch } = useUserDashboard();
@@ -66,7 +66,7 @@ const UserDashboard: React.FC = () => {
     let filtered = data.items.filter(item =>
       item.itemName.toLowerCase().normalize('NFC').includes(normalizedSearchTerm) ||
       (item.itemIdNumber && item.itemIdNumber.toLowerCase().normalize('NFC').includes(normalizedSearchTerm)) ||
-      (item.status === 'signed' && 'חתום'.normalize('NFC').includes(normalizedSearchTerm)) ||
+      (item.status === 'signed' && 'נחתם'.normalize('NFC').includes(normalizedSearchTerm)) ||
       (item.status === 'pending' && 'ממתין'.normalize('NFC').includes(normalizedSearchTerm)) ||
       item.createdBy.name.toLowerCase().normalize('NFC').includes(normalizedSearchTerm) ||
       item.createdBy.rank.toLowerCase().normalize('NFC').includes(normalizedSearchTerm)
@@ -86,21 +86,17 @@ const UserDashboard: React.FC = () => {
             aValue = a.itemIdNumber || '';
             bValue = b.itemIdNumber || '';
             break;
-          case 'status':
-            aValue = a.status === 'signed' ? 1 : 0; // Signed first when ascending
-            bValue = b.status === 'signed' ? 1 : 0;
-            break;
-          case 'createdAt':
-            aValue = new Date(a.createdAt).getTime();
-            bValue = new Date(b.createdAt).getTime();
-            break;
-          case 'signedAt':
-            aValue = a.signedAt ? new Date(a.signedAt).getTime() : 0;
-            bValue = b.signedAt ? new Date(b.signedAt).getTime() : 0;
-            break;
           case 'createdBy':
             aValue = a.createdBy.name;
             bValue = b.createdBy.name;
+            break;
+          case 'signedBy':
+            aValue = a.status === 'signed' ? 1 : 0; // Signed first when ascending
+            bValue = b.status === 'signed' ? 1 : 0;
+            break;
+          case 'location':
+            aValue = a.signedBy?.location || '';
+            bValue = b.signedBy?.location || '';
             break;
           default:
             return 0;
@@ -157,6 +153,44 @@ const UserDashboard: React.FC = () => {
 
   return (
     <div className="page-container">
+      {/* Status Legend */}
+      <div style={{
+        padding: '16px 20px',
+        marginBottom: '20px',
+        background: 'var(--color-surface)',
+        border: '1px solid var(--color-border)',
+        borderRadius: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '24px',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+          <i className="fas fa-info-circle" style={{ color: 'var(--color-text-secondary)' }}></i>
+          <span style={{ fontWeight: '600', color: 'var(--color-text)' }}>מקרא סטטוס:</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ 
+            width: '16px', 
+            height: '16px', 
+            backgroundColor: 'rgba(34, 197, 94, 0.2)', 
+            borderRadius: '4px',
+            border: '2px solid #22c55e'
+          }}></div>
+          <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>נחתם</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ 
+            width: '16px', 
+            height: '16px', 
+            backgroundColor: 'rgba(245, 158, 11, 0.2)', 
+            borderRadius: '4px',
+            border: '2px solid #f59e0b'
+          }}></div>
+          <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>ממתין לחתימה</span>
+        </div>
+      </div>
+
       {/* Enhanced Search Input - same style as admin dashboard */}
       <DashboardSearch
         value={searchTerm}
@@ -181,32 +215,11 @@ const UserDashboard: React.FC = () => {
                   title="לחץ למיון לפי שם פריט"
                 />
                 <DashboardTableHeader
-                  label="צ'"
+                  label="מספר צ'"
                   sortKey="itemIdNumber"
                   sortConfig={sortConfig}
                   onSort={handleSort}
-                  title="לחץ למיון לפי צ'"
-                />
-                <DashboardTableHeader
-                  label="סטטוס"
-                  sortKey="status"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
-                  title="לחץ למיון לפי סטטוס"
-                />
-                <DashboardTableHeader
-                  label="תאריך יצירה"
-                  sortKey="createdAt"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
-                  title="לחץ למיון לפי תאריך יצירה"
-                />
-                <DashboardTableHeader
-                  label="תאריך חתימה"
-                  sortKey="signedAt"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
-                  title="לחץ למיון לפי תאריך חתימה"
+                  title="לחץ למיון לפי מספר צ'"
                 />
                 <DashboardTableHeader
                   label="מחתים"
@@ -215,24 +228,36 @@ const UserDashboard: React.FC = () => {
                   onSort={handleSort}
                   title="לחץ למיון לפי מחתים"
                 />
+                <DashboardTableHeader
+                  label="חותם"
+                  sortKey="signedBy"
+                  sortConfig={sortConfig}
+                  onSort={handleSort}
+                  title="לחץ למיון לפי חותם"
+                />
+                <DashboardTableHeader
+                  label="מיקום"
+                  sortKey="location"
+                  sortConfig={sortConfig}
+                  onSort={handleSort}
+                  title="לחץ למיון לפי מיקום"
+                />
               </tr>
             </thead>
             <tbody>
               {paginatedItems && Array.isArray(paginatedItems) ? paginatedItems.map((item: UserDashboardItem) => (
-                <tr key={item.id} className="unified-table-row">
+                <tr 
+                  key={item.id} 
+                  className="unified-table-row"
+                  style={{
+                    borderLeft: `4px solid ${item.status === 'signed' ? '#22c55e' : '#f59e0b'}`,
+                    backgroundColor: item.status === 'signed' 
+                      ? 'rgba(34, 197, 94, 0.05)' 
+                      : 'rgba(245, 158, 11, 0.05)'
+                  }}
+                >
                   <td className="unified-table-cell">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: '500' }}>{item.itemName}</span>
-                      {item.requiresReporting && (
-                        <DashboardBadge
-                          type="info"
-                          title="פריט זה דורש דיווח"
-                          style={{ fontSize: '10px' }}
-                        >
-                          דיווח נדרש
-                        </DashboardBadge>
-                      )}
-                    </div>
+                    <span style={{ fontWeight: '500' }}>{item.itemName}</span>
                   </td>
                   <td className="unified-table-cell">
                     <DashboardBadge
@@ -242,25 +267,27 @@ const UserDashboard: React.FC = () => {
                     </DashboardBadge>
                   </td>
                   <td className="unified-table-cell">
-                    <DashboardBadge
-                      type={item.status}
-                    >
-                      {getStatusText(item.status)}
-                    </DashboardBadge>
+                    <span style={{ fontWeight: '500', fontSize: '13px' }}>{item.createdBy.name}</span>
                   </td>
                   <td className="unified-table-cell">
-                    {formatDate(item.createdAt)}
-                  </td>
-                  <td className="unified-table-cell">
-                    {item.signedAt ? formatDate(item.signedAt) : '-'}
-                  </td>
-                  <td className="unified-table-cell">
-                    <div style={{ fontSize: '13px' }}>
-                      <div style={{ fontWeight: '500' }}>{item.createdBy.name}</div>
-                      <div style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>
-                        {item.createdBy.rank}
+                    {item.status === 'signed' ? (
+                      <div style={{ fontSize: '13px', color: '#22c55e' }}>
+                        <div style={{ fontWeight: '500' }}>✓ {item.signedBy?.name || 'נחתם'}</div>
+                        <div style={{ fontSize: '11px' }}>
+                          חתימה דיגיטלית
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div style={{ fontSize: '13px', color: '#f59e0b' }}>
+                        <div style={{ fontWeight: '500' }}>{item.signedBy?.name || 'ממתין'}</div>
+                        <div style={{ fontSize: '11px' }}>
+                          ממתין לחתימה
+                        </div>
+                      </div>
+                    )}
+                  </td>
+                  <td className="unified-table-cell">
+                    {item.signedBy?.location || '-'}
                   </td>
                 </tr>
               )) : null}

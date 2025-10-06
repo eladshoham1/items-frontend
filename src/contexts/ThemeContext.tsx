@@ -31,7 +31,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         return savedTheme;
       }
     }
-    return 'light'; // Default to light theme
+    return 'dark'; // Default to dark theme
   };
 
   const [theme, setThemeState] = useState<Theme>(getSavedTheme);

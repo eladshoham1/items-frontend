@@ -110,7 +110,6 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
         (item.signedBy?.name?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
         (item.signedBy?.location?.name?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
         (item.reportedBy?.name?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
-        (item.reportedBy?.rank?.toLowerCase().normalize('NFC') || '').includes(searchLower) ||
         (item.reportNotes?.toLowerCase().normalize('NFC') || '').includes(searchLower)
       );
     }
@@ -615,7 +614,7 @@ const DailyReport: React.FC<DailyReportProps> = ({ userProfile, isAdmin }) => {
                             })() : '-'}
                           </td>
                           <td className="unified-table-cell">
-                            {item.reportedBy ? `${item.reportedBy.name} (${item.reportedBy.rank})` : '-'}
+                            {item.reportedBy ? item.reportedBy.name : '-'}
                           </td>
                           <td className="unified-table-cell">
                             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

@@ -385,6 +385,13 @@ export interface UserDashboardItem {
     name: string;
     rank: string;
   };
+  signedBy?: {                  // Who is assigned to sign the receipt
+    id: string;
+    name: string;
+    rank: string;
+    location: string;
+    unit: string;
+  };
 }
 
 export interface UserDashboardSummary {
