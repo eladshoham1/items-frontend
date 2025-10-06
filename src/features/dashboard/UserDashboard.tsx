@@ -11,8 +11,7 @@ import {
   DashboardEmptyState,
   DashboardTableHeader,
   DashboardBadge,
-  formatDate,
-  getStatusText
+  formatDate
 } from './DashboardShared';
 import '../../shared/styles/components.css';
 import './Dashboard.css';

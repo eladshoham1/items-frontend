@@ -384,66 +384,70 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
             <thead>
               <tr>
                 <th 
-                  className="unified-table-header unified-table-header-regular"
+                  className="unified-table-header unified-table-header-first sortable"
                   onClick={() => handleSort('name')}
                   title="לחץ למיון לפי שם פריט"
                   data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center">
+                  <div>
                     <span>שם פריט</span>
                   </div>
                 </th>
                 <th 
-                  className="unified-table-header unified-table-header-regular"
+                  className="unified-table-header unified-table-header-regular sortable"
                   onClick={() => handleSort('idNumber')}
                   title="לחץ למיון לפי מספר צ'"
                   data-sorted={sortConfig?.key === 'idNumber' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center">
+                  <div>
                     <span>מספר צ'</span>
                   </div>
                 </th>
                 <th 
-                  className="unified-table-header unified-table-header-regular"
+                  className="unified-table-header unified-table-header-regular sortable"
                   onClick={() => handleSort('allocatedLocation')}
                   title="לחץ למיון לפי הקצאה"
                   data-sorted={sortConfig?.key === 'allocatedLocation' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center">
+                  <div>
                     <span>הקצאה</span>
                   </div>
                 </th>
                 <th 
-                  className="unified-table-header unified-table-header-regular"
+                  className="unified-table-header unified-table-header-regular sortable"
                   onClick={() => handleSort('receiptLocation')}
                   title="לחץ למיון לפי מיקום"
                   data-sorted={sortConfig?.key === 'receiptLocation' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center">
+                  <div>
                     <span>מיקום</span>
                   </div>
                 </th>
                 <th 
-                  className="unified-table-header unified-table-header-regular"
+                  className="unified-table-header unified-table-header-regular sortable"
                   onClick={() => handleSort('status')}
                   title="לחץ למיון לפי סטטוס"
                   data-sorted={sortConfig?.key === 'status' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center">
+                  <div>
                     <span>סטטוס</span>
                   </div>
                 </th>
                 <th 
-                  className="unified-table-header unified-table-header-regular"
+                  className="unified-table-header unified-table-header-regular sortable"
                   onClick={() => handleSort('note')}
                   title="לחץ למיון לפי הערה"
                   data-sorted={sortConfig?.key === 'note' ? 'true' : 'false'}
                 >
-                  <div className="d-flex align-items-center">
+                  <div>
                     <span>הערה</span>
                   </div>
                 </th>
-                <th className="unified-table-header unified-table-header-regular">פעולות</th>
+                <th className="unified-table-header unified-table-header-regular">
+                  <div>
+                    <span>פעולות</span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -454,11 +458,15 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                   onClick={(e) => toggleSelection(item.id, e)}
                   title="לחץ לבחירה"
                 >
-                  <td className="unified-table-cell">{item.itemName?.name || 'אין תערכה'}</td>
-                  <td className="unified-table-cell">{item.idNumber || 'לא זמין'}</td>
+                  <td className="unified-table-cell unified-table-cell-first">{item.itemName?.name || 'אין תערכה'}</td>
+                  <td className="unified-table-cell unified-table-cell-badge">
+                    <span className={`unified-badge ${item.idNumber ? 'unified-badge-primary' : 'unified-badge-secondary'}`}>
+                      {item.idNumber || 'לא זמין'}
+                    </span>
+                  </td>
                   <td className="unified-table-cell">{item.allocatedLocation?.name || 'לא מוקצה'}</td>
                   <td className="unified-table-cell">{getReceiptLocation(item)}</td>
-                  <td className="unified-table-cell">
+                  <td className="unified-table-cell unified-table-cell-badge">
                     <span 
                       className={`unified-badge ${
                         !item.isOperational 
@@ -477,9 +485,9 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
                     </span>
                   </td>
                   <td className="unified-table-cell">{item.note || 'אין הערה'}</td>
-                  <td className="unified-table-cell">
+                  <td className="unified-table-cell unified-table-cell-actions">
                     <button 
-                      className="unified-action-btn unified-action-btn-primary" 
+                      className="unified-action-btn unified-action-btn-primary unified-action-btn-sm" 
                       onClick={(e) => {
                         e.stopPropagation();
                         handleItemClick(item);

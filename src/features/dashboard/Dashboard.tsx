@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useDashboardStats, useUserDashboard } from '../../hooks';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { reportService, managementService } from '../../services';
-import { TabNavigation } from '../../shared/components';
+import { TabNavigation, ResponsiveTable } from '../../shared/components';
 import { SignUser, UnitEntity, UserDashboardItem } from '../../types';
 import { paginate } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
@@ -11,11 +11,7 @@ import {
   DashboardError,
   DashboardSearch,
   DashboardPagination,
-  DashboardEmptyState,
-  DashboardTableHeader,
-  DashboardBadge,
-  formatDate,
-  getStatusText
+  DashboardEmptyState
 } from './DashboardShared';
 import '../../shared/styles/components.css';
 import './Dashboard.css';
@@ -201,47 +197,61 @@ const UserDashboard: React.FC = () => {
         id="userDashboardSearch"
       />
 
-      {/* Items Table - same style as admin dashboard */}
-      <div className="unified-table-container">
-        <div style={{ overflowX: 'auto' }}>
-          <table className="unified-table">
+      {/* Items Table - Responsive Design */}
+      <ResponsiveTable enableCardLayout={true}>
+        <table className="unified-table">
             <thead>
               <tr>
-                <DashboardTableHeader
-                  label="שם פריט"
-                  sortKey="itemName"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
+                <th 
+                  className="unified-table-header unified-table-header-first sortable"
+                  onClick={() => handleSort('itemName')}
                   title="לחץ למיון לפי שם פריט"
-                />
-                <DashboardTableHeader
-                  label="מספר צ'"
-                  sortKey="itemIdNumber"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
+                  data-sorted={sortConfig?.key === 'itemName' ? 'true' : 'false'}
+                >
+                  <div>
+                    <span>שם פריט</span>
+                  </div>
+                </th>
+                <th 
+                  className="unified-table-header unified-table-header-regular sortable"
+                  onClick={() => handleSort('itemIdNumber')}
                   title="לחץ למיון לפי מספר צ'"
-                />
-                <DashboardTableHeader
-                  label="מחתים"
-                  sortKey="createdBy"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
+                  data-sorted={sortConfig?.key === 'itemIdNumber' ? 'true' : 'false'}
+                >
+                  <div>
+                    <span>מספר צ'</span>
+                  </div>
+                </th>
+                <th 
+                  className="unified-table-header unified-table-header-regular sortable priority-medium"
+                  onClick={() => handleSort('createdBy')}
                   title="לחץ למיון לפי מחתים"
-                />
-                <DashboardTableHeader
-                  label="חותם"
-                  sortKey="signedBy"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
+                  data-sorted={sortConfig?.key === 'createdBy' ? 'true' : 'false'}
+                >
+                  <div>
+                    <span>מחתים</span>
+                  </div>
+                </th>
+                <th 
+                  className="unified-table-header unified-table-header-regular sortable"
+                  onClick={() => handleSort('signedBy')}
                   title="לחץ למיון לפי חותם"
-                />
-                <DashboardTableHeader
-                  label="מיקום"
-                  sortKey="location"
-                  sortConfig={sortConfig}
-                  onSort={handleSort}
+                  data-sorted={sortConfig?.key === 'signedBy' ? 'true' : 'false'}
+                >
+                  <div>
+                    <span>חותם</span>
+                  </div>
+                </th>
+                <th 
+                  className="unified-table-header unified-table-header-regular sortable priority-low"
+                  onClick={() => handleSort('location')}
                   title="לחץ למיון לפי מיקום"
-                />
+                  data-sorted={sortConfig?.key === 'location' ? 'true' : 'false'}
+                >
+                  <div>
+                    <span>מיקום</span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -250,51 +260,45 @@ const UserDashboard: React.FC = () => {
                   key={item.id} 
                   className="unified-table-row"
                   style={{
-                    borderLeft: `4px solid ${item.status === 'signed' ? '#22c55e' : '#f59e0b'}`,
-                    backgroundColor: item.status === 'signed' 
-                      ? 'rgba(34, 197, 94, 0.05)' 
-                      : 'rgba(245, 158, 11, 0.05)'
+                    borderLeft: `3px solid ${item.status === 'signed' ? '#22c55e' : '#f59e0b'}`
                   }}
                 >
-                  <td className="unified-table-cell">
-                    <span style={{ fontWeight: '500' }}>{item.itemName}</span>
+                  <td className="unified-table-cell unified-table-cell-first">
+                    {item.itemName}
                   </td>
-                  <td className="unified-table-cell">
-                    <DashboardBadge
-                      type={item.itemIdNumber ? 'primary' : 'empty'}
-                    >
+                  <td className="unified-table-cell unified-table-cell-badge">
+                    <span className={`unified-badge ${item.itemIdNumber ? 'unified-badge-primary' : 'unified-badge-secondary'}`}>
                       {item.itemIdNumber || 'ללא מספר'}
-                    </DashboardBadge>
+                    </span>
                   </td>
-                  <td className="unified-table-cell">
-                    <span style={{ fontWeight: '500', fontSize: '13px' }}>{item.createdBy.name}</span>
+                  <td className="unified-table-cell priority-medium">
+                    {item.createdBy.name}
                   </td>
-                  <td className="unified-table-cell">
+                  <td className="unified-table-cell mobile-card-primary">
                     {item.status === 'signed' ? (
-                      <div style={{ fontSize: '13px', color: '#22c55e' }}>
-                        <div style={{ fontWeight: '500' }}>✓ {item.signedBy?.name || 'נחתם'}</div>
-                        <div style={{ fontSize: '11px' }}>
+                      <div style={{ color: '#22c55e', fontSize: '13px' }}>
+                        <div style={{ fontWeight: '600' }}>✓ {item.signedBy?.name || 'נחתם'}</div>
+                        <div style={{ fontSize: '11px', opacity: 0.8 }}>
                           חתימה דיגיטלית
                         </div>
                       </div>
                     ) : (
-                      <div style={{ fontSize: '13px', color: '#f59e0b' }}>
-                        <div style={{ fontWeight: '500' }}>{item.signedBy?.name || 'ממתין'}</div>
-                        <div style={{ fontSize: '11px' }}>
+                      <div style={{ color: '#f59e0b', fontSize: '13px' }}>
+                        <div style={{ fontWeight: '600' }}>{item.signedBy?.name || 'ממתין'}</div>
+                        <div style={{ fontSize: '11px', opacity: 0.8 }}>
                           ממתין לחתימה
                         </div>
                       </div>
                     )}
                   </td>
-                  <td className="unified-table-cell">
+                  <td className="unified-table-cell priority-low">
                     {item.signedBy?.location || '-'}
                   </td>
                 </tr>
               )) : null}
             </tbody>
           </table>
-        </div>
-      </div>
+      </ResponsiveTable>
 
       {/* Pagination - same style as admin dashboard */}
       <DashboardPagination
@@ -965,18 +969,17 @@ const AdminDashboard: React.FC = () => {
               id="unitsSearch"
             />
           )}          {activeTab === 'units' && (
-            <div className="unified-table-container">
-              <div style={{ overflowX: 'auto' }}>
+            <ResponsiveTable enableCardLayout={false}>
                 <table className="unified-table">
                   <thead>
                     <tr>
                       <th 
-                        className="unified-table-header unified-table-header-regular sortable"
+                        className="unified-table-header unified-table-header-first sortable"
                         onClick={() => handleSort('name')}
                         title="לחץ למיון לפי שם פריט"
                         data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div>
                           <span>פריט</span>
                         </div>
                       </th>
@@ -988,7 +991,7 @@ const AdminDashboard: React.FC = () => {
                           title={`לחץ למיון לפי ${unit}`}
                           data-sorted={sortConfig?.key === `unit_${unit}` ? 'true' : 'false'}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <div>
                             <span>{unit}</span>
                           </div>
                         </th>
@@ -999,7 +1002,7 @@ const AdminDashboard: React.FC = () => {
                         title="לחץ למיון לפי חתומים"
                         data-sorted={sortConfig?.key === 'signed' ? 'true' : 'false'}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div>
                           <span>חתומים</span>
                         </div>
                       </th>
@@ -1009,7 +1012,7 @@ const AdminDashboard: React.FC = () => {
                         title="לחץ למיון לפי ממתינים לחתימה"
                         data-sorted={sortConfig?.key === 'waiting' ? 'true' : 'false'}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div>
                           <span>ממתינים לחתימה</span>
                         </div>
                       </th>
@@ -1019,7 +1022,7 @@ const AdminDashboard: React.FC = () => {
                         title="לחץ למיון לפי תקולים"
                         data-sorted={sortConfig?.key === 'nonOperational' ? 'true' : 'false'}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div>
                           <span>תקולים</span>
                         </div>
                       </th>
@@ -1029,7 +1032,7 @@ const AdminDashboard: React.FC = () => {
                         title="לחץ למיון לפי זמינים"
                         data-sorted={sortConfig?.key === 'available' ? 'true' : 'false'}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div>
                           <span>זמינים</span>
                         </div>
                       </th>
@@ -1039,7 +1042,7 @@ const AdminDashboard: React.FC = () => {
                         title="לחץ למיון לפי סה'כ"
                         data-sorted={sortConfig?.key === 'total' ? 'true' : 'false'}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div>
                           <span>סה"כ</span>
                         </div>
                       </th>
@@ -1054,7 +1057,7 @@ const AdminDashboard: React.FC = () => {
                         key={item} 
                         className="unified-table-row"
                       >
-                        <td className="unified-table-cell">
+                        <td className="unified-table-cell unified-table-cell-first">
                           {item}
                         </td>
                         {units && Array.isArray(units) ? units.map(unit => {
@@ -1095,7 +1098,7 @@ const AdminDashboard: React.FC = () => {
                           );
                         }) : null}
                         <td 
-                          className="unified-table-cell"
+                          className="unified-table-cell unified-table-cell-number"
                           onClick={(e) => {
                             // Collect all signed users from all units for this item
                             const allSignedUsers: SignUser[] = [];
@@ -1111,12 +1114,12 @@ const AdminDashboard: React.FC = () => {
                           title="לחץ לפרטי כל המשתמשים החתומים"
                           style={{ cursor: 'pointer' }}
                         >
-                          <span className="dashboard-badge-large dashboard-badge-signed-large">
+                          <span className="unified-badge unified-badge-large unified-badge-success">
                             {getItemSignedTotal(item)}
                           </span>
                         </td>
                         <td 
-                          className="unified-table-cell"
+                          className="unified-table-cell unified-table-cell-number"
                           onClick={(e) => {
                             // Collect all waiting users from all units for this item
                             const allWaitingUsers: SignUser[] = [];
@@ -1132,12 +1135,12 @@ const AdminDashboard: React.FC = () => {
                           title="לחץ לפרטי כל המשתמשים הממתינים"
                           style={{ cursor: 'pointer' }}
                         >
-                          <span className="dashboard-badge-large dashboard-badge-waiting-large">
+                          <span className="unified-badge unified-badge-large unified-badge-warning">
                             {getItemWaitingTotal(item)}
                           </span>
                         </td>
                         <td 
-                          className="unified-table-cell"
+                          className="unified-table-cell unified-table-cell-number"
                           onClick={(e) => {
                             const nonOpCount = stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0;
                             if (nonOpCount > 0) {
@@ -1149,12 +1152,12 @@ const AdminDashboard: React.FC = () => {
                           title={stats && stats[item] && stats[item].nonOperationalQuantity > 0 ? "לחץ לפרטי הפריטים התקולים" : "אין פריטים תקולים"}
                           style={{ cursor: 'pointer' }}
                         >
-                          <span className="dashboard-badge-large dashboard-badge-broken-large">
+                          <span className="unified-badge unified-badge-large unified-badge-danger">
                             {stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0}
                           </span>
                         </td>
                         <td 
-                          className="unified-table-cell"
+                          className="unified-table-cell unified-table-cell-number"
                           onClick={(e) => {
                             // For available items, show all users who are not assigned or not signed
                             const allUsers: SignUser[] = [];
@@ -1169,12 +1172,12 @@ const AdminDashboard: React.FC = () => {
                           title="לחץ לפרטי זמינות הפריט"
                           style={{ cursor: 'pointer' }}
                         >
-                          <span className="dashboard-badge-large dashboard-badge-available-large">
+                          <span className="unified-badge unified-badge-large unified-badge-primary">
                             {(stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0) - (stats && stats[item] && typeof stats[item].nonOperationalQuantity === 'number' ? stats[item].nonOperationalQuantity : 0) - getItemSignedTotal(item) - getItemWaitingTotal(item)}
                           </span>
                         </td>
                         <td 
-                          className="unified-table-cell"
+                          className="unified-table-cell unified-table-cell-number"
                           onClick={(e) => {
                             // For total, show all users from all units for this item
                             const allUsers: SignUser[] = [];
@@ -1189,7 +1192,7 @@ const AdminDashboard: React.FC = () => {
                           title="לחץ לפרטי כל המשתמשים הרשומים לפריט"
                           style={{ cursor: 'pointer' }}
                         >
-                          <span className="dashboard-badge-large dashboard-badge-total-large">
+                          <span className="unified-badge unified-badge-large unified-badge-secondary">
                             {stats && stats[item] && typeof stats[item].quantity === 'number' ? stats[item].quantity : 0}
                           </span>
                         </td>
@@ -1198,8 +1201,7 @@ const AdminDashboard: React.FC = () => {
                     }).filter(Boolean) : null}
                   </tbody>
                 </table>
-              </div>
-            </div>
+            </ResponsiveTable>
           )}
 
         {/* Locations Tab Content - Unified Table */}
@@ -1233,18 +1235,17 @@ const AdminDashboard: React.FC = () => {
                   id="locationsSearch"
                 />
 
-                <div className="unified-table-container">
-                  <div style={{ overflowX: 'auto' }}>
+                <ResponsiveTable enableCardLayout={true}>
                     <table className="unified-table">
                       <thead>
                         <tr>
                           <th 
-                            className="unified-table-header unified-table-header-regular sortable"
+                            className="unified-table-header unified-table-header-first sortable"
                             onClick={() => handleLocationsSort('itemName')}
                             title="לחץ למיון לפי שם פריט"
                             data-sorted={locationsSortConfig?.key === 'itemName' ? 'true' : 'false'}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <div>
                               <span>פריט</span>
                             </div>
                           </th>
@@ -1256,7 +1257,7 @@ const AdminDashboard: React.FC = () => {
                               title={`לחץ למיון לפי ${selectedLocation}`}
                               data-sorted={locationsSortConfig?.key === `location_${selectedLocation}` ? 'true' : 'false'}
                             >
-                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <div>
                                 <span>{selectedLocation}</span>
                               </div>
                             </th>
@@ -1270,7 +1271,7 @@ const AdminDashboard: React.FC = () => {
                                 title={`לחץ למיון לפי ${location}`}
                                 data-sorted={locationsSortConfig?.key === `location_${location}` ? 'true' : 'false'}
                               >
-                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div>
                                   <span>{location}</span>
                                 </div>
                               </th>
@@ -1284,7 +1285,7 @@ const AdminDashboard: React.FC = () => {
                         key={`${item.itemName}-locations`} 
                         className="unified-table-row"
                       >
-                        <td className="unified-table-cell">
+                        <td className="unified-table-cell unified-table-cell-first">
                           {item.itemName}
                         </td>
                         {selectedLocation ? (
@@ -1394,8 +1395,7 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
-              </div>
-            </div>
+              </ResponsiveTable>
               </>
             ) : (
               <div style={{ 

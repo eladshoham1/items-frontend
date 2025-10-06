@@ -311,12 +311,12 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
               <thead>
                 <tr>
                   <th 
-                    className="unified-table-header unified-table-header-regular sortable"
+                    className="unified-table-header unified-table-header-first sortable"
                     onClick={() => handleSort('name')}
                     title="לחץ למיון לפי שם המיקום"
                     data-sorted={sortConfig?.key === 'name' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center">
+                    <div>
                       <span>שם המיקום</span>
                     </div>
                   </th>
@@ -326,7 +326,7 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     title="לחץ למיון לפי יחידה"
                     data-sorted={sortConfig?.key === 'unitName' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center">
+                    <div>
                       <span>יחידה</span>
                     </div>
                   </th>
@@ -336,7 +336,7 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     title="לחץ למיון לפי תאריך יצירה"
                     data-sorted={sortConfig?.key === 'createdAt' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center">
+                    <div>
                       <span>תאריך יצירה</span>
                     </div>
                   </th>
@@ -346,11 +346,15 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     title="לחץ למיון לפי תאריך עדכון"
                     data-sorted={sortConfig?.key === 'updatedAt' ? 'true' : 'false'}
                   >
-                    <div className="d-flex align-items-center">
+                    <div>
                       <span>תאריך עדכון</span>
                     </div>
                   </th>
-                  <th className="unified-table-header unified-table-header-regular" style={{ width: '100px' }}>פעולות</th>
+                  <th className="unified-table-header unified-table-header-regular" style={{ width: '100px' }}>
+                    <div>
+                      <span>פעולות</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -361,13 +365,13 @@ export const LocationsTable: React.FC<LocationsTableProps> = ({
                     onClick={(e) => toggleSelection(location.id, e)}
                     title="לחץ לבחירה"
                   >
-                    <td className="unified-table-cell">{location.name}</td>
+                    <td className="unified-table-cell unified-table-cell-first">{location.name}</td>
                     <td className="unified-table-cell">{getUnitName(location.unitId)}</td>
                     <td className="unified-table-cell">{new Date(location.createdAt).toLocaleDateString('he-IL')}</td>
                     <td className="unified-table-cell">{new Date(location.updatedAt).toLocaleDateString('he-IL')}</td>
-                    <td className="unified-table-cell">
+                    <td className="unified-table-cell unified-table-cell-actions">
                       <button
-                        className="btn btn-sm btn-ghost unified-action-btn"
+                        className="unified-action-btn unified-action-btn-primary unified-action-btn-sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           openEditModal(location);

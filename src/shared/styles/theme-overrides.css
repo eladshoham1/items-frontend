@@ -318,43 +318,102 @@ select:focus {
   box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.25) !important;
 }
 
-/* Button Variants */
+/* Base Button Styles - Universal Text Color Fix */
+button:not(.btn-outline-primary):not(.btn-outline-secondary):not(.btn-outline-success):not(.btn-outline-danger):not(.btn-outline-warning):not(.btn-outline-info):not(.unified-action-btn-ghost),
+.btn:not(.btn-outline-primary):not(.btn-outline-secondary):not(.btn-outline-success):not(.btn-outline-danger):not(.btn-outline-warning):not(.btn-outline-info):not(.unified-action-btn-ghost) {
+  color: white !important;
+}
+
+/* Specific fixes for common button classes */
+.btn-sm,
+.btn-primary,
+.btn-danger,
+.btn-success,
+.btn-warning,
+.btn-info,
+.btn-secondary,
+.unified-action-btn,
+.unified-action-btn-primary,
+.unified-action-btn-danger,
+.unified-action-btn-success {
+  color: white !important;
+}
+
+/* Ensure hover states maintain white text */
+.btn-primary:hover,
+.btn-danger:hover,
+.btn-success:hover,
+.btn-warning:hover,
+.btn-info:hover,
+.btn-secondary:hover,
+.unified-action-btn:hover,
+.unified-action-btn-primary:hover,
+.unified-action-btn-danger:hover,
+.unified-action-btn-success:hover {
+  color: white !important;
+}
+
+/* Button Variants - Consistent Text Colors */
 .btn-primary {
   background: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
-  color: var(--color-text-inverse) !important;
+  color: white !important;
 }
 
 .btn-primary:hover {
   background: var(--color-primary-hover) !important;
   border-color: var(--color-primary-hover) !important;
+  color: white !important;
 }
 
 .btn-secondary {
   background: var(--color-secondary) !important;
   border-color: var(--color-secondary) !important;
-  color: var(--color-text-inverse) !important;
+  color: white !important;
+}
+
+.btn-secondary:hover {
+  color: white !important;
 }
 
 .btn-success {
   background: var(--color-success) !important;
   border-color: var(--color-success) !important;
+  color: white !important;
+}
+
+.btn-success:hover {
+  color: white !important;
 }
 
 .btn-danger {
   background: var(--color-danger) !important;
   border-color: var(--color-danger) !important;
+  color: white !important;
+}
+
+.btn-danger:hover {
+  color: white !important;
 }
 
 .btn-warning {
   background: var(--color-warning) !important;
   border-color: var(--color-warning) !important;
-  color: var(--color-text-inverse) !important;
+  color: white !important;
+}
+
+.btn-warning:hover {
+  color: white !important;
 }
 
 .btn-info {
   background: var(--color-info) !important;
   border-color: var(--color-info) !important;
+  color: white !important;
+}
+
+.btn-info:hover {
+  color: white !important;
 }
 
 /* Outline Button Variants */

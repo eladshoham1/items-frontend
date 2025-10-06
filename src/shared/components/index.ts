@@ -19,3 +19,4 @@ export type { AdvancedFilterCriteria } from './AdvancedFilter';
 export { default as PendingReceiptsBadge } from './PendingReceiptsBadge';
 export { default as PendingReceiptsToast } from './PendingReceiptsToast';
 export { default as ErrorBoundary } from './ErrorBoundary';
+export { ResponsiveTable } from './ResponsiveTable';

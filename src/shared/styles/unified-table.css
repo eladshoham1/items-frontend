@@ -1,13 +1,7 @@
 /* Unified Table System - Consistent Dashboard-Style Tables */
 
 /* Universal Table Container */
-.unified.unified-table-row:nth-child(odd) {
-  background-color: var(--color-odd, #1f2937);
-}
-
-.unified-table-row:hover:not(.selected) {
-  background-color: var(--color-hover, #3d4852) !important;
-}container {
+.unified-table-container {
   background: var(--color-surface);
   border-radius: 16px;
   overflow-x: auto;
@@ -30,6 +24,10 @@
   color: var(--color-text);
   margin: 0;
   min-width: 800px;
+  font-family: var(--font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 /* Universal Table Headers */
@@ -45,6 +43,8 @@
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  font-family: inherit;
+  vertical-align: middle;
 }
 
 .unified-table-header:hover {
@@ -78,6 +78,41 @@
 /* Regular Header Columns */
 .unified-table-header-regular {
   min-width: 120px;
+}
+
+/* Header Content Alignment */
+.unified-table-header .d-flex,
+.unified-table-header > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+/* Sortable headers styling */
+.unified-table-header.sortable {
+  user-select: none;
+  cursor: pointer;
+}
+
+.unified-table-header.sortable:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+}
+
+[data-theme="dark"] .unified-table-header.sortable:hover {
+  background: linear-gradient(135deg, #5a6578 0%, #3d4758 100%);
+}
+
+/* First column (name/item) should be right-aligned in RTL */
+.unified-table-header-first {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.unified-table-header-first .d-flex,
+.unified-table-header-first > div {
+  justify-content: flex-start;
 }
 
 /* Table Header Hover Effects */
@@ -118,26 +153,34 @@
 .unified-table-cell {
   text-align: center;
   position: relative;
-  padding: 16px 8px;
+  padding: 16px 12px;
   transition: all 0.3s ease;
   border-left: 1px solid var(--color-border, #404040);
   color: var(--color-text, #ffffff);
   background: transparent; /* Allow row background to show through */
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  vertical-align: middle;
+  line-height: 1.4;
 }
 
 /* Sticky Cell for First Column */
 .unified-table-cell-sticky {
   position: sticky;
   right: 0;
-  font-weight: 700;
+  font-weight: 600;
   border-right: 1px solid var(--color-border, #404040);
   padding: 16px 12px;
   font-size: 14px;
   color: var(--color-text, #ffffff);
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
-  text-align: center;
+  text-align: right; /* Right align for first column in RTL */
   z-index: 5;
   background: transparent; /* Allow row background to show through */
+  font-family: inherit;
+  vertical-align: middle;
+  line-height: 1.4;
 }
 
 /* Remove separate even/odd styling for sticky cells since they inherit from row */
@@ -147,6 +190,33 @@
 
 .unified-table-cell-sticky.odd {
   background: transparent;
+}
+
+/* First column cells should be right-aligned for RTL */
+.unified-table-cell-first {
+  text-align: right;
+  padding-right: 16px;
+  font-weight: 600;
+}
+
+/* Action column cells */
+.unified-table-cell-actions {
+  text-align: center;
+  white-space: nowrap;
+  width: 120px;
+  min-width: 120px;
+}
+
+/* Badge and status cells */
+.unified-table-cell-badge {
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Numeric cells */
+.unified-table-cell-number {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Clickable Cells */
@@ -161,42 +231,56 @@
 
 /* Universal Badge Styles */
 .unified-badge {
-  font-size: 11px;
-  padding: 4px 8px;
+  font-size: 12px;
+  padding: 6px 10px;
   border-radius: 8px;
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1;
+  transition: all 0.2s ease;
 }
 
 .unified-badge-primary {
   background-color: var(--color-accent, #3b82f6);
   color: white;
+  border-color: var(--color-accent, #3b82f6);
 }
 
 .unified-badge-success {
   background-color: var(--color-success, #10b981);
   color: white;
+  border-color: var(--color-success, #10b981);
 }
 
 .unified-badge-warning {
   background-color: var(--color-warning, #f59e0b);
   color: white;
+  border-color: var(--color-warning, #f59e0b);
 }
 
 .unified-badge-danger {
   background-color: var(--color-danger, #ef4444);
   color: white;
+  border-color: var(--color-danger, #ef4444);
 }
 
 .unified-badge-secondary {
   background-color: var(--color-text-muted, #6b7280);
   color: white;
+  border-color: var(--color-text-muted, #6b7280);
 }
 
 .unified-badge-large {
   font-size: 13px;
-  padding: 8px 12px;
+  padding: 8px 14px;
+  min-width: 50px;
 }
 
 /* Universal Search Container */
@@ -317,47 +401,99 @@
 
 /* Action Buttons */
 .unified-action-btn {
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-radius: 8px;
-  border: none;
-  font-size: 12px;
+  border: 1px solid transparent;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin: 0 2px;
+  margin: 0 4px;
+  font-family: inherit;
+  line-height: 1;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 80px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  color: white !important; /* Force white text for all action buttons */
+}
+
+.unified-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
 .unified-action-btn-primary {
   background: var(--color-accent, #3b82f6);
   color: white;
+  border-color: var(--color-accent, #3b82f6);
 }
 
-.unified-action-btn-primary:hover {
+.unified-action-btn-primary:hover:not(:disabled) {
   background: var(--color-accent-dark, #2563eb);
+  border-color: var(--color-accent-dark, #2563eb);
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }
 
 .unified-action-btn-danger {
   background: var(--color-danger, #ef4444);
   color: white;
+  border-color: var(--color-danger, #ef4444);
 }
 
-.unified-action-btn-danger:hover {
+.unified-action-btn-danger:hover:not(:disabled) {
   background: var(--color-danger-dark, #dc2626);
+  border-color: var(--color-danger-dark, #dc2626);
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
 .unified-action-btn-success {
   background: var(--color-success, #10b981);
   color: white;
+  border-color: var(--color-success, #10b981);
 }
 
-.unified-action-btn-success:hover {
+.unified-action-btn-success:hover:not(:disabled) {
   background: var(--color-success-dark, #059669);
+  border-color: var(--color-success-dark, #059669);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.unified-action-btn-ghost {
+  background: transparent;
+  color: var(--color-text, #ffffff) !important;
+  border-color: var(--color-border, #404040);
+}
+
+.unified-action-btn-ghost:hover:not(:disabled) {
+  background: var(--color-surface-alt, #333333);
+  color: white !important;
+  border-color: var(--color-accent, #3b82f6);
   transform: translateY(-1px);
 }
 
-/* Mobile Responsiveness */
+.unified-action-btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  min-width: 70px;
+}
+
+.unified-action-btn-xs {
+  padding: 4px 8px;
+  font-size: 11px;
+  min-width: 60px;
+}
+
+/* Responsive Table System - Mobile-First Approach */
+
+/* Card-based Mobile Layout */
 @media (max-width: 768px) {
   .unified-search-container {
     padding: 16px;
@@ -393,28 +529,75 @@
     padding: 8px 14px;
   }
 
-  .unified-table-container {
+  /* Mobile: Transform table to card layout */
+  .unified-table-container.mobile-cards .unified-table,
+  .unified-table-container.mobile-cards .unified-table thead,
+  .unified-table-container.mobile-cards .unified-table tbody,
+  .unified-table-container.mobile-cards .unified-table th,
+  .unified-table-container.mobile-cards .unified-table td,
+  .unified-table-container.mobile-cards .unified-table tr {
+    display: block;
+  }
+
+  .unified-table-container.mobile-cards .unified-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .unified-table-container.mobile-cards .unified-table tr {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    padding: 16px;
+    position: relative;
+  }
+
+  .unified-table-container.mobile-cards .unified-table td {
+    border: none !important;
+    position: relative;
+    padding: 8px 0;
+    text-align: right !important;
+    border-bottom: 1px solid var(--color-border-light, rgba(255,255,255,0.1)) !important;
+  }
+
+  .unified-table-container.mobile-cards .unified-table td:last-child {
+    border-bottom: none !important;
+  }
+
+  .unified-table-container.mobile-cards .unified-table td:before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    display: inline-block;
+    min-width: 100px;
+    margin-left: 12px;
+  }
+
+  /* Horizontal scroll fallback */
+  .unified-table-container:not(.mobile-cards) {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: 8px;
   }
 
-  .unified-table {
+  .unified-table-container:not(.mobile-cards) .unified-table {
     min-width: 800px;
   }
 
-  .unified-table-header {
+  .unified-table-container:not(.mobile-cards) .unified-table-header {
     padding: 12px 6px;
     font-size: 12px;
     min-width: 100px;
   }
 
-  .unified-table-header-sticky {
+  .unified-table-container:not(.mobile-cards) .unified-table-header-sticky {
     min-width: 120px;
   }
 
-  .unified-table-cell,
-  .unified-table-cell-sticky {
+  .unified-table-container:not(.mobile-cards) .unified-table-cell,
+  .unified-table-container:not(.mobile-cards) .unified-table-cell-sticky {
     padding: 12px 6px;
     font-size: 12px;
   }
@@ -513,4 +696,73 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Progressive Column Hiding for Medium Screens */
+@media (max-width: 1024px) {
+  .unified-table-header.priority-low,
+  .unified-table-cell.priority-low {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .unified-table-header.priority-medium,
+  .unified-table-cell.priority-medium {
+    display: none;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .unified-table {
+    min-width: 600px;
+  }
+  
+  .unified-table-header {
+    padding: 14px 8px;
+    font-size: 13px;
+  }
+  
+  .unified-table-cell {
+    padding: 14px 8px;
+    font-size: 13px;
+  }
+}
+
+/* Mobile-specific enhancements */
+@media (max-width: 480px) {
+  .unified-table-container.mobile-cards .unified-table tr {
+    margin-bottom: 12px;
+    padding: 12px;
+  }
+
+  .unified-table-container.mobile-cards .unified-table td:before {
+    min-width: 80px;
+    font-size: 12px;
+  }
+
+  .unified-action-btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-width: 60px;
+  }
+}
+
+/* Mobile Card Layout Priority System */
+.mobile-card-primary {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text) !important;
+  margin-bottom: 8px;
+}
+
+.mobile-card-secondary {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.mobile-card-tertiary {
+  font-size: 12px;
+  color: var(--color-text-secondary);
 }
