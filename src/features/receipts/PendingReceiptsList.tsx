@@ -5,7 +5,7 @@ import { Modal, SmartPagination, NotificationModal, SearchInput } from '../../sh
 import ReceiptForm from './ReceiptForm';
 import ReceiptDetailsModal from './ReceiptDetailsModal';
 import DeleteReceiptModal from './DeleteReceiptModal';
-import { paginate } from '../../utils';
+import { paginate, formatDateTimeHebrew, getReceiptUnit, getReceiptLocation, receiptItemsMatchSearch, compareReceiptValues } from '../../utils';
 import { UI_CONFIG } from '../../config/app.config';
 import type { NotificationType } from '../../shared/components/NotificationModal';
 import { usePendingReceiptsContext } from '../../contexts';
@@ -73,11 +73,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
     setNotification(prev => ({ ...prev, isOpen: false }));
   };
 
-  // Helper: safely get unit (prefer receiver unit, fallback to issuer)
-  const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
 
-  // Helper: safely get location (prefer receiver location, fallback to issuer)
-  const getLocation = (r: Receipt) => r.signedBy?.location?.name || r.createdBy?.location?.name || '—';
 
   // Helper: check if current user can sign this receipt
   const canUserSignReceipt = (receipt: Receipt) => {
@@ -101,18 +97,14 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
     let filtered = pendingReceipts.filter((r) => {
       const issuer = (r.createdBy?.name?.toLowerCase() || '').normalize('NFC');
       const receiver = (r.signedBy?.name?.toLowerCase() || '').normalize('NFC');
-      const unit = getUnit(r).toLowerCase().normalize('NFC');
-      const location = getLocation(r).toLowerCase().normalize('NFC');
+      const unit = getReceiptUnit(r).toLowerCase().normalize('NFC');
+      const location = getReceiptLocation(r).toLowerCase().normalize('NFC');
       const count = (r.receiptItems?.length || 0).toString();
-      const date = new Date(r.createdAt).toLocaleDateString('he-IL');
+      const date = formatDateTimeHebrew(r.createdAt);
       const note = (r.note?.toLowerCase() || '').normalize('NFC');
 
       // Check if any items match the search term
-      const itemsMatch = r.receiptItems?.some(receiptItem => {
-        const itemName = (receiptItem.item?.itemName?.name?.toLowerCase() || '').normalize('NFC');
-        const itemId = (receiptItem.item?.idNumber?.toLowerCase() || '').normalize('NFC');
-        return itemName.includes(term) || itemId.includes(term);
-      }) || false;
+      const itemsMatch = receiptItemsMatchSearch(r, term);
 
       return (
         issuer.includes(term) ||
@@ -140,12 +132,12 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
             bVal = b.signedBy?.name || '';
             break;
           case 'unit':
-            aVal = getUnit(a) || '';
-            bVal = getUnit(b) || '';
+            aVal = getReceiptUnit(a) || '';
+            bVal = getReceiptUnit(b) || '';
             break;
           case 'location':
-            aVal = getLocation(a) || '';
-            bVal = getLocation(b) || '';
+            aVal = getReceiptLocation(a) || '';
+            bVal = getReceiptLocation(b) || '';
             break;
           case 'itemCount':
             aVal = a.receiptItems?.length || 0;
@@ -163,13 +155,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
             return 0;
         }
 
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-          const cmp = aVal.localeCompare(bVal, 'he');
-          return direction === 'asc' ? cmp : -cmp;
-        }
-        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-        return 0;
+        return compareReceiptValues(aVal, bVal, direction);
       });
     }
 
@@ -363,21 +349,14 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                         <span>
                           {receipt.signedBy?.name || 'משתמש לא ידוע'}
                         </span>
-                        {!isAdmin && !canSign && (
-                          <span 
-                            className="unified-badge unified-badge-warning ms-2" 
-                            style={{ fontSize: '10px' }}
-                            title="קבלה זו מיועדת למשתמש אחר"
-                          >
-                            לא זמין
-                          </span>
-                        )}
                       </div>
                     </td>
-                    <td className="unified-table-cell">{getUnit(receipt)}</td>
-                    <td className="unified-table-cell">{getLocation(receipt)}</td>
+                    <td className="unified-table-cell">{getReceiptUnit(receipt)}</td>
+                    <td className="unified-table-cell">{getReceiptLocation(receipt)}</td>
                     <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
-                    <td className="unified-table-cell">{new Date(receipt.createdAt).toLocaleDateString('he-IL')}</td>
+                    <td className="unified-table-cell">
+                      {formatDateTimeHebrew(receipt.createdAt)}
+                    </td>
                     <td className="unified-table-cell">
                       {receipt.note ? (
                         <span title={receipt.note} style={{ 
@@ -468,57 +447,153 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
             </div>
           )}
 
-          <div style={{ marginBottom: '24px' }}>
-            <h5 style={{ color: 'rgba(255, 255, 255, 0.9)', marginBottom: '16px', fontSize: '18px', fontWeight: 'bold' }}>
-              <i className="fas fa-receipt" style={{ marginLeft: '8px' }}></i>
+          <div style={{ marginBottom: '32px' }}>
+            <h5 style={{ 
+              color: '#ffffff', 
+              marginBottom: '20px', 
+              fontSize: '20px', 
+              fontWeight: '700',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+            }}>
+              <i className="fas fa-receipt" style={{ color: '#64b5f6', fontSize: '22px' }}></i>
               פרטי הקבלה לחתימה
             </h5>
             {selectedReceipt && (
               <div className="receipt-summary-card" style={{
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '8px',
-                padding: '20px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                marginBottom: '20px'
+                border: '2px solid rgba(100, 181, 246, 0.3)',
+                borderRadius: '16px',
+                padding: '24px',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                marginBottom: '24px',
+                backdropFilter: 'blur(15px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
               }}>
                 {/* Receipt Header Info */}
                 <div style={{ 
                   display: 'grid', 
-                  gridTemplateColumns: '1fr 1fr', 
-                  gap: '16px',
-                  marginBottom: '20px',
-                  padding: '16px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                  gap: '20px',
+                  marginBottom: '24px'
                 }}>
-                  <div>
-                    <strong style={{ color: 'rgba(255, 255, 255, 0.7)' }}>מזהה קבלה:</strong>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#3b82f6' }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginBottom: '4px' }}>
+                      <i className="fas fa-hashtag" style={{ marginLeft: '6px' }}></i>
+                      מזהה קבלה
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#64b5f6' }}>
                       #{selectedReceipt.id}
                     </div>
                   </div>
-                  <div>
-                    <strong style={{ color: 'rgba(255, 255, 255, 0.7)' }}>סה"כ פריטים:</strong>
-                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#22c55e' }}>
+                  
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(34, 197, 94, 0.2)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginBottom: '4px' }}>
+                      <i className="fas fa-boxes" style={{ marginLeft: '6px' }}></i>
+                      סה"כ פריטים
+                    </div>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#4ade80' }}>
                       {selectedReceipt.receiptItems?.length || 0}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(168, 85, 247, 0.2)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginBottom: '4px' }}>
+                      <i className="fas fa-user" style={{ marginLeft: '6px' }}></i>
+                      מנפיק
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#a855f7' }}>
+                      {selectedReceipt.createdBy?.name || 'משתמש לא ידוע'}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(245, 101, 101, 0.15) 0%, rgba(245, 101, 101, 0.05) 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(245, 101, 101, 0.2)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginBottom: '4px' }}>
+                      <i className="fas fa-user-check" style={{ marginLeft: '6px' }}></i>
+                      מקבל
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#f56565' }}>
+                      {selectedReceipt.signedBy?.name || 'משתמש לא ידוע'}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginBottom: '4px' }}>
+                      <i className="fas fa-building" style={{ marginLeft: '6px' }}></i>
+                      יחידה
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#fbbf24' }}>
+                      {getReceiptUnit(selectedReceipt)}
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(14, 165, 233, 0.05) 100%)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(14, 165, 233, 0.2)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px', marginBottom: '4px' }}>
+                      <i className="fas fa-map-marker-alt" style={{ marginLeft: '6px' }}></i>
+                      מיקום
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#0ea5e9' }}>
+                      {getReceiptLocation(selectedReceipt)}
                     </div>
                   </div>
                 </div>
 
                 {/* Items List */}
                 <div>
-                  <p style={{ 
-                    margin: '0 0 16px 0', 
-                    fontWeight: '600', 
-                    fontSize: '16px',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    borderBottom: '2px solid rgba(255, 255, 255, 0.2)',
-                    paddingBottom: '8px'
+                  <div style={{ 
+                    margin: '0 0 20px 0', 
+                    fontWeight: '700', 
+                    fontSize: '18px',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '12px 16px',
+                    background: 'linear-gradient(135deg, rgba(100, 181, 246, 0.2) 0%, rgba(100, 181, 246, 0.1) 100%)',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(100, 181, 246, 0.3)',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
                   }}>
-                    <i className="fas fa-list" style={{ marginLeft: '8px' }}></i>
-                    רשימת פריטים לקבלה:
-                  </p>
+                    <i className="fas fa-list-ul" style={{ color: '#64b5f6', fontSize: '20px' }}></i>
+                    רשימת פריטים לקבלה
+                  </div>
                   <div className="items-grid" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {selectedReceipt.receiptItems && selectedReceipt.receiptItems.length > 0 ? 
                       // Group items by name for better display
@@ -664,38 +739,70 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
             )}
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '32px' }}>
             <div style={{
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              borderRadius: '12px',
-              padding: '20px',
-              backdropFilter: 'blur(10px)'
+              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+              border: '2px solid rgba(100, 181, 246, 0.3)',
+              borderRadius: '16px',
+              padding: '24px',
+              backdropFilter: 'blur(15px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
             }}>
               <label className="form-label required" style={{ 
-                fontSize: '16px', 
-                fontWeight: 'bold', 
-                color: 'rgba(255, 255, 255, 0.9)',
-                marginBottom: '12px',
-                display: 'block'
+                fontSize: '18px', 
+                fontWeight: '700', 
+                color: '#64b5f6',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
               }}>
-                <i className="fas fa-signature me-2" style={{ color: '#64b5f6' }}></i>
-                חתימה לאישור קבלת הפריטים:
+                <i className="fas fa-signature" style={{ color: '#64b5f6', fontSize: '20px' }}></i>
+                חתימה לאישור קבלת הפריטים
               </label>
+              
               <div style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '2px dashed rgba(255, 255, 255, 0.3)',
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center'
+                background: 'linear-gradient(135deg, rgba(100, 181, 246, 0.1) 0%, rgba(100, 181, 246, 0.05) 100%)',
+                border: '2px dashed rgba(100, 181, 246, 0.4)',
+                borderRadius: '16px',
+                padding: '24px',
+                textAlign: 'center',
+                transition: 'all 0.3s ease',
+                minHeight: '200px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center'
               }}>
-                <div style={{ marginBottom: '12px', color: 'rgba(255, 255, 255, 0.7)', fontSize: '14px' }}>
+                <div style={{ 
+                  marginBottom: '16px', 
+                  color: 'rgba(255, 255, 255, 0.8)', 
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}>
+                  <i className="fas fa-pen-fancy me-2" style={{ color: '#64b5f6' }}></i>
                   אנא חתמו במסגרת זו לאישור קבלת הפריטים
                 </div>
-                <SignaturePad onSave={setSignature} />
-                <div style={{ marginTop: '8px', fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>
-                  <i className="fas fa-info-circle me-1"></i>
-                  החתימה מהווה אישור על קבלת הפריטים הרשומים לעיל
+                
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  borderRadius: '12px',
+                  padding: '8px',
+                  margin: '0 auto',
+                  maxWidth: '100%',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid rgba(0, 0, 0, 0.1)'
+                }}>
+                  <SignaturePad onSave={setSignature} />
+                </div>
+                
+                <div style={{ 
+                  marginTop: '16px', 
+                  fontSize: '13px', 
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  fontStyle: 'italic'
+                }}>
+                  <i className="fas fa-info-circle me-1" style={{ color: '#64b5f6' }}></i>
+                  החתימה מהווה אישור חוקי על קבלת הפריטים הרשומים לעיל
                 </div>
               </div>
             </div>

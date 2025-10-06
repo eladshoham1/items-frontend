@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useImperativeHandle, forwardRef } from 'react';
-import { format } from 'date-fns';
 import { Receipt, User } from '../../types';
 import { useReceipts } from '../../hooks';
-import { paginate } from '../../utils';
+import { paginate, formatDateTimeHebrew, getReceiptUnit, getReceiptLocation, receiptItemsMatchSearch, compareReceiptValues } from '../../utils';
 import { receiptService } from '../../services';
 import { UI_CONFIG } from '../../config/app.config';
 import Modal from '../../shared/components/Modal';
@@ -15,9 +14,7 @@ import ReceiptDetailsModal from './ReceiptDetailsModal';
 import '../../shared/styles/components.css';
 import './ReceiptsTab.css';
 
-const timestampToDate = (timestamp: string): string => {
-    return format(new Date(timestamp), 'dd/MM/yy HH:mm:ss');
-};
+
 
 interface ReceiptsTabProps {
     userProfile: User;
@@ -121,11 +118,7 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
         });
     }, [pendingReceipts, isAdmin, userProfile.location]);
 
-    // Helper: get unit name (prefer receiver, fallback to issuer)
-    const getUnit = (r: Receipt) => r.signedBy?.location?.unit?.name || r.createdBy?.location?.unit?.name || '—';
-    
-    // Helper: get location name (prefer receiver, fallback to issuer)
-    const getLocation = (r: Receipt) => r.signedBy?.location?.name || r.createdBy?.location?.name || '—';
+
 
     const handleSort = (key: string) => {
         let direction: 'asc' | 'desc' = 'asc';
@@ -139,18 +132,14 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
         let filtered = userReceipts.filter((r) => {
             const issuer = (r.createdBy?.name?.toLowerCase() || '').normalize('NFC');
             const receiver = (r.signedBy?.name?.toLowerCase() || '').normalize('NFC');
-            const unit = getUnit(r).toLowerCase().normalize('NFC');
-            const location = getLocation(r).toLowerCase().normalize('NFC');
+            const unit = getReceiptUnit(r).toLowerCase().normalize('NFC');
+            const location = getReceiptLocation(r).toLowerCase().normalize('NFC');
             const count = (r.receiptItems?.length || 0).toString();
-            const dateStr = timestampToDate(r.updatedAt.toString()).toLowerCase().normalize('NFC');
+            const dateStr = formatDateTimeHebrew(r.updatedAt.toString()).normalize('NFC');
             const note = (r.note?.toLowerCase() || '').normalize('NFC');
             
             // Search in receipt items (item names and ID numbers)
-            const itemsMatch = r.receiptItems?.some(receiptItem => {
-                const itemName = (receiptItem.item?.itemName?.name?.toLowerCase() || '').normalize('NFC');
-                const itemIdNumber = (receiptItem.item?.idNumber?.toLowerCase() || '').normalize('NFC');
-                return itemName.includes(term) || itemIdNumber.includes(term);
-            }) || false;
+            const itemsMatch = receiptItemsMatchSearch(r, term);
             
             return issuer.includes(term) || receiver.includes(term) || unit.includes(term) || 
                    location.includes(term) || count.includes(term) || dateStr.includes(term) || 
@@ -171,12 +160,12 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                         bVal = b.signedBy?.name || '';
                         break;
                     case 'unit':
-                        aVal = getUnit(a) || '';
-                        bVal = getUnit(b) || '';
+                        aVal = getReceiptUnit(a) || '';
+                        bVal = getReceiptUnit(b) || '';
                         break;
                     case 'location':
-                        aVal = getLocation(a) || '';
-                        bVal = getLocation(b) || '';
+                        aVal = getReceiptLocation(a) || '';
+                        bVal = getReceiptLocation(b) || '';
                         break;
                     case 'itemCount':
                         aVal = a.receiptItems?.length || 0;
@@ -193,13 +182,7 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                     default:
                         return 0;
                 }
-                if (typeof aVal === 'string' && typeof bVal === 'string') {
-                    const cmp = aVal.localeCompare(bVal, 'he');
-                    return direction === 'asc' ? cmp : -cmp;
-                }
-                if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-                if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-                return 0;
+                return compareReceiptValues(aVal, bVal, direction);
             });
         }
         return filtered;
@@ -442,8 +425,8 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                                             <tr key={receipt.id} className="unified-table-row" onClick={() => setDetailsReceipt(receipt)} style={{ cursor: 'pointer' }}>
                                                 <td className="unified-table-cell">{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
                                                 <td className="unified-table-cell">{receipt.signedBy?.name || 'משתמש לא ידוע'}</td>
-                                                <td className="unified-table-cell">{getUnit(receipt)}</td>
-                                                <td className="unified-table-cell">{getLocation(receipt)}</td>
+                                                <td className="unified-table-cell">{getReceiptUnit(receipt)}</td>
+                                                <td className="unified-table-cell">{getReceiptLocation(receipt)}</td>
                                                 <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
                                                 <td className="unified-table-cell" style={{ maxWidth: '200px' }}>
                                                     {receipt.note ? (
@@ -464,7 +447,7 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="unified-table-cell">{timestampToDate(receipt.updatedAt.toString())}</td>
+                                                <td className="unified-table-cell">{formatDateTimeHebrew(receipt.updatedAt.toString())}</td>
                                                 <td className="unified-table-cell">
                                                     <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
                                                         {isAdmin && (
