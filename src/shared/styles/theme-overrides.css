@@ -98,6 +98,28 @@ main {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Light theme table headers - EXPLICIT OVERRIDE */
+[data-theme="light"] .table th,
+[data-theme="light"] .table thead th,
+[data-theme="light"] .unified-table-header,
+[data-theme="light"] .unified-table-header-regular,
+[data-theme="light"] .unified-table-header-sticky {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  color: #111827 !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="light"] .table th:hover,
+[data-theme="light"] .table thead th:hover,
+[data-theme="light"] .unified-table-header:hover,
+[data-theme="light"] .unified-table-header-regular:hover,
+[data-theme="light"] .unified-table-header-sticky:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%) !important;
+  color: #111827 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Daily Report Component Overrides */
 /* Fix progress card backgrounds with hardcoded rgba whites */
 *[style*="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(29, 78, 216, 0.05))"],
@@ -318,42 +340,316 @@ select:focus {
   box-shadow: 0 0 0 0.2rem rgba(var(--color-primary-rgb), 0.25) !important;
 }
 
-/* Base Button Styles - Universal Text Color Fix */
-button:not(.btn-outline-primary):not(.btn-outline-secondary):not(.btn-outline-success):not(.btn-outline-danger):not(.btn-outline-warning):not(.btn-outline-info):not(.unified-action-btn-ghost),
-.btn:not(.btn-outline-primary):not(.btn-outline-secondary):not(.btn-outline-success):not(.btn-outline-danger):not(.btn-outline-warning):not(.btn-outline-info):not(.unified-action-btn-ghost) {
+/* LIGHT MODE BUTTON VISIBILITY FIXES - Target only problematic white buttons */
+html[data-theme="light"] button[style*="rgba(255, 255, 255"],
+html[data-theme="light"] .btn[style*="rgba(255, 255, 255"],
+body[data-theme="light"] button[style*="rgba(255, 255, 255"],
+body[data-theme="light"] .btn[style*="rgba(255, 255, 255"] {
+  color: #1f2937 !important;
+}
+
+/* Light mode: Fix buttons with transparent/white backgrounds */
+html[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.1)"],
+html[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.05)"],
+html[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.08)"],
+html[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.12)"],
+html[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.15)"],
+body[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.1)"],
+body[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.05)"],
+body[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.08)"],
+body[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.12)"],
+body[data-theme="light"] button[style*="background: rgba(255, 255, 255, 0.15)"] {
+  color: #1f2937 !important;
+  border-color: #d1d5db !important;
+}
+
+/* Light mode: Fix buttons with white text in components */
+html[data-theme="light"] button[style*="color: white"],
+html[data-theme="light"] button[style*="color: rgba(255, 255, 255, 0.8)"],
+html[data-theme="light"] button[style*="color: rgba(255, 255, 255, 0.9)"],
+body[data-theme="light"] button[style*="color: white"],
+body[data-theme="light"] button[style*="color: rgba(255, 255, 255, 0.8)"],
+body[data-theme="light"] button[style*="color: rgba(255, 255, 255, 0.9)"] {
+  color: #1f2937 !important;
+}
+
+/* PRESERVE colored buttons - keep original button styling for proper buttons */
+html[data-theme="light"] .btn-primary,
+html[data-theme="light"] .btn-success, 
+html[data-theme="light"] .btn-danger,
+html[data-theme="light"] .btn-warning,
+html[data-theme="light"] .btn-info,
+html[data-theme="light"] .btn-secondary,
+html[data-theme="light"] button[style*="background: linear-gradient"],
+html[data-theme="light"] button[style*="background: #3b82f6"],
+html[data-theme="light"] button[style*="background: #10b981"],
+html[data-theme="light"] button[style*="background: #ef4444"],
+html[data-theme="light"] button[style*="background: #f59e0b"],
+body[data-theme="light"] .btn-primary,
+body[data-theme="light"] .btn-success, 
+body[data-theme="light"] .btn-danger,
+body[data-theme="light"] .btn-warning,
+body[data-theme="light"] .btn-info,
+body[data-theme="light"] .btn-secondary,
+body[data-theme="light"] button[style*="background: linear-gradient"],
+body[data-theme="light"] button[style*="background: #3b82f6"],
+body[data-theme="light"] button[style*="background: #10b981"],
+body[data-theme="light"] button[style*="background: #ef4444"],
+body[data-theme="light"] button[style*="background: #f59e0b"] {
   color: white !important;
 }
 
-/* Specific fixes for common button classes */
-.btn-sm,
-.btn-primary,
-.btn-danger,
-.btn-success,
-.btn-warning,
-.btn-info,
-.btn-secondary,
-.unified-action-btn,
-.unified-action-btn-primary,
-.unified-action-btn-danger,
-.unified-action-btn-success {
+/* SPECIFIC COMPONENT FIXES - SmartPagination and similar components */
+html[data-theme="light"] .smart-pagination button,
+html[data-theme="light"] .pagination button,
+html[data-theme="light"] [class*="pagination"] button,
+body[data-theme="light"] .smart-pagination button,
+body[data-theme="light"] .pagination button,
+body[data-theme="light"] [class*="pagination"] button {
+  color: #1f2937 !important;
+}
+
+/* Light mode: Fix page info text in pagination */
+html[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.6)"],
+html[data-theme="light"] span[style*="color: rgba(255, 255, 255, 0.5)"],
+body[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.6)"],
+body[data-theme="light"] span[style*="color: rgba(255, 255, 255, 0.5)"] {
+  color: #6b7280 !important;
+}
+
+/* RECEIPTS TAB SPECIFIC FIXES */
+/* Fix table content and action buttons in receipts */
+html[data-theme="light"] .unified-table-cell,
+html[data-theme="light"] .unified-table-row,
+html[data-theme="light"] .unified-table tbody tr,
+html[data-theme="light"] .unified-table tbody td,
+body[data-theme="light"] .unified-table-cell,
+body[data-theme="light"] .unified-table-row,
+body[data-theme="light"] .unified-table tbody tr,
+body[data-theme="light"] .unified-table tbody td {
+  color: var(--color-text) !important;
+}
+
+/* Fix action buttons in receipts table */
+html[data-theme="light"] .action-buttons .btn,
+html[data-theme="light"] .unified-action-btn,
+body[data-theme="light"] .action-buttons .btn,
+body[data-theme="light"] .unified-action-btn {
   color: white !important;
 }
 
-/* Ensure hover states maintain white text */
-.btn-primary:hover,
-.btn-danger:hover,
-.btn-success:hover,
-.btn-warning:hover,
-.btn-info:hover,
-.btn-secondary:hover,
-.unified-action-btn:hover,
-.unified-action-btn-primary:hover,
-.unified-action-btn-danger:hover,
-.unified-action-btn-success:hover {
+/* Fix empty state in receipts */
+html[data-theme="light"] .empty-state,
+html[data-theme="light"] .empty-state h4,
+html[data-theme="light"] .empty-state p,
+body[data-theme="light"] .empty-state,
+body[data-theme="light"] .empty-state h4,
+body[data-theme="light"] .empty-state p {
+  color: var(--color-text) !important;
+}
+
+/* Fix table headers in receipts */
+html[data-theme="light"] .unified-table-header,
+html[data-theme="light"] .unified-table thead th,
+body[data-theme="light"] .unified-table-header,
+body[data-theme="light"] .unified-table thead th {
+  color: var(--color-text) !important;
+}
+
+/* PENDING RECEIPTS MODAL FIXES */
+/* Fix all white text in pending receipts signing modal */
+html[data-theme="light"] .receipts-modal h5,
+html[data-theme="light"] .receipts-modal div[style*="color: #ffffff"],
+html[data-theme="light"] .receipts-modal div[style*="color: rgba(255, 255, 255"],
+html[data-theme="light"] .receipts-modal label[style*="color: #64b5f6"],
+body[data-theme="light"] .receipts-modal h5,
+body[data-theme="light"] .receipts-modal div[style*="color: #ffffff"],
+body[data-theme="light"] .receipts-modal div[style*="color: rgba(255, 255, 255"],
+body[data-theme="light"] .receipts-modal label[style*="color: #64b5f6"] {
+  color: var(--color-text) !important;
+}
+
+/* Fix receipt summary card text in light mode */
+html[data-theme="light"] .receipt-summary-card div[style*="color: rgba(255, 255, 255, 0.7)"],
+html[data-theme="light"] .receipt-summary-card div[style*="color: rgba(255, 255, 255, 0.8)"],
+body[data-theme="light"] .receipt-summary-card div[style*="color: rgba(255, 255, 255, 0.7)"],
+body[data-theme="light"] .receipt-summary-card div[style*="color: rgba(255, 255, 255, 0.8)"] {
+  color: var(--color-text-secondary) !important;
+}
+
+/* Fix signature section text */
+html[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.8)"],
+html[data-theme="light"] div[style*="marginBottom: '16px'"][style*="color: rgba(255, 255, 255"],
+body[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.8)"],
+body[data-theme="light"] div[style*="marginBottom: '16px'"][style*="color: rgba(255, 255, 255"] {
+  color: var(--color-text) !important;
+}
+
+/* Fix item group names */
+html[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.9)"],
+body[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.9)"] {
+  color: var(--color-text) !important;
+}
+
+/* Fix disclaimer text */
+html[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.7)"][style*="fontStyle: 'italic'"],
+body[data-theme="light"] div[style*="color: rgba(255, 255, 255, 0.7)"][style*="fontStyle: 'italic'"] {
+  color: var(--color-text-muted) !important;
+}
+
+/* ITEMS TAB - FIX GRAY BADGES WITH POOR CONTRAST IN LIGHT MODE */
+/* Target the problematic gray "לא זמין" badges in מספר צ' column */
+html[data-theme="light"] .unified-badge-secondary,
+body[data-theme="light"] .unified-badge-secondary {
+  background-color: #374151 !important; /* Dark gray background */
+  color: white !important; /* White text for contrast */
+  border-color: #374151 !important;
+}
+
+/* Ensure all secondary badges have good contrast in light mode */
+html[data-theme="light"] .unified-badge.unified-badge-secondary,
+html[data-theme="light"] span.unified-badge-secondary,
+body[data-theme="light"] .unified-badge.unified-badge-secondary,
+body[data-theme="light"] span.unified-badge-secondary {
+  background-color: #374151 !important; /* Dark gray for visibility */
+  color: white !important;
+  border-color: #374151 !important;
+}
+
+/* Make sure other badges maintain proper contrast too */
+html[data-theme="light"] .unified-badge-primary,
+html[data-theme="light"] .unified-badge-success,
+html[data-theme="light"] .unified-badge-warning,
+html[data-theme="light"] .unified-badge-danger,
+body[data-theme="light"] .unified-badge-primary,
+body[data-theme="light"] .unified-badge-success,
+body[data-theme="light"] .unified-badge-warning,
+body[data-theme="light"] .unified-badge-danger {
+  color: white !important; /* Ensure white text on colored badges */
+}
+
+/* Fix table cell text in Items tab */
+html[data-theme="light"] .unified-table-cell,
+html[data-theme="light"] .unified-table-row,
+body[data-theme="light"] .unified-table-cell,
+body[data-theme="light"] .unified-table-row {
+  color: var(--color-text) !important;
+}
+
+/* ULTIMATE FIX for gray badges - MAXIMUM SPECIFICITY */
+html[data-theme="light"] .unified-table tbody tr td .unified-badge-secondary,
+html[data-theme="light"] .unified-table-cell .unified-badge.unified-badge-secondary,
+html[data-theme="light"] table tbody tr td span.unified-badge-secondary,
+html[data-theme="light"] .unified-table .unified-badge-secondary,
+body[data-theme="light"] .unified-table tbody tr td .unified-badge-secondary,
+body[data-theme="light"] .unified-table-cell .unified-badge.unified-badge-secondary,
+body[data-theme="light"] table tbody tr td span.unified-badge-secondary,
+body[data-theme="light"] .unified-table .unified-badge-secondary {
+  background: linear-gradient(135deg, #374151, #1f2937) !important;
+  color: #f3f4f6 !important; /* Light gray text */
+  border: 1px solid #1f2937 !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Alternative approach - change gray badges to a more visible style in light mode */
+html[data-theme="light"] span.unified-badge[class*="secondary"],
+body[data-theme="light"] span.unified-badge[class*="secondary"] {
+  background-color: #374151 !important;
+  color: #f9fafb !important;
+  border: 1px solid #6b7280 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* SPECIFIC UX FIX for "לא זמין" badges in מספר צ' column */
+/* These badges need to be clearly visible and communicate "not available" effectively */
+html[data-theme="light"] .unified-badge-secondary:contains("לא זמין"),
+html[data-theme="light"] .unified-badge:contains("לא זמין"),
+body[data-theme="light"] .unified-badge-secondary:contains("לא זמין"),
+body[data-theme="light"] .unified-badge:contains("לא זמין") {
+  background: linear-gradient(135deg, #64748b, #475569) !important;
+  color: #f1f5f9 !important; /* Softer light gray instead of pure white */
+  border: 1px solid #334155 !important;
+  font-weight: 500 !important; /* Lighter font weight for elegance */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important; /* Lighter shadow */
+}
+
+/* Final nuclear override - catch all secondary badges in tables */
+html[data-theme="light"] table .unified-badge-secondary,
+html[data-theme="light"] .unified-table .unified-badge-secondary,
+html[data-theme="light"] tbody .unified-badge-secondary,
+html[data-theme="light"] td .unified-badge-secondary,
+body[data-theme="light"] table .unified-badge-secondary,
+body[data-theme="light"] .unified-table .unified-badge-secondary,
+body[data-theme="light"] tbody .unified-badge-secondary,
+body[data-theme="light"] td .unified-badge-secondary {
+  background: linear-gradient(135deg, #4b5563, #374151) !important;
+  color: #e5e7eb !important; /* Lighter gray for softer appearance */
+  border-color: #374151 !important;
+  font-weight: 500 !important; /* Slightly lighter font weight */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3) !important; /* Softer text shadow */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* SIMPLE DIRECT FIX - Override everything for secondary badges in light mode */
+[data-theme="light"] .unified-badge-secondary {
+  background: #374151 !important;
+  color: #f3f4f6 !important;
+  border-color: #374151 !important;
+}
+
+/* DARK MODE ONLY - Preserve white text for styled buttons in dark mode */
+html[data-theme="dark"] .btn-sm,
+html[data-theme="dark"] .btn-primary,
+html[data-theme="dark"] .btn-danger,
+html[data-theme="dark"] .btn-success,
+html[data-theme="dark"] .btn-warning,
+html[data-theme="dark"] .btn-info,
+html[data-theme="dark"] .btn-secondary,
+html[data-theme="dark"] .unified-action-btn,
+html[data-theme="dark"] .unified-action-btn-primary,
+html[data-theme="dark"] .unified-action-btn-danger,
+html[data-theme="dark"] .unified-action-btn-success,
+body[data-theme="dark"] .btn-sm,
+body[data-theme="dark"] .btn-primary,
+body[data-theme="dark"] .btn-danger,
+body[data-theme="dark"] .btn-success,
+body[data-theme="dark"] .btn-warning,
+body[data-theme="dark"] .btn-info,
+body[data-theme="dark"] .btn-secondary,
+body[data-theme="dark"] .unified-action-btn,
+body[data-theme="dark"] .unified-action-btn-primary,
+body[data-theme="dark"] .unified-action-btn-danger,
+body[data-theme="dark"] .unified-action-btn-success {
   color: white !important;
 }
 
-/* Button Variants - Consistent Text Colors */
+/* DARK MODE ONLY - Ensure hover states maintain white text */
+html[data-theme="dark"] .btn-primary:hover,
+html[data-theme="dark"] .btn-danger:hover,
+html[data-theme="dark"] .btn-success:hover,
+html[data-theme="dark"] .btn-warning:hover,
+html[data-theme="dark"] .btn-info:hover,
+html[data-theme="dark"] .btn-secondary:hover,
+html[data-theme="dark"] .unified-action-btn:hover,
+html[data-theme="dark"] .unified-action-btn-primary:hover,
+html[data-theme="dark"] .unified-action-btn-danger:hover,
+html[data-theme="dark"] .unified-action-btn-success:hover,
+body[data-theme="dark"] .btn-primary:hover,
+body[data-theme="dark"] .btn-danger:hover,
+body[data-theme="dark"] .btn-success:hover,
+body[data-theme="dark"] .btn-warning:hover,
+body[data-theme="dark"] .btn-info:hover,
+body[data-theme="dark"] .btn-secondary:hover,
+body[data-theme="dark"] .unified-action-btn:hover,
+body[data-theme="dark"] .unified-action-btn-primary:hover,
+body[data-theme="dark"] .unified-action-btn-danger:hover,
+body[data-theme="dark"] .unified-action-btn-success:hover {
+  color: white !important;
+}
+
+/* Button Variants - Theme-aware colors (preserve intended button designs) */
 .btn-primary {
   background: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
@@ -983,20 +1279,20 @@ table tbody tr:hover td {
 }
 
 [data-theme="light"] .tab-navigation__item {
-  color: var(--color-text-secondary) !important;
+  color: #6b7280 !important; /* Gray-500 for inactive tabs */
   background: transparent !important;
   border-bottom: 2px solid transparent !important;
 }
 
 [data-theme="light"] .tab-navigation__item:hover:not(.tab-navigation__item--disabled) {
-  color: var(--color-text) !important;
+  color: #111827 !important;
   font-weight: 550 !important;
 }
 
 [data-theme="light"] .tab-navigation__item--active {
-  color: var(--color-primary) !important;
+  color: #2563eb !important; /* Blue-600 for active tab */
   font-weight: 550 !important;
-  border-bottom-color: var(--color-primary) !important;
+  border-bottom-color: #2563eb !important;
 }
 
 [data-theme="light"] .tab-navigation__count {
@@ -1014,6 +1310,504 @@ table tbody tr:hover td {
 [data-theme="light"] .tab-navigation__label {
   color: inherit !important;
 }
+
+/* Additional specificity for tab navigation in light mode - override white colors */
+[data-theme="light"] .tab-navigation .tab-navigation__item,
+[data-theme="light"] .tab-navigation-container .tab-navigation__item,
+html[data-theme="light"] .tab-navigation__item {
+  color: #374151 !important;
+}
+
+[data-theme="light"] .tab-navigation .tab-navigation__item:hover:not(.tab-navigation__item--disabled),
+[data-theme="light"] .tab-navigation-container .tab-navigation__item:hover:not(.tab-navigation__item--disabled),
+html[data-theme="light"] .tab-navigation__item:hover:not(.tab-navigation__item--disabled) {
+  color: #111827 !important;
+}
+
+[data-theme="light"] .tab-navigation .tab-navigation__item--active,
+[data-theme="light"] .tab-navigation-container .tab-navigation__item--active,
+html[data-theme="light"] .tab-navigation__item--active {
+  color: var(--color-primary) !important;
+}
+
+/* Compact variant overrides for light mode */
+[data-theme="light"] .tab-navigation--compact {
+  background: #f1f5f9 !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+[data-theme="light"] .tab-navigation--compact .tab-navigation__item {
+  color: #4b5563 !important;
+  background: transparent !important;
+}
+
+[data-theme="light"] .tab-navigation--compact .tab-navigation__item:hover:not(.tab-navigation__item--disabled):not(.tab-navigation__item--active) {
+  background: #e2e8f0 !important;
+  color: #111827 !important;
+}
+
+[data-theme="light"] .tab-navigation--compact .tab-navigation__item--active {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Ultra-high specificity overrides to ensure light theme tab text is black */
+body[data-theme="light"] .tab-navigation .tab-navigation__item,
+html[data-theme="light"] body .tab-navigation .tab-navigation__item,
+[data-theme="light"] .tab-navigation-container .tab-navigation .tab-navigation__item {
+  color: #374151 !important;
+}
+
+body[data-theme="light"] .tab-navigation .tab-navigation__item:hover,
+html[data-theme="light"] body .tab-navigation .tab-navigation__item:hover {
+  color: #111827 !important;
+}
+
+body[data-theme="light"] .tab-navigation .tab-navigation__item--active,
+html[data-theme="light"] body .tab-navigation .tab-navigation__item--active {
+  color: var(--color-primary) !important;
+}
+
+/* Override any rgba white color assignments in light mode */
+[data-theme="light"] .tab-navigation__item[style*="color: rgba(255, 255, 255"],
+[data-theme="light"] .tab-navigation__item[style*="color:rgba(255,255,255"] {
+  color: #374151 !important;
+}
+
+/* ============== NAVIGATION AND HEADER LIGHT MODE FIXES ============== */
+/* NUCLEAR OPTION - Direct color overrides with maximum specificity */
+
+/* Navigation text - use hardcoded colors instead of CSS variables */
+html[data-theme="light"] .navigation,
+html[data-theme="light"] .navigation .nav-link,
+html[data-theme="light"] .navigation .nav-label,
+html[data-theme="light"] .navigation .user-name,
+html[data-theme="light"] .navigation .user-email,
+html[data-theme="light"] .navigation .logo-title,
+html[data-theme="light"] .navigation .footer-text,
+body[data-theme="light"] .navigation,
+body[data-theme="light"] .navigation .nav-link,
+body[data-theme="light"] .navigation .nav-label,
+body[data-theme="light"] .navigation .user-name,
+body[data-theme="light"] .navigation .user-email,
+body[data-theme="light"] .navigation .logo-title,
+body[data-theme="light"] .navigation .footer-text {
+  color: #374151 !important;
+}
+
+/* Navigation hover states */
+html[data-theme="light"] .navigation .nav-link:hover,
+body[data-theme="light"] .navigation .nav-link:hover {
+  color: #111827 !important;
+}
+
+/* Navigation icons - force dark colors */
+html[data-theme="light"] .navigation .nav-icon,
+html[data-theme="light"] .navigation .nav-icon svg,
+html[data-theme="light"] .navigation .nav-icon *,
+body[data-theme="light"] .navigation .nav-icon,
+body[data-theme="light"] .navigation .nav-icon svg,
+body[data-theme="light"] .navigation .nav-icon * {
+  color: #374151 !important;
+  fill: #374151 !important;
+}
+
+html[data-theme="light"] .navigation .nav-link:hover .nav-icon,
+html[data-theme="light"] .navigation .nav-link:hover .nav-icon svg,
+html[data-theme="light"] .navigation .nav-link:hover .nav-icon *,
+body[data-theme="light"] .navigation .nav-link:hover .nav-icon,
+body[data-theme="light"] .navigation .nav-link:hover .nav-icon svg,
+body[data-theme="light"] .navigation .nav-link:hover .nav-icon * {
+  color: #111827 !important;
+  fill: #111827 !important;
+}
+
+/* Top header text */
+[data-theme="light"] .top-header .logo-title,
+[data-theme="light"] .user-profile-button {
+  color: var(--color-text-sidebar) !important;
+}
+
+/* Tab Navigation - NUCLEAR OVERRIDE */
+html[data-theme="light"] .tab-navigation__item,
+html[data-theme="light"] .tab-navigation .tab-navigation__item,
+body[data-theme="light"] .tab-navigation__item,
+body[data-theme="light"] .tab-navigation .tab-navigation__item {
+  color: #4b5563 !important;
+}
+
+html[data-theme="light"] .tab-navigation__item:hover,
+html[data-theme="light"] .tab-navigation .tab-navigation__item:hover,
+body[data-theme="light"] .tab-navigation__item:hover,
+body[data-theme="light"] .tab-navigation .tab-navigation__item:hover {
+  color: #111827 !important;
+}
+
+html[data-theme="light"] .tab-navigation__item--active,
+html[data-theme="light"] .tab-navigation .tab-navigation__item--active,
+body[data-theme="light"] .tab-navigation__item--active,
+body[data-theme="light"] .tab-navigation .tab-navigation__item--active {
+  color: #3b82f6 !important;
+}
+
+/* Tab Navigation icons and labels - FORCE DARK */
+html[data-theme="light"] .tab-navigation__icon,
+html[data-theme="light"] .tab-navigation__icon svg,
+html[data-theme="light"] .tab-navigation__icon *,
+html[data-theme="light"] .tab-navigation__label,
+html[data-theme="light"] .tab-navigation .tab-navigation__icon,
+html[data-theme="light"] .tab-navigation .tab-navigation__icon svg,
+html[data-theme="light"] .tab-navigation .tab-navigation__icon *,
+html[data-theme="light"] .tab-navigation .tab-navigation__label,
+body[data-theme="light"] .tab-navigation__icon,
+body[data-theme="light"] .tab-navigation__icon svg,
+body[data-theme="light"] .tab-navigation__icon *,
+body[data-theme="light"] .tab-navigation__label,
+body[data-theme="light"] .tab-navigation .tab-navigation__icon,
+body[data-theme="light"] .tab-navigation .tab-navigation__icon svg,
+body[data-theme="light"] .tab-navigation .tab-navigation__icon *,
+body[data-theme="light"] .tab-navigation .tab-navigation__label {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+
+/* High specificity overrides for icons and text visibility */
+body[data-theme="light"] .nav-icon,
+body[data-theme="light"] .nav-icon svg,
+html[data-theme="light"] .nav-icon,
+html[data-theme="light"] .nav-icon svg {
+  color: var(--color-text-sidebar) !important;
+}
+
+body[data-theme="light"] .tab-navigation__item,
+html[data-theme="light"] .tab-navigation__item {
+  color: var(--color-text-secondary) !important;
+}
+
+body[data-theme="light"] .tab-navigation__icon,
+body[data-theme="light"] .tab-navigation__icon svg,
+html[data-theme="light"] .tab-navigation__icon,
+html[data-theme="light"] .tab-navigation__icon svg {
+  color: inherit !important;
+}
+
+/* Override any rgba white colors that might still exist */
+[data-theme="light"] *[style*="color: rgba(255, 255, 255"] {
+  color: var(--color-text-secondary) !important;
+}
+
+[data-theme="light"] svg[style*="color: rgba(255, 255, 255"] {
+  color: var(--color-text-sidebar) !important;
+}
+
+/* Special handling for active navigation state - keep white on blue background */
+[data-theme="light"] .nav-link-active .nav-icon,
+[data-theme="light"] .nav-link-active .nav-icon svg {
+  color: white !important; /* Keep white on blue background */
+}
+
+/* But if there's no blue background, make icon dark */
+[data-theme="light"] .nav-link.active .nav-icon,
+[data-theme="light"] .nav-link.active .nav-icon svg,
+[data-theme="light"] .nav-item.active .nav-icon,
+[data-theme="light"] .nav-item.active .nav-icon svg {
+  color: var(--color-text-sidebar) !important;
+}
+
+/* Ensure TabNavigation border visibility */
+[data-theme="light"] .tab-navigation {
+  border-bottom: 1px solid var(--color-border) !important;
+}
+
+/* Fix any potential issues with compact variant */
+[data-theme="light"] .tab-navigation--compact .tab-navigation__item--active .tab-navigation__icon,
+[data-theme="light"] .tab-navigation--compact .tab-navigation__item--active .tab-navigation__icon svg {
+  color: #2d2d2d !important; /* Dark color on white active background */
+}
+
+/* ============== UNIFIED TABLE HEADER FIXES FOR LIGHT MODE ============== */
+/* NUCLEAR OVERRIDE for table headers */
+
+html[data-theme="light"] .unified-table-header,
+html[data-theme="light"] .unified-table-header-regular,
+html[data-theme="light"] .unified-table-header-sticky,
+html[data-theme="light"] table .unified-table-header,
+html[data-theme="light"] table .unified-table-header-regular,
+html[data-theme="light"] table .unified-table-header-sticky,
+body[data-theme="light"] .unified-table-header,
+body[data-theme="light"] .unified-table-header-regular,
+body[data-theme="light"] .unified-table-header-sticky,
+body[data-theme="light"] table .unified-table-header,
+body[data-theme="light"] table .unified-table-header-regular,
+body[data-theme="light"] table .unified-table-header-sticky {
+  color: #111827 !important;
+}
+
+html[data-theme="light"] .unified-table-header .d-flex,
+html[data-theme="light"] .unified-table-header > div,
+html[data-theme="light"] .unified-table-header span,
+html[data-theme="light"] .unified-table-header-regular .d-flex,
+html[data-theme="light"] .unified-table-header-regular > div,
+html[data-theme="light"] .unified-table-header-regular span,
+html[data-theme="light"] table .unified-table-header .d-flex,
+html[data-theme="light"] table .unified-table-header > div,
+html[data-theme="light"] table .unified-table-header span,
+html[data-theme="light"] table .unified-table-header-regular .d-flex,
+html[data-theme="light"] table .unified-table-header-regular > div,
+html[data-theme="light"] table .unified-table-header-regular span,
+body[data-theme="light"] .unified-table-header .d-flex,
+body[data-theme="light"] .unified-table-header > div,
+body[data-theme="light"] .unified-table-header span,
+body[data-theme="light"] .unified-table-header-regular .d-flex,
+body[data-theme="light"] .unified-table-header-regular > div,
+body[data-theme="light"] .unified-table-header-regular span,
+body[data-theme="light"] table .unified-table-header .d-flex,
+body[data-theme="light"] table .unified-table-header > div,
+body[data-theme="light"] table .unified-table-header span,
+body[data-theme="light"] table .unified-table-header-regular .d-flex,
+body[data-theme="light"] table .unified-table-header-regular > div,
+body[data-theme="light"] table .unified-table-header-regular span {
+  color: #111827 !important;
+}
+
+html[data-theme="light"] .unified-table-header i,
+html[data-theme="light"] .unified-table-header-regular i,
+html[data-theme="light"] .unified-table-header svg,
+html[data-theme="light"] .unified-table-header-regular svg,
+html[data-theme="light"] table .unified-table-header i,
+html[data-theme="light"] table .unified-table-header-regular i,
+html[data-theme="light"] table .unified-table-header svg,
+html[data-theme="light"] table .unified-table-header-regular svg,
+body[data-theme="light"] .unified-table-header i,
+body[data-theme="light"] .unified-table-header-regular i,
+body[data-theme="light"] .unified-table-header svg,
+body[data-theme="light"] .unified-table-header-regular svg,
+body[data-theme="light"] table .unified-table-header i,
+body[data-theme="light"] table .unified-table-header-regular i,
+body[data-theme="light"] table .unified-table-header svg,
+body[data-theme="light"] table .unified-table-header-regular svg {
+  color: #4b5563 !important;
+  fill: #4b5563 !important;
+}
+
+/* ============== MOBILE MENU TOGGLE (HAMBURGER) FIXES ============== */
+/* Ensure hamburger menu is visible in light mode */
+html[data-theme="light"] .mobile-menu-toggle,
+html[data-theme="light"] .mobile-menu-toggle svg,
+html[data-theme="light"] .mobile-menu-toggle *,
+body[data-theme="light"] .mobile-menu-toggle,
+body[data-theme="light"] .mobile-menu-toggle svg,
+body[data-theme="light"] .mobile-menu-toggle * {
+  color: #111827 !important;
+  fill: #111827 !important;
+}
+
+html[data-theme="light"] .mobile-menu-toggle:hover,
+html[data-theme="light"] .mobile-menu-toggle:hover svg,
+html[data-theme="light"] .mobile-menu-toggle:hover *,
+body[data-theme="light"] .mobile-menu-toggle:hover,
+body[data-theme="light"] .mobile-menu-toggle:hover svg,
+body[data-theme="light"] .mobile-menu-toggle:hover * {
+  color: #111827 !important;
+  fill: #111827 !important;
+  background: var(--color-surface) !important;
+}
+
+/* ============== CATCH-ALL NUCLEAR OVERRIDE ============== */
+/* Override any remaining white text in light mode */
+
+html[data-theme="light"] *[style*="color: white"],
+html[data-theme="light"] *[style*="color: #fff"],
+html[data-theme="light"] *[style*="color: #ffffff"],
+html[data-theme="light"] *[style*="color:white"],
+html[data-theme="light"] *[style*="color:#fff"],
+html[data-theme="light"] *[style*="color:#ffffff"],
+body[data-theme="light"] *[style*="color: white"],
+body[data-theme="light"] *[style*="color: #fff"],
+body[data-theme="light"] *[style*="color: #ffffff"],
+body[data-theme="light"] *[style*="color:white"],
+body[data-theme="light"] *[style*="color:#fff"],
+body[data-theme="light"] *[style*="color:#ffffff"] {
+  color: #374151 !important;
+}
+
+/* Override white rgba colors */
+html[data-theme="light"] *[style*="rgba(255, 255, 255"],
+html[data-theme="light"] *[style*="rgba(255,255,255"],
+body[data-theme="light"] *[style*="rgba(255, 255, 255"],
+body[data-theme="light"] *[style*="rgba(255,255,255"] {
+  color: #374151 !important;
+}
+
+/* ============== TOOLTIP AND TITLE ATTRIBUTE FIXES ============== */
+/* Custom tooltip overrides */
+html[data-theme="light"] .tooltip,
+html[data-theme="light"] .tooltip-inner,
+html[data-theme="light"] [data-tooltip],
+body[data-theme="light"] .tooltip,
+body[data-theme="light"] .tooltip-inner,
+body[data-theme="light"] [data-tooltip] {
+  color: #111827 !important;
+  background: #ffffff !important;
+  border: 1px solid #374151 !important;
+}
+
+html[data-theme="light"] .tooltip::after,
+html[data-theme="light"] .tooltip::before,
+body[data-theme="light"] .tooltip::after,
+body[data-theme="light"] .tooltip::before {
+  color: #111827 !important;
+  background: #ffffff !important;
+  border: 1px solid #374151 !important;
+}
+
+/* Override Bootstrap tooltips if any */
+html[data-theme="light"] .bs-tooltip-top .tooltip-inner,
+html[data-theme="light"] .bs-tooltip-bottom .tooltip-inner,
+html[data-theme="light"] .bs-tooltip-left .tooltip-inner,
+html[data-theme="light"] .bs-tooltip-right .tooltip-inner,
+body[data-theme="light"] .bs-tooltip-top .tooltip-inner,
+body[data-theme="light"] .bs-tooltip-bottom .tooltip-inner,
+body[data-theme="light"] .bs-tooltip-left .tooltip-inner,
+body[data-theme="light"] .bs-tooltip-right .tooltip-inner {
+  color: #111827 !important;
+  background: #ffffff !important;
+}
+
+/* ============== COMPREHENSIVE TAB AND BUTTON TEXT FIXES ============== */
+/* Target any remaining tab-like elements */
+
+html[data-theme="light"] button,
+html[data-theme="light"] .btn,
+html[data-theme="light"] [role="tab"],
+html[data-theme="light"] .nav-item,
+html[data-theme="light"] .nav-link,
+html[data-theme="light"] .tab,
+html[data-theme="light"] .tab-item,
+html[data-theme="light"] .tab-button,
+body[data-theme="light"] button,
+body[data-theme="light"] .btn,
+body[data-theme="light"] [role="tab"],
+body[data-theme="light"] .nav-item,
+body[data-theme="light"] .nav-link,
+body[data-theme="light"] .tab,
+body[data-theme="light"] .tab-item,
+body[data-theme="light"] .tab-button {
+  color: #374151 !important;
+}
+
+html[data-theme="light"] button:hover,
+html[data-theme="light"] .btn:hover,
+html[data-theme="light"] [role="tab"]:hover,
+html[data-theme="light"] .nav-item:hover,
+html[data-theme="light"] .nav-link:hover,
+html[data-theme="light"] .tab:hover,
+html[data-theme="light"] .tab-item:hover,
+html[data-theme="light"] .tab-button:hover,
+body[data-theme="light"] button:hover,
+body[data-theme="light"] .btn:hover,
+body[data-theme="light"] [role="tab"]:hover,
+body[data-theme="light"] .nav-item:hover,
+body[data-theme="light"] .nav-link:hover,
+body[data-theme="light"] .tab:hover,
+body[data-theme="light"] .tab-item:hover,
+body[data-theme="light"] .tab-button:hover {
+  color: #111827 !important;
+}
+
+/* Target any icons in buttons/tabs */
+html[data-theme="light"] button i,
+html[data-theme="light"] button svg,
+html[data-theme="light"] .btn i,
+html[data-theme="light"] .btn svg,
+html[data-theme="light"] [role="tab"] i,
+html[data-theme="light"] [role="tab"] svg,
+body[data-theme="light"] button i,
+body[data-theme="light"] button svg,
+body[data-theme="light"] .btn i,
+body[data-theme="light"] .btn svg,
+body[data-theme="light"] [role="tab"] i,
+body[data-theme="light"] [role="tab"] svg {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+
+/* ============== MAXIMUM SPECIFICITY NUCLEAR OPTION ============== */
+/* Use !important with highest possible CSS specificity */
+
+/* Universal text color enforcement for light theme */
+
+html[data-theme="light"] body .tab-navigation__item,
+html[data-theme="light"] body .tab-navigation .tab-navigation__item,
+html[data-theme="light"] body div .tab-navigation__item,
+html[data-theme="light"] body nav .tab-navigation__item {
+  color: #4b5563 !important;
+}
+
+html[data-theme="light"] body .tab-navigation__label,
+html[data-theme="light"] body .tab-navigation .tab-navigation__label,
+html[data-theme="light"] body div .tab-navigation__label,
+html[data-theme="light"] body nav .tab-navigation__label {
+  color: inherit !important;
+}
+
+html[data-theme="light"] body .tab-navigation__icon,
+html[data-theme="light"] body .tab-navigation__icon svg,
+html[data-theme="light"] body .tab-navigation .tab-navigation__icon,
+html[data-theme="light"] body .tab-navigation .tab-navigation__icon svg {
+  color: inherit !important;
+  fill: currentColor !important;
+}
+
+/* Force override using CSS Custom Properties */
+html[data-theme="light"] {
+  --tab-text-color: #374151 !important;
+  --tab-icon-color: #374151 !important;
+}
+
+html[data-theme="light"] .tab-navigation__item {
+  color: var(--tab-text-color) !important;
+}
+
+html[data-theme="light"] .tab-navigation__icon,
+html[data-theme="light"] .tab-navigation__icon svg {
+  color: var(--tab-icon-color) !important;
+  fill: var(--tab-icon-color) !important;
+}
+
+/* Fix navigation active state icon issue */
+[data-theme="light"] .nav-link:not(.nav-link-active) .nav-icon,
+[data-theme="light"] .nav-link:not(.nav-link-active) .nav-icon svg {
+  color: var(--color-text-sidebar) !important;
+}
+
+/* High specificity overrides for table headers */
+body[data-theme="light"] .unified-table-header,
+body[data-theme="light"] .unified-table-header-regular,
+html[data-theme="light"] .unified-table-header,
+html[data-theme="light"] .unified-table-header-regular {
+  color: var(--color-text) !important;
+}
+
+body[data-theme="light"] .unified-table-header span,
+body[data-theme="light"] .unified-table-header-regular span,
+html[data-theme="light"] .unified-table-header span,
+html[data-theme="light"] .unified-table-header-regular span {
+  color: inherit !important;
+}
+
+body[data-theme="light"] .unified-table-header i,
+body[data-theme="light"] .unified-table-header-regular i,
+html[data-theme="light"] .unified-table-header i,
+html[data-theme="light"] .unified-table-header-regular i {
+  color: var(--color-text-secondary) !important;
+}
+
+
+
+
+
+
 
 /* ============== EMERGENCY LIGHT MODE FIXES ============== */
 /* Use highest specificity and multiple selectors to override everything */
@@ -1065,4 +1859,236 @@ table tbody tr:hover td {
   background: #3b82f6 !important;
   color: #ffffff !important;
   border-color: #3b82f6 !important;
+}
+
+/* ============== ULTIMATE TAB NAVIGATION OVERRIDE - FINAL FIX ============== */
+/* Maximum specificity override for TabNavigation component */
+
+html[data-theme="light"] body .tab-navigation .tab-navigation__item,
+html[data-theme="light"] .tab-navigation .tab-navigation__item,
+body[data-theme="light"] .tab-navigation .tab-navigation__item {
+  color: #6b7280 !important; /* Gray-500 for inactive tabs */
+  background: transparent !important;
+}
+
+html[data-theme="light"] body .tab-navigation .tab-navigation__item:hover:not(.tab-navigation__item--disabled),
+html[data-theme="light"] .tab-navigation .tab-navigation__item:hover:not(.tab-navigation__item--disabled),
+body[data-theme="light"] .tab-navigation .tab-navigation__item:hover:not(.tab-navigation__item--disabled) {
+  color: #111827 !important; /* Dark gray on hover */
+}
+
+html[data-theme="light"] body .tab-navigation .tab-navigation__item--active,
+html[data-theme="light"] .tab-navigation .tab-navigation__item--active,
+body[data-theme="light"] .tab-navigation .tab-navigation__item--active {
+  color: #2563eb !important; /* Blue-600 for active tab */
+  border-bottom-color: #2563eb !important;
+}
+
+html[data-theme="light"] body .tab-navigation .tab-navigation__label,
+html[data-theme="light"] .tab-navigation .tab-navigation__label,
+body[data-theme="light"] .tab-navigation .tab-navigation__label,
+html[data-theme="light"] body .tab-navigation .tab-navigation__icon,
+html[data-theme="light"] .tab-navigation .tab-navigation__icon,
+body[data-theme="light"] .tab-navigation .tab-navigation__icon {
+  color: inherit !important;
+}
+
+/* ============== EMERGENCY OVERRIDE - WHITE TEXT KILLER ============== */
+/* Nuclear option - override any remaining white text in light mode */
+
+[data-theme="light"] .tab-navigation *,
+[data-theme="light"] .tab-navigation *:before,
+[data-theme="light"] .tab-navigation *:after {
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] .tab-navigation .tab-navigation__item--active,
+[data-theme="light"] .tab-navigation .tab-navigation__item--active *,
+[data-theme="light"] .tab-navigation .tab-navigation__item--active:before,
+[data-theme="light"] .tab-navigation .tab-navigation__item--active:after {
+  color: #2563eb !important;
+}
+
+/* Force tab text to be visible - last resort */
+html[data-theme="light"] .tab-navigation button,
+html[data-theme="light"] .tab-navigation button span,
+html[data-theme="light"] .tab-navigation .tab-navigation__item span,
+html[data-theme="light"] .tab-navigation .tab-navigation__label {
+  color: #374151 !important;
+}
+
+html[data-theme="light"] .tab-navigation button.tab-navigation__item--active,
+html[data-theme="light"] .tab-navigation button.tab-navigation__item--active span,
+html[data-theme="light"] .tab-navigation .tab-navigation__item--active span,
+html[data-theme="light"] .tab-navigation .tab-navigation__item--active .tab-navigation__label {
+  color: #2563eb !important;
+}
+
+/* ============== COMPONENTS.CSS TAB SYSTEM OVERRIDES ============== */
+/* Fix for components.css tab-item classes that use hardcoded colors */
+
+[data-theme="light"] .tab-item,
+[data-theme="light"] .tabs-nav .tab-item,
+html[data-theme="light"] .tab-item,
+body[data-theme="light"] .tab-item {
+  color: #6b7280 !important; /* Gray-500 instead of #adb5bd */
+  border-bottom-color: transparent !important;
+}
+
+[data-theme="light"] .tab-item:hover,
+[data-theme="light"] .tabs-nav .tab-item:hover,
+html[data-theme="light"] .tab-item:hover,
+body[data-theme="light"] .tab-item:hover {
+  color: #111827 !important; /* Dark gray on hover */
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+[data-theme="light"] .tab-item.active,
+[data-theme="light"] .tabs-nav .tab-item.active,
+html[data-theme="light"] .tab-item.active,
+body[data-theme="light"] .tab-item.active {
+  color: #2563eb !important; /* Blue for active */
+  border-bottom-color: #2563eb !important;
+  background: transparent !important;
+}
+
+/* Fix tab borders and backgrounds */
+[data-theme="light"] .tabs-nav,
+html[data-theme="light"] .tabs-nav,
+body[data-theme="light"] .tabs-nav {
+  border-bottom-color: var(--color-border) !important;
+}
+
+/* Tab counts and icons */
+[data-theme="light"] .tab-count,
+html[data-theme="light"] .tab-count,
+body[data-theme="light"] .tab-count {
+  background: #2563eb !important;
+  color: white !important;
+}
+
+[data-theme="light"] .tab-icon,
+html[data-theme="light"] .tab-icon,
+body[data-theme="light"] .tab-icon {
+  color: inherit !important;
+}
+
+/* ============== COMPREHENSIVE TAB SYSTEM NUCLEAR OVERRIDE ============== */
+/* Master override for ALL possible tab classes and selectors */
+
+[data-theme="light"] *[class*="tab"]:not(.table):not(.tab-content):not(.tab-pane):not(.navigation *):not(.nav-link):not(.nav-item),
+[data-theme="light"] button[role="tab"]:not(.navigation *),
+[data-theme="light"] .nav-pills .nav-link:not(.navigation *),
+[data-theme="light"] .nav-tabs .nav-link:not(.navigation *) {
+  color: #6b7280 !important;
+}
+
+[data-theme="light"] *[class*="tab"]:not(.table):not(.tab-content):not(.tab-pane):not(.navigation *):not(.nav-link):not(.nav-item):hover,
+[data-theme="light"] button[role="tab"]:not(.navigation *):hover,
+[data-theme="light"] .nav-pills .nav-link:not(.navigation *):hover,
+[data-theme="light"] .nav-tabs .nav-link:not(.navigation *):hover {
+  color: #111827 !important;
+}
+
+[data-theme="light"] *[class*="tab"].active:not(.table):not(.tab-content):not(.tab-pane):not(.navigation *):not(.nav-link):not(.nav-item),
+[data-theme="light"] button[role="tab"][aria-selected="true"]:not(.navigation *),
+[data-theme="light"] .nav-pills .nav-link.active:not(.navigation *),
+[data-theme="light"] .nav-tabs .nav-link.active:not(.navigation *) {
+  color: #2563eb !important;
+  border-color: #2563eb !important;
+}
+
+/* Emergency override for specific text elements in tabs - exclude navigation */
+[data-theme="light"] *[class*="tab"] span:not(.table *):not(.navigation *):not(.nav-link *):not(.nav-item *),
+[data-theme="light"] *[class*="tab"] div:not(.table *):not(.navigation *):not(.nav-link *):not(.nav-item *),
+[data-theme="light"] button[role="tab"]:not(.navigation *) *,
+[data-theme="light"] .nav-pills .nav-link:not(.navigation *) *,
+[data-theme="light"] .nav-tabs .nav-link:not(.navigation *) * {
+  color: inherit !important;
+}
+
+/* ============== REINFORCE SIDEBAR NAVIGATION COLORS ============== */
+/* Ensure sidebar navigation remains properly visible in light mode */
+
+html[data-theme="light"] .navigation .nav-link,
+html[data-theme="light"] .navigation .nav-item .nav-link,
+html[data-theme="light"] .navigation .nav-list .nav-link,
+body[data-theme="light"] .navigation .nav-link,
+body[data-theme="light"] .navigation .nav-item .nav-link,
+body[data-theme="light"] .navigation .nav-list .nav-link {
+  color: #111827 !important; /* Dark color for sidebar nav */
+  background: transparent !important;
+}
+
+html[data-theme="light"] .navigation .nav-link:hover,
+html[data-theme="light"] .navigation .nav-item .nav-link:hover,
+html[data-theme="light"] .navigation .nav-list .nav-link:hover,
+body[data-theme="light"] .navigation .nav-link:hover,
+body[data-theme="light"] .navigation .nav-item .nav-link:hover,
+body[data-theme="light"] .navigation .nav-list .nav-link:hover {
+  color: #111827 !important;
+  background: var(--color-surface) !important;
+}
+
+html[data-theme="light"] .navigation .nav-link-active,
+html[data-theme="light"] .navigation .nav-item .nav-link-active,
+html[data-theme="light"] .navigation .nav-list .nav-link-active,
+body[data-theme="light"] .navigation .nav-link-active,
+body[data-theme="light"] .navigation .nav-item .nav-link-active,
+body[data-theme="light"] .navigation .nav-list .nav-link-active {
+  background: var(--color-primary) !important;
+  color: white !important;
+}
+
+/* Sidebar navigation text and icons */
+html[data-theme="light"] .navigation .nav-label,
+html[data-theme="light"] .navigation .nav-link .nav-label,
+html[data-theme="light"] .navigation span.nav-label,
+body[data-theme="light"] .navigation .nav-label,
+body[data-theme="light"] .navigation .nav-link .nav-label,
+body[data-theme="light"] .navigation span.nav-label {
+  color: #111827 !important; /* Force dark text instead of inherit */
+}
+
+html[data-theme="light"] .navigation .nav-icon,
+html[data-theme="light"] .navigation .nav-link .nav-icon,
+html[data-theme="light"] .navigation .nav-icon svg,
+html[data-theme="light"] .navigation .nav-link .nav-icon svg,
+body[data-theme="light"] .navigation .nav-icon,
+body[data-theme="light"] .navigation .nav-link .nav-icon,
+body[data-theme="light"] .navigation .nav-icon svg,
+body[data-theme="light"] .navigation .nav-link .nav-icon svg {
+  color: #111827 !important;
+  fill: #111827 !important;
+}
+
+/* Active navigation icon stays white */
+html[data-theme="light"] .navigation .nav-link-active .nav-icon,
+html[data-theme="light"] .navigation .nav-link-active .nav-icon svg,
+body[data-theme="light"] .navigation .nav-link-active .nav-icon,
+body[data-theme="light"] .navigation .nav-link-active .nav-icon svg {
+  color: white !important;
+  fill: white !important;
+}
+
+/* Active navigation text stays white */
+html[data-theme="light"] .navigation .nav-link-active .nav-label,
+html[data-theme="light"] .navigation .nav-link-active span.nav-label,
+body[data-theme="light"] .navigation .nav-link-active .nav-label,
+body[data-theme="light"] .navigation .nav-link-active span.nav-label {
+  color: white !important;
+}
+
+/* NUCLEAR OVERRIDE for navigation text - ensure all text is dark except active */
+html[data-theme="light"] .navigation *:not(.nav-link-active):not(.nav-link-active *),
+body[data-theme="light"] .navigation *:not(.nav-link-active):not(.nav-link-active *) {
+  color: #111827 !important;
+}
+
+/* But keep active navigation elements white */
+html[data-theme="light"] .navigation .nav-link-active,
+html[data-theme="light"] .navigation .nav-link-active *,
+body[data-theme="light"] .navigation .nav-link-active,
+body[data-theme="light"] .navigation .nav-link-active * {
+  color: white !important;
 }

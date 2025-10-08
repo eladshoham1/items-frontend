@@ -369,7 +369,7 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                           {receipt.note}
                         </span>
                       ) : (
-                        <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>—</span>
+                        <span style={{ color: 'var(--color-text-muted)' }}>—</span>
                       )}
                     </td>
                     <td className="unified-table-cell" style={{ textAlign: 'center' }}>

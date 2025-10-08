@@ -1,8 +1,14 @@
 /* Import Google Fonts for Hebrew support */
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap');
 
-/* Import unified table styles */
+/* Import theme variables FIRST */
+@import './shared/styles/globals.css';
+
+/* Import unified table styles AFTER theme variables */
 @import './shared/styles/unified-table.css';
+
+/* Import theme overrides LAST */
+@import './shared/styles/theme-overrides.css';
 
 /* Global reset and basic styles - Modern Design */
 * {
