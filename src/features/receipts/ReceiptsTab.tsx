@@ -407,17 +407,16 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                                                         <span>כמות פריטים</span>
                                                     </div>
                                                 </th>
-                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('note')} data-sorted={sortConfig?.key === 'note'}>
-                                                    <div className="d-flex align-items-center">
-                                                        <span>הערה</span>
-                                                    </div>
-                                                </th>
                                                 <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('updatedAt')} data-sorted={sortConfig?.key === 'updatedAt'}>
                                                     <div className="d-flex align-items-center">
                                                         <span>תאריך חתימה</span>
                                                     </div>
                                                 </th>
-                                                <th className="unified-table-header unified-table-header-regular" style={{ width: '200px' }}>פעולות</th>
+                                                <th className="unified-table-header unified-table-header-regular sortable" onClick={() => handleSort('note')} data-sorted={sortConfig?.key === 'note'}>
+                                                    <div className="d-flex align-items-center">
+                                                        <span>הערה</span>
+                                                    </div>
+                                                </th>
                                             </tr>
                                         </thead>
                                     <tbody>
@@ -428,6 +427,7 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                                                 <td className="unified-table-cell">{getReceiptUnit(receipt)}</td>
                                                 <td className="unified-table-cell">{getReceiptLocation(receipt)}</td>
                                                 <td className="unified-table-cell">{receipt.receiptItems?.length || 0}</td>
+                                                <td className="unified-table-cell">{formatDateTimeHebrew(receipt.updatedAt.toString())}</td>
                                                 <td className="unified-table-cell" style={{ maxWidth: '200px' }}>
                                                     {receipt.note ? (
                                                         <span 
@@ -446,49 +446,6 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                                                             ללא הערה
                                                         </span>
                                                     )}
-                                                </td>
-                                                <td className="unified-table-cell">{formatDateTimeHebrew(receipt.updatedAt.toString())}</td>
-                                                <td className="unified-table-cell">
-                                                    <div className="action-buttons" onClick={(e) => e.stopPropagation()}>
-                                                        {isAdmin && (
-                                                            <>
-                                                                <button 
-                                                                    className="btn btn-primary unified-action-btn" 
-                                                                    onClick={() => handleUpdateClick(receipt)}
-                                                                    title="עדכן קבלה"
-                                                                >
-                                                                    <i className="fas fa-edit"></i>
-                                                                    עדכן
-                                                                </button>
-                                                                <button 
-                                                                    className="btn btn-danger unified-action-btn" 
-                                                                    onClick={() => handleDeleteClick(receipt)}
-                                                                    title="מחק קבלה"
-                                                                >
-                                                                    <i className="fas fa-trash"></i>
-                                                                    מחק
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                        <button 
-                                                            className="btn btn-info unified-action-btn" 
-                                                            onClick={() => handleDownloadPDF(receipt)}
-                                                            disabled={downloadingReceiptId === receipt.id}
-                                                            title="הורד קבלה"
-                                                        >
-                                                            {downloadingReceiptId === receipt.id ? (
-                                                                <>
-                                                                    <i className="fas fa-spinner fa-spin"></i>
-                                                                    מוריד...
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <i className="fas fa-download"></i>
-                                                                    הורד PDF
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -555,6 +512,11 @@ const ReceiptsTab = forwardRef<ReceiptsTabRef, ReceiptsTabProps>(({ userProfile,
                 receipt={detailsReceipt}
                 isOpen={!!detailsReceipt}
                 onClose={() => setDetailsReceipt(null)}
+                isAdmin={isAdmin}
+                onUpdate={detailsReceipt ? () => handleUpdateClick(detailsReceipt) : undefined}
+                onDelete={detailsReceipt ? () => handleDeleteClick(detailsReceipt) : undefined}
+                onDownload={detailsReceipt ? () => handleDownloadPDF(detailsReceipt) : undefined}
+                downloadingReceiptId={downloadingReceiptId}
             />
 
             {/* Create Modal */}

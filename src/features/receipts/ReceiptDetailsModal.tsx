@@ -24,6 +24,14 @@ interface ReceiptDetailsModalProps {
   receipt: Receipt | null;
   isOpen: boolean;
   onClose: () => void;
+  isAdmin?: boolean;
+  onUpdate?: () => void;
+  onDelete?: () => void;
+  onDownload?: () => Promise<void>;
+  downloadingReceiptId?: string | null;
+  onSign?: () => void;
+  currentUserId?: string;
+  isPendingReceipt?: boolean;
 }
 
 // Function to merge items with identical attributes for display
@@ -58,8 +66,22 @@ const mergeModalReceiptItems = (items: ModalReceiptItem[]): MergedModalReceiptIt
 const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
   receipt,
   isOpen,
-  onClose
+  onClose,
+  isAdmin = false,
+  onUpdate,
+  onDelete,
+  onDownload,
+  downloadingReceiptId,
+  onSign,
+  currentUserId,
+  isPendingReceipt = false
 }) => {
+  
+  // Helper function to check if current user can sign this receipt (for pending receipts)
+  const canUserSignReceipt = (receipt: Receipt) => {
+    if (!currentUserId || !isPendingReceipt) return false;
+    return receipt.signedById === currentUserId;
+  };
   // Convert receipt items to modal format and merge identical ones
   const modalItems: ModalReceiptItem[] = useMemo(() => {
     if (!receipt?.receiptItems) return [];
@@ -363,11 +385,127 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
         {/* Actions */}
         <div className="modal-actions mt-4" style={{
           display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '8px',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '12px',
           paddingTop: '16px',
           borderTop: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
+          {/* Left side - Receipt actions */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {/* Admin actions for both signed and pending receipts */}
+            {isAdmin && onUpdate && (
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                onClick={() => {
+                  onUpdate();
+                  onClose();
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  border: 'none',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  borderRadius: '6px'
+                }}
+              >
+                <i className="fas fa-edit"></i>
+                עדכן קבלה
+              </button>
+            )}
+            
+            {isAdmin && onDelete && (
+              <button 
+                type="button" 
+                className="btn btn-danger"
+                onClick={() => {
+                  onDelete();
+                  onClose();
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                  border: 'none',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  borderRadius: '6px'
+                }}
+              >
+                <i className="fas fa-trash"></i>
+                מחק קבלה
+              </button>
+            )}
+
+            {/* Sign action for pending receipts */}
+            {isPendingReceipt && onSign && receipt && canUserSignReceipt(receipt) && (
+              <button 
+                type="button" 
+                className="btn btn-success"
+                onClick={() => {
+                  onSign();
+                  onClose();
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
+                  border: 'none',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  borderRadius: '6px'
+                }}
+              >
+                <i className="fas fa-signature"></i>
+                חתום וקבל
+              </button>
+            )}
+
+            {/* Download action for signed receipts only */}
+            {!isPendingReceipt && onDownload && (
+              <button 
+                type="button" 
+                className="btn btn-info"
+                onClick={async () => {
+                  await onDownload();
+                }}
+                disabled={downloadingReceiptId === receipt?.id}
+                style={{
+                  background: downloadingReceiptId === receipt?.id 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                  border: 'none',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  opacity: downloadingReceiptId === receipt?.id ? 0.7 : 1
+                }}
+              >
+                {downloadingReceiptId === receipt?.id ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    מוריד...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-download"></i>
+                    הורד PDF
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Right side - Close button */}
           <button 
             type="button" 
             className="btn btn-secondary"
@@ -375,10 +513,15 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
             style={{
               background: 'rgba(255, 255, 255, 0.1)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: 'rgba(255, 255, 255, 0.9)'
+              color: 'rgba(255, 255, 255, 0.9)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '6px'
             }}
           >
-            <i className="fas fa-times me-2"></i>
+            <i className="fas fa-times"></i>
             סגור
           </button>
         </div>

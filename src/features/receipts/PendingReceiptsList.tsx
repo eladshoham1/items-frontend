@@ -326,22 +326,31 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                     <span>הערה</span>
                   </div>
                 </th>
-                <th className="unified-table-header unified-table-header-regular" style={{ width: '200px' }}>פעולות</th>
               </tr>
             </thead>
             <tbody>
               {paginatedReceipts.map((receipt, index) => {
                 const canSign = canUserSignReceipt(receipt);
+                
+                // All users now open details modal - actions will be inside the modal
+                const handleRowClick = () => {
+                  setDetailsReceipt(receipt);
+                };
+
+                const getRowTitle = () => {
+                  return "לחץ לפרטים ופעולות";
+                };
+
                 return (
                   <tr 
                     key={receipt.id} 
                     className="unified-table-row"
-                    onClick={() => setDetailsReceipt(receipt)} 
+                    onClick={handleRowClick} 
                     style={{ 
                       cursor: 'pointer',
                       opacity: !isAdmin && !canSign ? 0.6 : 1
                     }}
-                    title="לחץ לפרטים"
+                    title={getRowTitle()}
                   >
                     <td className="unified-table-cell">{receipt.createdBy?.name || 'משתמש לא ידוע'}</td>
                     <td className="unified-table-cell">
@@ -369,50 +378,8 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                           {receipt.note}
                         </span>
                       ) : (
-                        <span style={{ color: 'var(--color-text-muted)' }}>—</span>
+                        <span className="receipt-note-placeholder">—</span>
                       )}
-                    </td>
-                    <td className="unified-table-cell" style={{ textAlign: 'center' }}>
-                      <div className="action-buttons" onClick={(e) => e.stopPropagation()} style={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        gap: '8px' 
-                      }}>
-                        {isAdmin && (
-                          <>
-                            <button 
-                              className="btn btn-primary btn-sm me-2 unified-action-btn" 
-                              onClick={() => handleUpdateClick(receipt)}
-                              title="עדכן קבלה"
-                            >
-                              <i className="fas fa-edit"></i>
-                              עדכן
-                            </button>
-                            <button 
-                              className="btn btn-danger btn-sm unified-action-btn" 
-                              onClick={() => handleDeleteClick(receipt)}
-                              title="מחק קבלה"
-                            >
-                              <i className="fas fa-trash"></i>
-                              מחק
-                            </button>
-                          </>
-                        )}
-                        {canSign && (
-                          <button
-                            className="btn-sign btn-sm unified-action-btn"
-                            onClick={() => handleSignClick(receipt)}
-                            title="חתום וקבל"
-                          >
-                            <i className="fas fa-signature"></i>
-                            חתום וקבל
-                          </button>
-                        )}
-                        {!canSign && !isAdmin && (
-                          <span style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '12px' }}>לא זמין לחתימה</span>
-                        )}
-                      </div>
                     </td>
                   </tr>
                 );
@@ -431,6 +398,12 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
         receipt={detailsReceipt}
         isOpen={!!detailsReceipt}
         onClose={() => setDetailsReceipt(null)}
+        isAdmin={isAdmin}
+        onUpdate={detailsReceipt && isAdmin ? () => handleUpdateClick(detailsReceipt) : undefined}
+        onDelete={detailsReceipt && isAdmin ? () => handleDeleteClick(detailsReceipt) : undefined}
+        onSign={detailsReceipt && canUserSignReceipt(detailsReceipt) ? () => handleSignClick(detailsReceipt) : undefined}
+        currentUserId={currentUserId}
+        isPendingReceipt={true}
       />
 
       {/* Sign Modal */}

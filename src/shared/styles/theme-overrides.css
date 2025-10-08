@@ -150,6 +150,293 @@ input[placeholder*="הערות"]:focus {
   background: var(--color-border) !important;
 }
 
+/* ===============================================
+   DASHBOARD TABLE OVERRIDES - MASTER UI/UX FIX
+   =============================================== */
+
+/* Dashboard Table - Clean Professional Design */
+[data-theme="light"] .unified-table {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+[data-theme="light"] .unified-table tbody tr {
+  background: #ffffff !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+}
+
+[data-theme="light"] .unified-table tbody tr:nth-child(even) {
+  background: #f9fafb !important;
+}
+
+[data-theme="light"] .unified-table tbody tr:hover {
+  background: #f3f4f6 !important;
+}
+
+[data-theme="light"] .unified-table tbody tr td {
+  background: transparent !important;
+  color: #374151 !important;
+  border-color: #e5e7eb !important;
+  font-weight: 400 !important;
+  padding: 12px !important;
+}
+
+/* Table Cell Badge Container */
+[data-theme="light"] .unified-table-cell-badge {
+  background: transparent !important;
+  padding: 12px !important;
+  text-align: center !important;
+}
+
+/* Table Headers */
+[data-theme="light"] .unified-table thead th {
+  background: #f9fafb !important;
+  color: #374151 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  padding: 16px 12px !important;
+}
+
+/* Dashboard Badge System - Clean Professional Design */
+[data-theme="light"] .dashboard-badge-signed,
+[data-theme="light"] .unified-badge-primary {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  text-align: center !important;
+  min-width: 28px !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .dashboard-badge-waiting,
+[data-theme="light"] .unified-badge-warning {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  text-align: center !important;
+  min-width: 28px !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .unified-badge-success {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  text-align: center !important;
+  min-width: 28px !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .unified-badge-danger {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  text-align: center !important;
+  min-width: 28px !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .dashboard-badge-empty,
+[data-theme="light"] .unified-badge-secondary {
+  background-color: #6b7280 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
+  text-align: center !important;
+  min-width: 28px !important;
+  display: inline-block !important;
+}
+
+/* Dashboard Locations Badge System - Clean Design */
+[data-theme="light"] .dashboard-locations-badge-signed {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  text-align: center !important;
+  min-width: 24px !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .dashboard-locations-badge-pending {
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  text-align: center !important;
+  min-width: 24px !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .dashboard-locations-badge-allocation {
+  background-color: #10b981 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  text-align: center !important;
+  min-width: 24px !important;
+  display: inline-block !important;
+}
+
+[data-theme="light"] .dashboard-locations-badge-empty {
+  background-color: #6b7280 !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 500 !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  text-align: center !important;
+  min-width: 24px !important;
+  display: inline-block !important;
+}
+
+/* Table Cell Content Enhancement */
+[data-theme="light"] .unified-table-cell {
+  background: transparent !important;
+}
+
+[data-theme="light"] .unified-table-cell-badge {
+  background: transparent !important;
+}
+
+/* Table Cell Text Visibility - Unified Dark Text */
+[data-theme="light"] .unified-table tbody tr td,
+[data-theme="light"] .unified-table tbody tr td *,
+[data-theme="light"] .unified-table tbody tr td span,
+[data-theme="light"] .unified-table tbody tr td div,
+[data-theme="light"] .unified-table tbody tr td p,
+[data-theme="light"] .unified-table tbody tr td a {
+  color: #1f2937 !important;
+  font-weight: 500 !important;
+}
+
+/* Ensure pending receipts table uses same styling */
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td,
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td *,
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td span,
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td div {
+  color: #1f2937 !important;
+  font-weight: 500 !important;
+}
+
+/* Force consistent text color across all receipt tables */
+[data-theme="light"] .receipts-tab .unified-table tbody tr td,
+[data-theme="light"] .receipts-tab .unified-table tbody tr td *,
+[data-theme="light"] .tab-content .unified-table tbody tr td,
+[data-theme="light"] .tab-content .unified-table tbody tr td * {
+  color: #1f2937 !important;
+  font-weight: 500 !important;
+}
+
+/* Nuclear override for all table text elements */
+[data-theme="light"] .unified-table-container .unified-table tbody tr td,
+[data-theme="light"] .unified-table-container .unified-table tbody tr td *,
+[data-theme="light"] .unified-table-container .unified-table tbody tr td span,
+[data-theme="light"] .unified-table-container .unified-table tbody tr td div,
+[data-theme="light"] .unified-table-container .unified-table tbody tr td .d-flex,
+[data-theme="light"] .unified-table-container .unified-table tbody tr td .align-items-center {
+  color: #1f2937 !important;
+  font-weight: 500 !important;
+}
+
+/* Specific override for muted text elements */
+[data-theme="light"] .unified-table tbody tr td [style*="color: var(--color-text-muted)"],
+[data-theme="light"] .unified-table tbody tr td [style*="color: rgba(255, 255, 255, 0.5)"],
+[data-theme="light"] .unified-table tbody tr td span[style*="color: var(--color-text-muted)"] {
+  color: #6b7280 !important;
+}
+
+/* Ultimate override for all table text - Nuclear approach */
+[data-theme="light"] .pending-receipts-list table tbody tr td,
+[data-theme="light"] .pending-receipts-list table tbody tr td span,
+[data-theme="light"] .pending-receipts-list table tbody tr td div,
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td,
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td span,
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td div {
+  color: #1f2937 !important;
+}
+
+/* Force override muted text specifically in pending receipts */
+[data-theme="light"] .pending-receipts-list .unified-table tbody tr td span:not([class]) {
+  color: #1f2937 !important;
+}
+
+/* Specific fix for receipt note placeholder */
+[data-theme="light"] .receipt-note-placeholder {
+  color: #6b7280 !important;
+}
+
+/* Fix for disabled action text */
+[data-theme="light"] .action-disabled-text {
+  color: #9ca3af !important;
+  font-size: 12px !important;
+}
+
+/* Badge Container Light Mode */
+[data-theme="light"] .dashboard-badge-container {
+  background: transparent !important;
+}
+
+/* Results Badge Enhancement */
+[data-theme="light"] .dashboard-results-badge,
+[data-theme="light"] .unified-results-badge {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  color: #374151 !important;
+  border: 1px solid #d1d5db !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Large Badge Variants - Clean Design */
+[data-theme="light"] .unified-badge-large {
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  min-width: 40px !important;
+  text-align: center !important;
+  display: inline-block !important;
+}
+
+/* Dashboard Modal Badge Fixes */
+[data-theme="light"] .dashboard-modal-card .dashboard-badge-signed,
+[data-theme="light"] .dashboard-modal-card .dashboard-badge-waiting,
+[data-theme="light"] .dashboard-modal-card .dashboard-badge-empty {
+  background: var(--original-background) !important;
+  color: #ffffff !important;
+}
+
 /* Empty state containers */
 *[style*="background: rgba(255, 255, 255, 0.05)"][style*="min-height"] {
   background: var(--color-surface) !important;
