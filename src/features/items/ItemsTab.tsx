@@ -366,6 +366,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({ userProfile, isAdmin }) => {
         isOpen={isAdvancedFilterOpen}
         onToggle={handleAdvancedFilterToggle}
         isAdmin={isAdmin}
+        resultsCount={filteredAndSortedItems.length}
       />
 
       {/* Modern Selection Toolbar */}

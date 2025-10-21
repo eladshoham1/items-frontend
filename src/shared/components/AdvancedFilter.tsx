@@ -24,6 +24,8 @@ interface AdvancedFilterProps {
   onToggle: () => void;
   /** Whether user is admin (affects available options) */
   isAdmin?: boolean;
+  /** Number of filtered results */
+  resultsCount?: number;
 }
 
 const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
@@ -32,7 +34,8 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
   onFiltersChange,
   isOpen,
   onToggle,
-  isAdmin = false
+  isAdmin = false,
+  resultsCount
 }) => {
   // Extract unique options from items
   const uniqueItemNames = Array.from(
@@ -120,10 +123,18 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
         <div className="filter-panel-content">
           {/* Panel Header */}
           <div className="filter-panel-header">
-            <h4>
-              <i className="fas fa-sliders-h"></i>
-              פילטרים מתקדמים
-            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h4>
+                <i className="fas fa-sliders-h"></i>
+                פילטרים מתקדמים
+              </h4>
+              {resultsCount !== undefined && (
+                <span className="filter-results-count">
+                  <i className="fas fa-check-circle" style={{ marginLeft: '6px' }}></i>
+                  נמצאו {resultsCount} פריטים
+                </span>
+              )}
+            </div>
             {hasActiveFilters && (
               <button
                 className="btn btn-outline-secondary btn-sm clear-filters-btn"
