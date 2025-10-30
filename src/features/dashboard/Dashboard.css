@@ -822,9 +822,10 @@
   font-size: 14px;
   color: var(--color-text, #ffffff);
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
-  text-align: center;
+  text-align: center !important;
   z-index: 5;
   background: transparent; /* Allow row background to show through */
+  vertical-align: middle;
 }
 
 .dashboard-table-cell-item.even {
@@ -949,6 +950,11 @@
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .dashboard-badge-waiting {
@@ -960,6 +966,11 @@
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .dashboard-badge-empty {
@@ -971,6 +982,11 @@
   font-weight: 500;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .dashboard-badge-large {
@@ -980,31 +996,56 @@
   font-weight: 600;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .dashboard-badge-signed-large {
   background-color: var(--color-success, #10b981);
   color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }
 
 .dashboard-badge-waiting-large {
   background-color: var(--color-text-muted, #6b7280);
   color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }
 
 .dashboard-badge-broken-large {
   background-color: var(--color-danger, #ef4444);
   color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }
 
 .dashboard-badge-available-large {
   background-color: var(--color-accent, #3b82f6);
   color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }
 
 .dashboard-badge-total-large {
   background-color: var(--color-text-muted, #6b7280);
   color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }
 
 /* Error and Loading States */
@@ -1169,6 +1210,23 @@
   border-left: 1px solid var(--color-border, #404040);
   background-color: var(--color-surface, #2a2a2a);
   color: var(--color-text, #ffffff);
+  vertical-align: middle;
+}
+
+/* Ensure flex containers within dashboard cells are centered */
+.dashboard-locations-table-cell > div,
+.dashboard-table-cell > div,
+.dashboard-table-cell-signed > div,
+.dashboard-table-cell-waiting > div,
+.dashboard-table-cell-broken > div,
+.dashboard-table-cell-available > div,
+.dashboard-table-cell-total > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
 }
 
 .dashboard-locations-table-cell--has-data {
@@ -1198,6 +1256,11 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .dashboard-locations-badge-pending {
@@ -1211,6 +1274,11 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .dashboard-locations-badge-allocation {
@@ -1224,6 +1292,11 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 .dashboard-locations-badge-empty {
@@ -1235,6 +1308,11 @@
   font-weight: 500;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
 }
 
 /* Locations table headers - Unified Dark Theme */
@@ -1303,8 +1381,9 @@
   font-size: 14px;
   color: var(--color-text, #ffffff);
   box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
-  text-align: center;
+  text-align: center !important;
   z-index: 5;
+  vertical-align: middle;
 }
 
 .dashboard-locations-cell-item.even {
@@ -1413,4 +1492,37 @@
   .dashboard-summary-label {
     font-size: 11px;
   }
+}
+
+/* Force center alignment for all dashboard table cells and content */
+.dashboard-table td,
+.dashboard-locations-table-cell,
+.dashboard-table-cell,
+.dashboard-table-cell-signed,
+.dashboard-table-cell-waiting,
+.dashboard-table-cell-broken,
+.dashboard-table-cell-available,
+.dashboard-table-cell-total,
+.dashboard-table-cell-item {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* Center all span elements in dashboard tables */
+.dashboard-table td span,
+.unified-table td span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  margin: 0 auto !important;
+}
+
+/* Center all div elements in dashboard table cells */
+.dashboard-table td > div,
+.unified-table td > div {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
 }
