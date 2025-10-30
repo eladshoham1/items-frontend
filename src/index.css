@@ -1,4 +1,7 @@
-/* Import Google Fonts for Hebrew support */
+/* Critical: Ensure UTF-8 encoding for Hebrew characters - MUST be first line */
+@charset "UTF-8";
+
+/* Import Google Fonts for Hebrew support with enhanced display */
 @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700&display=swap');
 
 /* Import theme variables FIRST */
@@ -17,12 +20,31 @@
   box-sizing: border-box;
 }
 
+/* Comprehensive Hebrew text rendering support for all elements */
+*,
+*::before,
+*::after {
+  /* Ensure proper Hebrew text rendering */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent text size adjustments on mobile */
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Support RTL text direction */
+  unicode-bidi: isolate;
+}
+
 html {
   min-width: 320px;
   overflow-x: auto;
   scroll-behavior: smooth;
   /* Enable smooth scrolling on iOS */
   -webkit-overflow-scrolling: touch;
+  /* Hebrew language support */
+  direction: rtl;
 }
 
 /* Set viewport meta tag for proper mobile rendering */
@@ -40,18 +62,24 @@ html, body {
 }
 
 body {
-  font-family: 'Assistant', 'Heebo', system-ui, sans-serif;
+  font-family: 'Assistant', 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
   direction: rtl;
   padding: 0;
   line-height: 1.6;
   min-width: 320px;
+  /* Enhanced text rendering for Hebrew */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   font-feature-settings: 'kern' 1, 'liga' 1;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Hebrew text support */
+  unicode-bidi: embed;
+  writing-mode: horizontal-tb;
   /* Enable momentum scrolling on iOS */
   -webkit-overflow-scrolling: touch;
   /* Prevent horizontal overflow from children but allow table scrolling */
@@ -272,10 +300,80 @@ body {
   background: var(--color-primary-light);
   color: var(--color-primary);
 }
+
+/* Utility class for ensuring Hebrew text renders correctly */
+.hebrew-safe,
+.rtl-text {
+  direction: rtl !important;
+  text-align: right !important;
+  unicode-bidi: isolate !important;
+  font-family: var(--app-font) !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Force Hebrew rendering for specific problem areas */
+.modal-content,
+.modal-body,
+.modal-header,
+.modal-footer,
+.card-body,
+.card-header,
+.table-cell,
+.form-label,
+.form-control::placeholder {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: isolate;
+  font-family: var(--app-font);
+}
 :root {
-  --app-font: 'Arial', sans-serif;
-  --bs-font-sans-serif: 'Arial', sans-serif; /* align Bootstrap components */
-  --bs-body-font-family: 'Arial', sans-serif;
+  /* Hebrew-optimized font stack */
+  --app-font: 'Assistant', 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --bs-font-sans-serif: 'Assistant', 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --bs-body-font-family: 'Assistant', 'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+
+/* Ensure all text elements use Hebrew-optimized fonts and rendering */
+body, input, textarea, select, button, 
+h1, h2, h3, h4, h5, h6, 
+p, span, div, a, label, 
+table, th, td, li, option {
+  font-family: var(--app-font) !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  unicode-bidi: isolate;
+}
+
+/* Critical: Ensure Hebrew text is not flipped or mirrored on any browser */
+[dir="rtl"],
+[lang="he"],
+:lang(he) {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: embed;
+}
+
+/* Prevent Hebrew text from being affected by bidirectional algorithm issues */
+.hebrew-text,
+[lang="he"] *,
+:lang(he) * {
+  unicode-bidi: isolate;
+  direction: rtl;
+}
+
+/* Ensure proper Hebrew rendering in all text inputs and textareas */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  direction: rtl;
+  text-align: right;
+  unicode-bidi: plaintext;
 }
 
 /* Ensure all table text uses the same font */
@@ -584,6 +682,12 @@ body {
   textarea,
   select {
     font-size: 16px;
+    /* Mobile Hebrew text rendering */
+    direction: rtl;
+    text-align: right;
+    unicode-bidi: plaintext;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
   
   /* Better table interaction on mobile */

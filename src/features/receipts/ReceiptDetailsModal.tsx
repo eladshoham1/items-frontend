@@ -114,7 +114,7 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
       title={`פרטי קבלה #${receipt.id}`}
       size="lg"
     >
-      <div style={{ direction: 'rtl', padding: '16px' }}>
+      <div style={{ direction: 'rtl', padding: '16px', unicodeBidi: 'embed', textRendering: 'optimizeLegibility' }}>
         {/* Receipt Summary */}
         <div className="receipt-summary" style={{
           display: 'grid',
@@ -128,8 +128,8 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
           backdropFilter: 'blur(10px)'
         }}>
           <div>
-            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>מנפיק:</label>
-            <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)' }}>{receipt.createdBy?.name || 'משתמש לא ידוע'}</div>
+            <label style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px', direction: 'rtl', unicodeBidi: 'isolate' }}>מנפיק:</label>
+            <div style={{ fontWeight: 'bold', color: 'rgba(255, 255, 255, 0.9)', direction: 'rtl', unicodeBidi: 'isolate' }}>{receipt.createdBy?.name || 'משתמש לא ידוע'}</div>
             <small style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
               {receipt.createdBy?.personalNumber && `מספר אישי: ${receipt.createdBy.personalNumber}`}
             </small>
