@@ -2,7 +2,7 @@
   "name": "client",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://eladshoham1.github.io/items-frontend",
+  "homepage": "https://achlan.club",
   "dependencies": {
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.2",
