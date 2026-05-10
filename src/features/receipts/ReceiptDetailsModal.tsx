@@ -115,6 +115,160 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
       size="lg"
     >
       <div style={{ direction: 'rtl', padding: '16px', unicodeBidi: 'embed', textRendering: 'optimizeLegibility' }}>
+        {/* Sticky action bar — pinned to the top of the scrollable area
+            so primary actions are always visible (no hidden buttons on small screens). */}
+        <div
+          className="modal-actions"
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            margin: '-16px -16px 20px -16px',
+            padding: '12px 16px',
+            background: 'rgba(26, 26, 26, 0.92)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderBottom: '1px solid rgba(100, 181, 246, 0.25)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          {/* Primary CTA — most prominent */}
+          {isPendingReceipt && onSign && receipt && canUserSignReceipt(receipt) && (
+            <button
+              type="button"
+              className="btn btn-success"
+              onClick={() => {
+                onSign();
+                onClose();
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
+                border: 'none',
+                color: 'white',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '0 20px',
+                minHeight: '48px',
+                minWidth: '140px',
+                borderRadius: '8px',
+                fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(34, 197, 94, 0.35)',
+                flex: '1 1 auto',
+              }}
+            >
+              <i className="fas fa-signature" />
+              חתום וקבל
+            </button>
+          )}
+
+          {!isPendingReceipt && onDownload && (
+            <button
+              type="button"
+              className="btn btn-info"
+              onClick={async () => {
+                await onDownload();
+              }}
+              disabled={downloadingReceiptId === receipt?.id}
+              style={{
+                background:
+                  downloadingReceiptId === receipt?.id
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                border: 'none',
+                color: 'white',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                padding: '0 20px',
+                minHeight: '48px',
+                minWidth: '140px',
+                borderRadius: '8px',
+                fontWeight: 700,
+                opacity: downloadingReceiptId === receipt?.id ? 0.7 : 1,
+                flex: '1 1 auto',
+              }}
+            >
+              {downloadingReceiptId === receipt?.id ? (
+                <>
+                  <i className="fas fa-spinner fa-spin" />
+                  מוריד...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-download" />
+                  הורד PDF
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Secondary admin actions — icon-first, label hidden on narrow screens */}
+          {isAdmin && onUpdate && (
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                onUpdate();
+                onClose();
+              }}
+              aria-label="עדכן קבלה"
+              title="עדכן קבלה"
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                color: 'white',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0 14px',
+                minHeight: '48px',
+                minWidth: '48px',
+                borderRadius: '8px',
+              }}
+            >
+              <i className="fas fa-edit" />
+              <span className="d-none d-sm-inline">עדכן</span>
+            </button>
+          )}
+
+          {isAdmin && onDelete && (
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => {
+                onDelete();
+                onClose();
+              }}
+              aria-label="מחק קבלה"
+              title="מחק קבלה"
+              style={{
+                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                border: 'none',
+                color: 'white',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '0 14px',
+                minHeight: '48px',
+                minWidth: '48px',
+                borderRadius: '8px',
+              }}
+            >
+              <i className="fas fa-trash" />
+              <span className="d-none d-sm-inline">מחק</span>
+            </button>
+          )}
+        </div>
+
         {/* Receipt Summary */}
         <div className="receipt-summary" style={{
           display: 'grid',
@@ -381,150 +535,6 @@ const ReceiptDetailsModal: React.FC<ReceiptDetailsModalProps> = ({
             </div>
           </div>
         )}
-
-        {/* Actions */}
-        <div className="modal-actions mt-4" style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '12px',
-          paddingTop: '16px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)'
-        }}>
-          {/* Left side - Receipt actions */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {/* Admin actions for both signed and pending receipts */}
-            {isAdmin && onUpdate && (
-              <button 
-                type="button" 
-                className="btn btn-primary"
-                onClick={() => {
-                  onUpdate();
-                  onClose();
-                }}
-                style={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  border: 'none',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 16px',
-                  borderRadius: '6px'
-                }}
-              >
-                <i className="fas fa-edit"></i>
-                עדכן קבלה
-              </button>
-            )}
-            
-            {isAdmin && onDelete && (
-              <button 
-                type="button" 
-                className="btn btn-danger"
-                onClick={() => {
-                  onDelete();
-                  onClose();
-                }}
-                style={{
-                  background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                  border: 'none',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 16px',
-                  borderRadius: '6px'
-                }}
-              >
-                <i className="fas fa-trash"></i>
-                מחק קבלה
-              </button>
-            )}
-
-            {/* Sign action for pending receipts */}
-            {isPendingReceipt && onSign && receipt && canUserSignReceipt(receipt) && (
-              <button 
-                type="button" 
-                className="btn btn-success"
-                onClick={() => {
-                  onSign();
-                  onClose();
-                }}
-                style={{
-                  background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
-                  border: 'none',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 16px',
-                  borderRadius: '6px'
-                }}
-              >
-                <i className="fas fa-signature"></i>
-                חתום וקבל
-              </button>
-            )}
-
-            {/* Download action for signed receipts only */}
-            {!isPendingReceipt && onDownload && (
-              <button 
-                type="button" 
-                className="btn btn-info"
-                onClick={async () => {
-                  await onDownload();
-                }}
-                disabled={downloadingReceiptId === receipt?.id}
-                style={{
-                  background: downloadingReceiptId === receipt?.id 
-                    ? 'rgba(255, 255, 255, 0.1)' 
-                    : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                  border: 'none',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  opacity: downloadingReceiptId === receipt?.id ? 0.7 : 1
-                }}
-              >
-                {downloadingReceiptId === receipt?.id ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i>
-                    מוריד...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-download"></i>
-                    הורד PDF
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
-          {/* Right side - Close button */}
-          <button 
-            type="button" 
-            className="btn btn-secondary"
-            onClick={onClose}
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              color: 'rgba(255, 255, 255, 0.9)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              borderRadius: '6px'
-            }}
-          >
-            <i className="fas fa-times"></i>
-            סגור
-          </button>
-        </div>
       </div>
     </Modal>
   );

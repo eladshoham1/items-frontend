@@ -414,6 +414,73 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
         size="lg"
       >
         <div className="receipts-modal" style={{ direction: 'rtl', padding: '20px' }}>
+          {/* Sticky action bar - always visible at top of scrollable area
+              so users on small screens don't need to scroll to find the sign button */}
+          <div
+            style={{
+              position: 'sticky',
+              top: 0,
+              zIndex: 10,
+              margin: '-20px -20px 20px -20px',
+              padding: '12px 16px',
+              background: 'rgba(26, 26, 26, 0.92)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              borderBottom: '1px solid rgba(100, 181, 246, 0.25)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              flexWrap: 'wrap',
+            }}
+          >
+            <span
+              aria-live="polite"
+              style={{
+                flex: '1 1 140px',
+                minWidth: 0,
+                fontSize: '13px',
+                fontWeight: 600,
+                color: signature ? '#4caf50' : '#ffc107',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              <i className={`fas ${signature ? 'fa-check-circle' : 'fa-pen-fancy'}`} />
+              {signature ? 'חתימה נקלטה — מוכן לאישור' : 'נדרשת חתימה כדי להמשיך'}
+            </span>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleCloseModal}
+              disabled={isSubmitting}
+              style={{ minHeight: '48px', minWidth: '88px', padding: '0 16px' }}
+            >
+              ביטול
+            </button>
+            <button
+              type="button"
+              className="btn-sign"
+              onClick={handleSignSubmit}
+              disabled={isSubmitting || !signature}
+              aria-disabled={isSubmitting || !signature}
+              style={{ minHeight: '48px', minWidth: '140px', padding: '0 20px' }}
+            >
+              {isSubmitting ? (
+                <>
+                  <i className="fas fa-spinner fa-spin me-2" />
+                  חותם...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-signature me-2" />
+                  חתום וקבל
+                </>
+              )}
+            </button>
+          </div>
+
           {error && (
             <div className="alert alert-danger">
               {error}
@@ -779,25 +846,6 @@ const PendingReceiptsList: React.FC<PendingReceiptsListProps> = ({
                 </div>
               </div>
             </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={handleCloseModal}
-              disabled={isSubmitting}
-            >
-              ביטול
-            </button>
-            <button
-              type="button"
-              className="btn-sign"
-              onClick={handleSignSubmit}
-              disabled={isSubmitting || !signature}
-            >
-              {isSubmitting ? 'חותם...' : 'חתום וקבל'}
-            </button>
           </div>
         </div>
       </Modal>
